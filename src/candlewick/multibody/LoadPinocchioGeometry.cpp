@@ -12,28 +12,28 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
                         std::vector<MeshData> &meshData) {
   using namespace coal;
 
-  const coal::CollisionGeometry &collgom = *gobj.geometry.get();
+  const CollisionGeometry &collgom = *gobj.geometry.get();
   const OBJECT_TYPE objType = collgom.getObjectType();
 
   Float4 meshColor = gobj.meshColor.cast<float>();
   Float3 meshScale = gobj.meshScale.cast<float>();
+  const char *meshPath = gobj.meshPath.c_str();
+  bool overrideMaterial = gobj.overrideMaterial;
 
   Eigen::Affine3f T;
   T.setIdentity();
   T.scale(meshScale);
   switch (objType) {
   case OT_BVH: {
-    loadSceneMeshes(gobj.meshPath.c_str(), meshData);
+    loadSceneMeshes(meshPath, meshData);
     break;
   }
   case OT_GEOM: {
-    MeshData &md = meshData.emplace_back(loadCoalPrimitive(collgom));
-    md.material.baseColor = meshColor;
+    meshData.emplace_back(loadCoalPrimitive(collgom));
     break;
   }
   case OT_HFIELD: {
-    MeshData &md = meshData.emplace_back(loadCoalHeightField(collgom));
-    md.material.baseColor = meshColor;
+    meshData.emplace_back(loadCoalHeightField(collgom));
     break;
   }
   default:
@@ -42,6 +42,8 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
   }
   for (auto &data : meshData) {
     apply3DTransformInPlace(data, T);
+    if (overrideMaterial)
+      data.material.baseColor = meshColor;
   }
 }
 
