@@ -28,6 +28,8 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
   robotScene.emplace(registry, renderer, visualModel(), visualData(), rconfig);
   debugScene.emplace(registry, renderer);
   debugScene->addSystem<RobotDebugSystem>(m_model, data());
+  debugScene->addTriad();
+  debugScene->addLineGrid();
 
   robotScene->directionalLight = {
       .direction = {0., -1., -1.},
@@ -42,9 +44,6 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
   robotScene->addEnvironmentObject(loadPlaneTiled(0.5f, prepeat, prepeat),
                                    Mat4f::Identity());
 
-  if (m_environmentFlags & ENV_EL_TRIAD) {
-    debugScene->addTriad();
-  }
   this->resetCamera();
 }
 
