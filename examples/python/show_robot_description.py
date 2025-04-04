@@ -29,10 +29,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name", help="name of the robot description")
     parser.add_argument(
-        "--width", help="window width in px", type=int, default=1600,
+        "--width",
+        help="window width in px",
+        type=int,
+        default=1600,
     )
     parser.add_argument(
-        "--height", help="window height in px", type=int, default=900,
+        "--height",
+        help="window height in px",
+        type=int,
+        default=900,
     )
     parser.add_argument(
         "--altitude",
@@ -43,9 +49,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        robot = load_robot_description(
-            args.name, root_joint=pin.JointModelFreeFlyer()
-        )
+        robot = load_robot_description(args.name, root_joint=pin.JointModelFreeFlyer())
     except ModuleNotFoundError:
         robot = load_robot_description(
             f"{args.name}_description", root_joint=pin.JointModelFreeFlyer()
