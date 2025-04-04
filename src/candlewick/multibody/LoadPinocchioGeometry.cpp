@@ -27,7 +27,8 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
     break;
   }
   case OT_GEOM: {
-    meshData.push_back(loadCoalPrimitive(collgom, meshColor));
+    MeshData &md = meshData.emplace_back(loadCoalPrimitive(collgom));
+    md.material.baseColor = meshColor;
     break;
   }
   case OT_HFIELD: {

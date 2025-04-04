@@ -43,8 +43,7 @@ void getPlaneOrHalfspaceNormalOffset(const coal::CollisionGeometry &geometry,
   }
 }
 
-MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry,
-                           const Float4 &meshColor) {
+MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry) {
   using namespace coal;
   SDL_assert_always(geometry.getObjectType() == OT_GEOM);
   MeshData meshData{NoInit};
@@ -98,7 +97,8 @@ MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry,
     throw std::runtime_error("Unsupported geometry type.");
     break;
   }
-  meshData.material.baseColor = meshColor;
+  // apply appropriate transform for converting to Coal geometry's scaling
+  // parameters
   apply3DTransformInPlace(meshData, transform);
   return meshData;
 }
