@@ -37,5 +37,7 @@ print(
 )
 
 for i in tqdm.tqdm(range(1000)):
+    if viz.shouldExit:
+        break
     viz.display(q0)
     time.sleep(dt)
