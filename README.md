@@ -66,7 +66,7 @@ Candlewick depends mainly on:
 
 These dependencies can be installed from Conda as follows:
 ```bash
-conda install sdl3 eigen coal magic_enum assimp entt nlohmann_json
+conda install -c conda-forge sdl3 eigen coal magic_enum assimp entt nlohmann_json
 ```
 
 #### Optional dependencies
@@ -78,8 +78,18 @@ conda install sdl3 eigen coal magic_enum assimp entt nlohmann_json
   ```
 * [GoogleTest](https://github.com/google/googletest) for the tests | `conda install gtest`
 * [CLI11](https://github.com/CLIUtils/CLI11) for the examples and tests | `conda install cli11`
-* The [Pinocchio](https://github.com/stack-of-tasks/pinocchio) rigid-body dynamics library (required for the `candlewick::multibody` classes and functions). Pinocchio must be built with collision support. | `conda install pinocchio`
-  * With Pinocchio support activated, building the tests requires [example-robot-data](https://github.com/Gepetto/example-robot-data) | `conda install example-robot-data`
+* The [Pinocchio](https://github.com/stack-of-tasks/pinocchio) rigid-body dynamics library (required for the `candlewick::multibody` classes and functions). Pinocchio must be built with collision support. | `conda install -c conda-forge pinocchio`
+  * With Pinocchio support activated, building the tests requires [example-robot-data](https://github.com/Gepetto/example-robot-data) | `conda install -c conda-forge example-robot-data`
+
+The optional dependencies can be installed from conda:
+```bash
+conda install -c conda-forge
+  gtest \  # for testing
+  ffmpeg pkg-config \  # for FFmpeg support
+  cli11 \  # for the examples
+  pinocchio \  # for multibody/Pinocchio support
+  example-robot-data # for the examples, with the above
+```
 
 ### Building
 
