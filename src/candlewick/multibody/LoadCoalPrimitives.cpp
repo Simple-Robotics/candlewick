@@ -53,7 +53,7 @@ MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry,
   switch (nodeType) {
   case GEOM_BOX: {
     auto &g = castGeom<Box>(geometry);
-    transform.scale(2 * g.halfSide.cast<float>());
+    transform.scale(g.halfSide.cast<float>());
     meshData = loadCubeSolid().toOwned();
     break;
   }
