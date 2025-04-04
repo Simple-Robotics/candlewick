@@ -1,3 +1,6 @@
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Simple-Robotics/candlewick/main.svg)](https://results.pre-commit.ci/latest/github/Simple-Robotics/candlewick/main)
+
+
 # Candlewick: a WIP renderer based on SDL_gpu
 
 > [!WARNING]
