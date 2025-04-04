@@ -4,6 +4,7 @@
 #include "LoadMaterial.h"
 #include "../core/DefaultVertex.h"
 
+#include <source_location>
 #include <SDL3/SDL_log.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -50,6 +51,13 @@ MeshData loadAiMesh(const aiMesh *inMesh, const aiMatrix4x4 transform) {
                   std::move(indexData)};
 }
 
+static void log_resource_failure(
+    const char *err_message,
+    std::source_location loc = std::source_location::current()) {
+  SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s: Failed to load resource [%s]",
+              loc.function_name(), err_message);
+}
+
 mesh_load_retc loadSceneMeshes(const char *path,
                                std::vector<MeshData> &meshData) {
 
@@ -66,8 +74,7 @@ mesh_load_retc loadSceneMeshes(const char *path,
   import.SetPropertyBool(AI_CONFIG_IMPORT_COLLADA_IGNORE_UP_DIRECTION, true);
   const aiScene *scene = import.ReadFile(path, pFlags);
   if (!scene) {
-    SDL_Log("%s: Warning: Failed to load resource. %s", __FUNCTION__,
-            import.GetErrorString());
+    log_resource_failure(import.GetErrorString());
     return mesh_load_retc::FAILED_TO_LOAD;
   }
 

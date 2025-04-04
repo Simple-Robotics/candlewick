@@ -8,14 +8,15 @@
 #include <string>
 #include <string_view>
 #include <format>
+#include <source_location>
 
 namespace candlewick {
-struct RAIIException : std::runtime_error {
-  RAIIException(std::string_view msg);
-};
 
-struct InvalidArgument : std::invalid_argument {
-  InvalidArgument(const std::string &msg) : std::invalid_argument(msg) {}
+/// \brief Wrapper for std::runtime_error, which prints out the filename and
+/// code line.
+struct RAIIException : std::runtime_error {
+  RAIIException(std::string_view msg, std::source_location location =
+                                          std::source_location::current());
 };
 
 namespace detail {
@@ -32,18 +33,27 @@ namespace detail {
   }
 
 } // namespace detail
-} // namespace candlewick
 
-#define CANDLEWICK_UNREACHABLE_ASSERT(msg)                                     \
-  SDL_LogError(                                                                \
-      SDL_LOG_CATEGORY_APPLICATION, "%s",                                      \
-      ::candlewick::detail::error_message_format(__FUNCTION__, "{:s}", msg)    \
-          .c_str());                                                           \
-  ::candlewick::unreachable();
-
-#define CANDLEWICK_TERMINATE(msg)                                              \
-  SDL_LogError(                                                                \
-      SDL_LOG_CATEGORY_APPLICATION, "%s",                                      \
-      ::candlewick::detail::error_message_format(__FUNCTION__, "{:s}", msg)    \
-          .c_str());                                                           \
+[[noreturn]]
+inline void terminate_with_message(
+    std::string_view msg,
+    std::source_location location = std::source_location::current()) {
+  SDL_LogError(
+      SDL_LOG_CATEGORY_APPLICATION, "%s",
+      detail::error_message_format(location.function_name(), "{:s}", msg)
+          .c_str());
   ::std::terminate();
+}
+
+[[noreturn]]
+inline void unreachable_with_message(
+    std::string_view msg,
+    std::source_location location = std::source_location::current()) {
+  SDL_LogError(
+      SDL_LOG_CATEGORY_APPLICATION, "%s",
+      detail::error_message_format(location.function_name(), "{:s}", msg)
+          .c_str());
+  ::candlewick::unreachable();
+}
+
+} // namespace candlewick

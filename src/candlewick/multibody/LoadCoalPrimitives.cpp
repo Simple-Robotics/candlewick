@@ -37,7 +37,7 @@ void getPlaneOrHalfspaceNormalOffset(const coal::CollisionGeometry &geometry,
     return;
   }
   default:
-    CANDLEWICK_UNREACHABLE_ASSERT(
+    unreachable_with_message(
         "This function should not be called with a "
         "non-Plane, non-Halfspace coal CollisionGeometry.");
   }

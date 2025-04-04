@@ -2,9 +2,11 @@
 #include <format>
 
 namespace candlewick {
-RAIIException::RAIIException(std::string_view msg)
+RAIIException::RAIIException(std::string_view msg,
+                             std::source_location location)
     : std::runtime_error(
-          std::format("RAIIException: SDL error \'{}\'", msg.data())) {}
+          std::format("{:s}({:d}) RAIIException: SDL error \'{}\'",
+                      location.file_name(), location.line(), msg.data())) {}
 
 namespace detail {
   std::string _error_message_impl(const char *fname, std::string_view _fmtstr,

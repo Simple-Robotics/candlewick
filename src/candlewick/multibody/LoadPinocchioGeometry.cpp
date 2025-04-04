@@ -36,7 +36,7 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
     break;
   }
   default:
-    throw InvalidArgument("Unsupported object type.");
+    terminate_with_message("Unsupported object type.");
     break;
   }
   for (auto &data : meshData) {

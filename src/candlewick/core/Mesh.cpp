@@ -66,14 +66,14 @@ Mesh &Mesh::bindVertexBuffer(Uint32 slot, SDL_GPUBuffer *buffer) {
   for (std::size_t i = 0; i < numVertexBuffers(); i++) {
     if (m_layout.m_bufferDescs[i].slot == slot) {
       if (vertexBuffers[i]) {
-        throw InvalidArgument(
+        terminate_with_message(
             "Rebinding vertex buffer to already occupied slot.");
       }
       vertexBuffers[i] = buffer;
       return *this;
     }
   }
-  CANDLEWICK_TERMINATE("Binding slot not found!");
+  terminate_with_message("Binding slot not found!");
 }
 
 Mesh &Mesh::setIndexBuffer(SDL_GPUBuffer *buffer) {

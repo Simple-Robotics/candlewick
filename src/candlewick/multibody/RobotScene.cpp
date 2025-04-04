@@ -7,6 +7,7 @@
 #include "../core/Components.h"
 #include "../core/TransformUniforms.h"
 #include "../core/Camera.h"
+#include "../core/errors.h"
 
 #include <entt/entity/registry.hpp>
 #include <coal/BVH/BVH_model.h>
@@ -24,6 +25,15 @@ struct alignas(16) light_ubo_t {
   float intensity;
   alignas(16) GpuMat4 projMat;
 };
+
+template <typename T>
+  requires std::is_enum_v<T>
+[[noreturn]] void
+invalid_enum(const char *msg, T type,
+             std::source_location location = std::source_location::current()) {
+  terminate_with_message(
+      std::format("{:s} - {:s}", msg, magic_enum::enum_name(type)), location);
+}
 
 auto RobotScene::pinGeomToPipeline(const coal::CollisionGeometry &geom)
     -> PipelineType {
@@ -44,15 +54,13 @@ auto RobotScene::pinGeomToPipeline(const coal::CollisionGeometry &geom)
     case BVH_MODEL_TRIANGLES:
       return PIPELINE_TRIANGLEMESH;
     case BVH_MODEL_UNKNOWN:
-      throw InvalidArgument("Unknown BVH model type.");
+      invalid_enum("Unknown BVH model type.", BVH_MODEL_UNKNOWN);
     }
   }
   case OT_COUNT:
   case OT_OCTREE:
   case OT_UNKNOWN:
-    throw InvalidArgument(std::format("%s: Unsupported object type %s",
-                                      __FUNCTION__,
-                                      magic_enum::enum_name(objType)));
+    invalid_enum("Unsupported object type", objType);
   }
 }
 
@@ -107,9 +115,7 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
            //  PIPELINE_POINTCLOUD
        }) {
     if (!m_config.pipeline_configs.contains(type)) {
-      throw InvalidArgument(std::format("%s: missing a pipeline config type %s",
-                                        __FUNCTION__,
-                                        magic_enum::enum_name(type)));
+      invalid_enum("missing a pipeline config type", type);
     }
   }
 
@@ -150,7 +156,7 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
     }
 
     if (!renderPipelines[pipeline_type]) {
-      SDL_Log("%s(): building pipeline for type %s", __FUNCTION__,
+      SDL_Log("Building pipeline for type %s",
               magic_enum::enum_name(pipeline_type).data());
       SDL_GPUGraphicsPipeline *pipeline =
           createPipeline(layout, renderer.getSwapchainTextureFormat(),
