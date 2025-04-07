@@ -83,7 +83,10 @@ target_include_directories(
 )
 
 if(FFmpeg_FOUND)
-  message(STATUS "FFmpeg found. Building video module for candlewick_core.")
+  message(
+    STATUS
+    "FFmpeg found (version ${FFmpeg_VERSION}). Building video module for candlewick_core."
+  )
   target_compile_definitions(
     candlewick_core
     PUBLIC CANDLEWICK_WITH_FFMPEG_SUPPORT
