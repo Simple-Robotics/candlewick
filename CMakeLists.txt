@@ -95,7 +95,7 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 if(BUILD_PYTHON_BINDINGS)
-  add_subdirectory(python)
+  add_subdirectory(bindings/python)
 endif()
 
 # install shaders
