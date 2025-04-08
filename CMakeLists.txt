@@ -63,7 +63,7 @@ set(INSTALL_DOCUMENTATION OFF CACHE BOOL "" FORCE)
 set(
   CMAKE_MODULE_PATH
   "${PROJECT_SOURCE_DIR}/cmake/find-external/Simde"
-  "${PROJECT_SOURCE_DIR}/modules"
+  "${PROJECT_SOURCE_DIR}/cmake/find-external/FFmpeg"
   ${CMAKE_MODULE_PATH}
 )
 
@@ -96,6 +96,8 @@ if(BUILD_TESTING)
 endif()
 if(BUILD_PYTHON_BINDINGS)
   add_subdirectory(bindings/python)
+  # WIP nanobind bindings
+  # add_subdirectory(bindings/nanobind)
 endif()
 
 # install shaders
