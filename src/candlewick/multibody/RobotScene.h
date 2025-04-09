@@ -51,7 +51,7 @@ namespace multibody {
       }
     }
 
-    template <PipelineType t> struct pipeline_tag_component {};
+    template <PipelineType t> using pipeline_tag_component = entt::tag<t>;
 
     struct PipelineConfig {
       // shader set

@@ -10,14 +10,13 @@ namespace candlewick::multibody {
 Visualizer::Visualizer(const Config &config, const pin::Model &model,
                        const pin::GeometryModel &visual_model,
                        GuiSystem::GuiBehavior gui_callback)
-    : BaseVisualizer(model, visual_model), registry{}, renderer{NoInit},
+    : BaseVisualizer{model, visual_model}, registry{}, renderer{NoInit},
       guiSystem{NoInit, std::move(gui_callback)} {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     throw std::runtime_error(
         std::format("Failed to init video: {}", SDL_GetError()));
   }
 
-  SDL_Log("Video driver: %s", SDL_GetCurrentVideoDriver());
   ::new (&renderer) Renderer{Device{auto_detect_shader_format_subset()},
                              Window{"Candlewick Pinocchio visualizer",
                                     int(config.width), int(config.height), 0},
@@ -27,9 +26,9 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
   rconfig.enable_shadows = true;
   robotScene.emplace(registry, renderer, visualModel(), visualData(), rconfig);
   debugScene.emplace(registry, renderer);
-  debugScene->addSystem<RobotDebugSystem>(m_model, data());
-  debugScene->addTriad();
-  debugScene->addLineGrid();
+  debugScene->addSystem<RobotDebugSystem>(this->model(), data());
+  std::tie(m_triad, std::ignore) = debugScene->addTriad();
+  std::tie(m_grid, std::ignore) = debugScene->addLineGrid();
 
   robotScene->directionalLight = {
       .direction = {0., -1., -1.},
@@ -40,9 +39,9 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
 
   robotScene->worldSpaceBounds.update({-1., -1., 0.}, {+1., +1., 1.});
 
-  Uint32 prepeat = 25;
-  robotScene->addEnvironmentObject(loadPlaneTiled(0.5f, prepeat, prepeat),
-                                   Mat4f::Identity());
+  const Uint32 prepeat = 25;
+  m_plane = robotScene->addEnvironmentObject(
+      loadPlaneTiled(0.5f, prepeat, prepeat), Mat4f::Identity());
 
   this->resetCamera();
 }

@@ -5,7 +5,7 @@
 #include <SDL3/SDL_log.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
-#include <magic_enum/magic_enum.hpp>
+#include <magic_enum/magic_enum_flags.hpp>
 
 namespace candlewick::multibody {
 
@@ -145,6 +145,9 @@ void Visualizer::default_gui_exec() {
     ImGui::EndMenuBar();
   }
 
+  ImGui::Text("Video driver: %s", SDL_GetCurrentVideoDriver());
+  ImGui::Text("Display pixel density: %.2f / scale: %.2f",
+              renderer.window.pixelDensity(), renderer.window.displayScale());
   ImGui::Text("Device driver: %s", renderer.device.driverName());
 
   ImGui::SeparatorText("Lights and camera controls");
@@ -152,10 +155,16 @@ void Visualizer::default_gui_exec() {
   add_light_gui(light);
   camera_params_gui(controller, cameraParams);
 
+  auto env_checkbox_cb = [this](const char *title, entt::entity ent) {
+    char label[32];
+    SDL_snprintf(label, sizeof(label), "hud.%s", title);
+    auto &dmc = registry.get<DebugMeshComponent>(ent);
+    ImGui::Checkbox(label, &dmc.enable);
+  };
   if (ImGui::CollapsingHeader("Debug Hud elements",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
-    ImGui::CheckboxFlags("hud.Grid", (int *)&m_environmentFlags, ENV_EL_GRID);
-    ImGui::CheckboxFlags("hud.Triad", (int *)&m_environmentFlags, ENV_EL_TRIAD);
+    env_checkbox_cb("grid", m_grid);
+    env_checkbox_cb("triad", m_triad);
   }
 
   if (ImGui::CollapsingHeader("Robot model info",
