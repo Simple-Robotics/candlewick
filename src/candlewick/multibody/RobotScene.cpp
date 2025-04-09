@@ -417,7 +417,19 @@ SDL_GPUGraphicsPipeline *RobotScene::createPipeline(
 
   SDL_GPUColorTargetDescription color_targets[2];
   SDL_zero(color_targets);
-  color_targets[0].format = render_target_format;
+  color_targets[0] = {
+      .format = render_target_format,
+      .blend_state =
+          {
+              .src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+              .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+              .color_blend_op = SDL_GPU_BLENDOP_ADD,
+              .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+              .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+              .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+              .enable_blend = true,
+          },
+  };
   bool had_prepass =
       (type == PIPELINE_TRIANGLEMESH) && m_config.triangle_has_prepass;
   SDL_GPUCompareOp depth_compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
