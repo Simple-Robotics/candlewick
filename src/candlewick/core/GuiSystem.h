@@ -1,3 +1,5 @@
+/// \defgroup gui_util GUI utilities
+/// Tools, render systems, etc... for the Candlewick GUI.
 #include "Core.h"
 #include "Tags.h"
 #include <functional>
@@ -23,5 +25,9 @@ public:
 
   GuiBehavior _callback;
 };
+
+/// \ingroup gui_util
+/// \brief Show an about window providing information about Candlewick.
+void showCandlewickAboutWindow(bool *p_open = NULL);
 
 } // namespace candlewick

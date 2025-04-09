@@ -274,6 +274,7 @@ int main(int argc, char **argv) {
   GuiSystem gui_system{
       renderer, [&](const Renderer &r) {
         static bool demo_window_open = true;
+        static bool show_about_window = false;
 
         ImGui::Begin("Renderer info & controls", nullptr,
                      ImGuiWindowFlags_AlwaysAutoResize);
@@ -342,9 +343,16 @@ int main(int argc, char **argv) {
                           ImGuiColorEditFlags_AlphaPreview);
         ImGui::ColorEdit4("plane color",
                           plane_obj.materials[0].baseColor.data());
+
+        if (ImGui::Button("About candlewick"))
+          show_about_window = true;
+
         ImGui::End();
+
         ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
         ImGui::ShowDemoWindow(&demo_window_open);
+        if (show_about_window)
+          showCandlewickAboutWindow(&show_about_window);
       }};
 
   // MAIN APPLICATION LOOP

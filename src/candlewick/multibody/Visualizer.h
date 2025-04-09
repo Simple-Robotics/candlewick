@@ -67,7 +67,7 @@ public:
 
   /// \brief Default GUI callback for the Visualizer; provide your own callback
   /// to the Visualizer constructor to change this behaviour.
-  static void default_gui_exec(Visualizer &viz);
+  void default_gui_exec();
 
   void resetCamera();
   void loadViewerModel() override;
@@ -79,7 +79,7 @@ public:
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model)
       : Visualizer(config, model, visual_model,
-                   [this](auto &) { default_gui_exec(*this); }) {}
+                   [this](auto &) { this->default_gui_exec(); }) {}
 
   ~Visualizer() override;
 

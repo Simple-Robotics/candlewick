@@ -34,24 +34,43 @@ void camera_params_gui(CylindricalCamera &controller,
   }
 }
 
-void Visualizer::default_gui_exec(Visualizer &viz) {
-  auto &render = viz.renderer;
-  auto &light = viz.robotScene->directionalLight;
-  ImGui::Begin("Renderer info & controls", nullptr,
-               ImGuiWindowFlags_AlwaysAutoResize);
-  ImGui::Text("Device driver: %s", render.device.driverName());
+void Visualizer::default_gui_exec() {
+  static bool show_imgui_about = false;
+  static bool show_our_about = false;
+
+  // Verify ABI compatibility between caller code and compiled version of Dear
+  // ImGui. This helps detects some build issues. Check demo code in
+  // imgui_demo.cpp.
+  IMGUI_CHECKVERSION();
+
+  if (show_imgui_about)
+    ImGui::ShowAboutWindow(&show_imgui_about);
+  if (show_our_about)
+    ::candlewick::showCandlewickAboutWindow(&show_our_about);
+
+  auto &light = robotScene->directionalLight;
+  ImGuiWindowFlags window_flags = 0;
+  window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+  window_flags |= ImGuiWindowFlags_MenuBar;
+  ImGui::Begin("Renderer info & controls", nullptr, window_flags);
+
+  if (ImGui::BeginMenuBar()) {
+    ImGui::MenuItem("About Dear ImGui", NULL, &show_imgui_about);
+    ImGui::MenuItem("About Candlewick", NULL, &show_our_about);
+    ImGui::EndMenuBar();
+  }
+
+  ImGui::Text("Device driver: %s", renderer.device.driverName());
 
   ImGui::SeparatorText("Lights");
   ImGui::SetItemTooltip("Configuration for lights");
   add_light_gui(light);
 
-  camera_params_gui(viz.controller, viz.cameraParams);
+  camera_params_gui(controller, cameraParams);
 
   if (ImGui::TreeNode("Debug Hud elements")) {
-    ImGui::CheckboxFlags("hud.Grid", (int *)&viz.m_environmentFlags,
-                         ENV_EL_GRID);
-    ImGui::CheckboxFlags("hud.Triad", (int *)&viz.m_environmentFlags,
-                         ENV_EL_TRIAD);
+    ImGui::CheckboxFlags("hud.Grid", (int *)&m_environmentFlags, ENV_EL_GRID);
+    ImGui::CheckboxFlags("hud.Triad", (int *)&m_environmentFlags, ENV_EL_TRIAD);
     ImGui::TreePop();
   }
 

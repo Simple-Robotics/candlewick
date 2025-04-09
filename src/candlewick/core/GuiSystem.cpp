@@ -1,5 +1,6 @@
 #include "GuiSystem.h"
 #include "Renderer.h"
+#include "candlewick/config.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlgpu3.h"
 
@@ -65,6 +66,33 @@ void GuiSystem::release() {
   ImGui_ImplSDL3_Shutdown();
   ImGui_ImplSDLGPU3_Shutdown();
   ImGui::DestroyContext();
+}
+
+void showCandlewickAboutWindow(bool *p_open) {
+  if (!ImGui::Begin("About Candlewick", p_open,
+                    ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::End();
+    return;
+  }
+
+  ImGui::Text("Candlewick v%s", CANDLEWICK_VERSION);
+  ImGui::Spacing();
+
+  ImGui::TextLinkOpenURL("Homepage",
+                         "https://github.com/Simple-Robotics/candlewick/");
+  ImGui::SameLine();
+  ImGui::TextLinkOpenURL(
+      "Releases", "https://github.com/Simple-Robotics/candlewick/releases");
+
+  ImGui::Separator();
+  ImGui::Text("Copyright (c) 2024-2025 Inria");
+  constexpr float wrap_width = 400.f;
+  ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + wrap_width);
+  ImGui::Text("Candlewick is licensed under the BSD 2-Clause License, see "
+              "LICENSE file for more information.");
+  ImGui::PopTextWrapPos();
+
+  ImGui::End();
 }
 
 } // namespace candlewick
