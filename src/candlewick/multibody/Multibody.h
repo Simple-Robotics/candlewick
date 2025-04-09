@@ -16,5 +16,10 @@ namespace multibody {
 
   using SE3f = pin::SE3Tpl<float>;
   using Motionf = pin::MotionTpl<float>;
+
+  /// \ingroup gui_util
+  /// \brief Display Pinocchio model and geometry model info in ImGui.
+  void guiPinocchioModelInfo(const pin::Model &model,
+                             const pin::GeometryModel &geom_model);
 } // namespace multibody
 } // namespace candlewick

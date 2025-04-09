@@ -5,8 +5,93 @@
 #include <SDL3/SDL_log.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
+#include <magic_enum/magic_enum.hpp>
 
 namespace candlewick::multibody {
+
+void guiPinocchioModelInfo(const pin::Model &model,
+                           const pin::GeometryModel &geom_model) {
+  const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+  ImGuiTableFlags flags = 0;
+  flags |= ImGuiTableFlags_SizingStretchProp;
+  if (ImGui::BeginTable("pin_info_table", 4, flags)) {
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("No. of joints / frames");
+    ImGui::TableSetupColumn("No. of geometries");
+    ImGui::TableSetupColumn("nq / nv");
+    ImGui::TableHeadersRow();
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("%s", model.name.c_str());
+    ImGui::TableNextColumn();
+    ImGui::Text("%d / %d", model.njoints, model.nframes);
+    ImGui::TableNextColumn();
+    ImGui::Text("%zu", geom_model.ngeoms);
+    ImGui::TableNextColumn();
+    ImGui::Text("%d / %d", model.nq, model.nv);
+
+    ImGui::EndTable();
+  }
+
+  flags |= ImGuiTableFlags_RowBg;
+  flags |= ImGuiTableFlags_ScrollY;
+  ImVec2 outer_size{0.0f, TEXT_BASE_HEIGHT * 12};
+
+  ImGui::Text("Frames");
+  ImGui::Spacing();
+
+  if (ImGui::BeginTable("pin_frames_table", 3, flags, outer_size)) {
+    ImGui::TableSetupColumn("Index");
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("Type");
+    ImGui::TableHeadersRow();
+
+    for (pin::FrameIndex i = 0; i < pin::FrameIndex(model.nframes); i++) {
+      const pin::Frame &frame = model.frames[i];
+
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("%zu", i);
+      ImGui::TableNextColumn();
+      ImGui::Text("%s", frame.name.c_str());
+      ImGui::TableNextColumn();
+      ImGui::Text("%s", magic_enum::enum_name(frame.type).data());
+    }
+    ImGui::EndTable();
+  }
+
+  ImGui::Text("Geometry model");
+  ImGui::Spacing();
+
+  if (ImGui::BeginTable("pin_geom_table", 4, flags, outer_size)) {
+    ImGui::TableSetupColumn("Index");
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("Object / node type");
+    ImGui::TableSetupColumn("Parent joint");
+    ImGui::TableHeadersRow();
+
+    for (size_t id = 0; id < geom_model.ngeoms; id++) {
+      auto &gobj = geom_model.geometryObjects[id];
+      const coal::CollisionGeometry &coll = *gobj.geometry;
+      coal::OBJECT_TYPE objType = coll.getObjectType();
+      coal::NODE_TYPE nodeType = coll.getNodeType();
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::Text("%zu", id);
+      ImGui::TableNextColumn();
+      ImGui::Text("%s", gobj.name.c_str());
+      ImGui::TableNextColumn();
+      ImGui::Text("%s / %s", magic_enum::enum_name(objType).data(),
+                  magic_enum::enum_name(nodeType).data());
+      ImGui::TableNextColumn();
+      pin::JointIndex parent_joint = gobj.parentJoint;
+      const char *parent_joint_name = model.names[parent_joint].c_str();
+      ImGui::Text("%zu (%s)", parent_joint, parent_joint_name);
+    }
+    ImGui::EndTable();
+  }
+}
 
 void add_light_gui(DirectionalLight &light) {
   ImGui::SliderFloat("intensity", &light.intensity, 0.1f, 10.f);
@@ -62,16 +147,20 @@ void Visualizer::default_gui_exec() {
 
   ImGui::Text("Device driver: %s", renderer.device.driverName());
 
-  ImGui::SeparatorText("Lights");
-  ImGui::SetItemTooltip("Configuration for lights");
-  add_light_gui(light);
+  ImGui::SeparatorText("Lights and camera controls");
 
+  add_light_gui(light);
   camera_params_gui(controller, cameraParams);
 
-  if (ImGui::TreeNode("Debug Hud elements")) {
+  if (ImGui::CollapsingHeader("Debug Hud elements",
+                              ImGuiTreeNodeFlags_DefaultOpen)) {
     ImGui::CheckboxFlags("hud.Grid", (int *)&m_environmentFlags, ENV_EL_GRID);
     ImGui::CheckboxFlags("hud.Triad", (int *)&m_environmentFlags, ENV_EL_TRIAD);
-    ImGui::TreePop();
+  }
+
+  if (ImGui::CollapsingHeader("Robot model info",
+                              ImGuiTreeNodeFlags_DefaultOpen)) {
+    guiPinocchioModelInfo(m_model, visualModel());
   }
 
   ImGui::End();

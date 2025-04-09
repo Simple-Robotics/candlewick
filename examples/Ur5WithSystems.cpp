@@ -333,6 +333,10 @@ int main(int argc, char **argv) {
           ImGui::RadioButton("Heatmap", (int *)&depth_mode, 1);
         }
 
+        ImGui::SeparatorText("Robot model");
+        ImGui::SetItemTooltip("Information about the displayed robot model.");
+        multibody::guiPinocchioModelInfo(model, geom_model);
+
         ImGui::SeparatorText("Lights");
         ImGui::SliderFloat("intens.", &sceneLight.intensity, 0.1f, 10.0f);
         ImGui::DragFloat3("direction", sceneLight.direction.data(), 0.0f, -1.f,
