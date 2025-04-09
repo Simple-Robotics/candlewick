@@ -164,6 +164,7 @@ void Visualizer::default_gui_exec() {
   if (ImGui::CollapsingHeader("Debug Hud elements",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
     env_checkbox_cb("grid", m_grid);
+    ImGui::SameLine();
     env_checkbox_cb("triad", m_triad);
   }
 
