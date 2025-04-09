@@ -169,4 +169,11 @@ namespace math {
     return M.topLeftCorner<3, 3>().inverse().transpose();
   }
 } // namespace math
+
+class Mesh;
+
+/// \brief Intermediary argument type for shadow-casting or opaque objects. For
+/// use in depth or light pre-passes.
+using OpaqueCastable = std::tuple<const Mesh &, Mat4f>;
+
 } // namespace candlewick

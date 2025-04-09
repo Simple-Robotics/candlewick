@@ -209,10 +209,9 @@ void RobotScene::collectOpaqueCastables() {
   m_castables.clear();
 
   // collect castable objects
-  for (auto [ent, tr, meshMaterial] : all_view.each()) {
-    const Mesh &mesh = meshMaterial.mesh;
-    m_castables.emplace_back(ent, mesh, tr);
-  }
+  all_view.each([this](auto &&tr, auto &&meshMaterial) {
+    m_castables.emplace_back(meshMaterial.mesh, tr);
+  });
 }
 
 void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {

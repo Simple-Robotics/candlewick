@@ -8,7 +8,6 @@
 #include <span>
 
 namespace candlewick {
-struct OpaqueCastable;
 namespace effects {
 
   /// \brief WIP screen space shadows

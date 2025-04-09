@@ -22,11 +22,10 @@
 
 #include "Core.h"
 #include "Camera.h"
-#include "Mesh.h"
 #include "math_types.h"
 #include "LightUniforms.h"
 
-#include <entt/entity/fwd.hpp>
+#include <SDL3/SDL_gpu.h>
 #include <span>
 
 namespace candlewick {
@@ -89,17 +88,6 @@ struct ShadowPassInfo : DepthPassInfo {
                                              const ShadowPassConfig &config);
 
   void release();
-};
-
-/// \ingroup depth_pass
-/// \brief Struct for shadow-casting or opaque objects. For use in depth or
-/// light pre-passes.
-/// \sa renderDepthOnlyPass()
-/// \sa renderShadowPass()
-struct OpaqueCastable {
-  entt::entity ent;
-  const Mesh &mesh;
-  Mat4f transform;
 };
 
 /// \ingroup depth_pass

@@ -146,7 +146,7 @@ void renderDepthOnlyPass(CommandBuffer &cmdBuf, const DepthPassInfo &passInfo,
 
   Mat4f mvp;
   for (auto &cs : castables) {
-    auto &[ent, mesh, tr] = cs;
+    auto &&[mesh, tr] = cs;
     assert(validateMesh(mesh));
     rend::bindMesh(render_pass, mesh);
     mvp.noalias() = viewProj * tr;

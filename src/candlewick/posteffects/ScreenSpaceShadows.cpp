@@ -120,10 +120,11 @@ namespace effects {
                                }});
 
     for (auto &cs : castables) {
-      GpuMat4 mvp = vp * cs.transform;
+      auto &&[mesh, tr] = cs;
+      GpuMat4 mvp = vp * tr;
       cmdBuf.pushVertexUniform(0, &mvp, sizeof(mvp));
-      rend::bindMesh(render_pass, cs.mesh);
-      rend::draw(render_pass, cs.mesh);
+      rend::bindMesh(render_pass, mesh);
+      rend::draw(render_pass, mesh);
     }
 
     SDL_DrawGPUPrimitives(render_pass, 6, 1, 0, 0);
