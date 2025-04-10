@@ -1,5 +1,8 @@
 #include "GuiSystem.h"
 #include "Renderer.h"
+#include "Components.h"
+#include "LightUniforms.h"
+#include "candlewick/config.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlgpu3.h"
 
@@ -65,6 +68,47 @@ void GuiSystem::release() {
   ImGui_ImplSDL3_Shutdown();
   ImGui_ImplSDLGPU3_Shutdown();
   ImGui::DestroyContext();
+}
+
+void showCandlewickAboutWindow(bool *p_open) {
+  if (!ImGui::Begin("About Candlewick", p_open,
+                    ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::End();
+    return;
+  }
+
+  ImGui::Text("Candlewick v%s", CANDLEWICK_VERSION);
+  ImGui::Spacing();
+
+  ImGui::TextLinkOpenURL("Homepage",
+                         "https://github.com/Simple-Robotics/candlewick/");
+  ImGui::SameLine();
+  ImGui::TextLinkOpenURL(
+      "Releases", "https://github.com/Simple-Robotics/candlewick/releases");
+
+  ImGui::Separator();
+  ImGui::Text("Copyright (c) 2024-2025 Inria");
+  constexpr float wrap_width = 400.f;
+  ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + wrap_width);
+  ImGui::Text("Candlewick is licensed under the BSD 2-Clause License, see "
+              "LICENSE file for more information.");
+  ImGui::PopTextWrapPos();
+
+  ImGui::End();
+}
+
+void add_light_controls_gui(DirectionalLight &light) {
+  ImGui::SliderFloat("intensity", &light.intensity, 0.1f, 10.f);
+  ImGui::DragFloat3("direction", light.direction.data(), 0.0f, -1.f, 1.f);
+  light.direction.stableNormalize();
+  ImGui::ColorEdit3("color", light.color.data());
+}
+
+void add_disable_checkbox(const char *label, entt::registry &reg,
+                          entt::entity id, bool &flag) {
+  if (ImGui::Checkbox(label, &flag)) {
+    flag ? (void)reg.remove<Disable>(id) : reg.emplace<Disable>(id);
+  }
 }
 
 } // namespace candlewick

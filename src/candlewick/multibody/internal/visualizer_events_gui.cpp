@@ -1,18 +1,110 @@
 #include "../Visualizer.h"
+#include "../Components.h"
 #include "candlewick/core/CameraControls.h"
+#include "candlewick/core/Components.h"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_log.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
+#include <magic_enum/magic_enum_flags.hpp>
 
 namespace candlewick::multibody {
 
-void add_light_gui(DirectionalLight &light) {
-  ImGui::SliderFloat("intensity", &light.intensity, 0.1f, 10.f);
-  ImGui::DragFloat3("direction", light.direction.data(), 0.0f, -1.f, 1.f);
-  light.direction.stableNormalize();
-  ImGui::ColorEdit3("color", light.color.data());
+void guiPinocchioModelInfo(const pin::Model &model,
+                           const pin::GeometryModel &geom_model,
+                           entt::registry &reg) {
+  const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+  ImGuiTableFlags flags = 0;
+  flags |= ImGuiTableFlags_SizingStretchProp;
+  if (ImGui::BeginTable("pin_info_table", 4, flags)) {
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("No. of joints / frames");
+    ImGui::TableSetupColumn("nq / nv");
+    ImGui::TableHeadersRow();
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::Text("%s", model.name.c_str());
+    ImGui::TableNextColumn();
+    ImGui::Text("%d / %d", model.njoints, model.nframes);
+    ImGui::TableNextColumn();
+    ImGui::Text("%d / %d", model.nq, model.nv);
+
+    ImGui::EndTable();
+  }
+
+  flags |= ImGuiTableFlags_RowBg;
+  flags |= ImGuiTableFlags_ScrollY;
+  ImVec2 outer_size{0.0f, TEXT_BASE_HEIGHT * 12};
+
+  ImGui::Text("Frames");
+  ImGui::Spacing();
+
+  if (ImGui::BeginTable("pin_frames_table", 3, flags, outer_size)) {
+    ImGui::TableSetupColumn("Index");
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("Type");
+    ImGui::TableHeadersRow();
+
+    for (pin::FrameIndex i = 0; i < pin::FrameIndex(model.nframes); i++) {
+      const pin::Frame &frame = model.frames[i];
+
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("%zu", i);
+      ImGui::TableNextColumn();
+      ImGui::Text("%s", frame.name.c_str());
+      ImGui::TableNextColumn();
+      ImGui::Text("%s", magic_enum::enum_name(frame.type).data());
+    }
+    ImGui::EndTable();
+  }
+
+  ImGui::Text("Geometry model");
+  ImGui::Spacing();
+  ImGui::Text("No. of geometries: %zu", geom_model.ngeoms);
+
+  if (ImGui::BeginTable("pin_geom_table", 5, flags | ImGuiTableFlags_Sortable,
+                        outer_size)) {
+    ImGui::TableSetupColumn("Index");
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("Object / node type");
+    ImGui::TableSetupColumn("Parent joint");
+    ImGui::TableSetupColumn("Show");
+    ImGui::TableHeadersRow();
+
+    auto view = reg.view<const PinGeomObjComponent>();
+    // grab storage for the Disable component
+    // we won't filter on it, but use it to query if entities are disabled
+    auto &disabled = reg.storage<Disable>();
+
+    for (auto [ent, id] : view.each()) {
+      auto &gobj = geom_model.geometryObjects[id];
+      const coal::CollisionGeometry &coll = *gobj.geometry;
+      coal::OBJECT_TYPE objType = coll.getObjectType();
+      coal::NODE_TYPE nodeType = coll.getNodeType();
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::Text("%zu", id.geom_index);
+      ImGui::TableNextColumn();
+      ImGui::Text("%s", gobj.name.c_str());
+      ImGui::TableNextColumn();
+      ImGui::Text("%s / %s", magic_enum::enum_name(objType).data(),
+                  magic_enum::enum_name(nodeType).data());
+      ImGui::TableNextColumn();
+      pin::JointIndex parent_joint = gobj.parentJoint;
+      const char *parent_joint_name = model.names[parent_joint].c_str();
+      ImGui::Text("%zu (%s)", parent_joint, parent_joint_name);
+
+      ImGui::TableNextColumn();
+      char chk_label[32];
+      bool enabled = !disabled.contains(ent);
+      SDL_snprintf(chk_label, 32, "enabled###%zu", id.geom_index);
+      add_disable_checkbox(chk_label, reg, ent, enabled);
+    }
+    ImGui::EndTable();
+  }
 }
 
 void camera_params_gui(CylindricalCamera &controller,
@@ -34,25 +126,63 @@ void camera_params_gui(CylindricalCamera &controller,
   }
 }
 
-void Visualizer::default_gui_exec(Visualizer &viz) {
-  auto &render = viz.renderer;
-  auto &light = viz.robotScene->directionalLight;
-  ImGui::Begin("Renderer info & controls", nullptr,
-               ImGuiWindowFlags_AlwaysAutoResize);
-  ImGui::Text("Device driver: %s", render.device.driverName());
+void Visualizer::default_gui_exec() {
 
-  ImGui::SeparatorText("Lights");
-  ImGui::SetItemTooltip("Configuration for lights");
-  add_light_gui(light);
+  // Verify ABI compatibility between caller code and compiled version of Dear
+  // ImGui. This helps detects some build issues. Check demo code in
+  // imgui_demo.cpp.
+  IMGUI_CHECKVERSION();
 
-  camera_params_gui(viz.controller, viz.cameraParams);
+  if (envStatus.show_imgui_about)
+    ImGui::ShowAboutWindow(&envStatus.show_imgui_about);
+  if (envStatus.show_our_about)
+    ::candlewick::showCandlewickAboutWindow(&envStatus.show_our_about);
 
-  if (ImGui::TreeNode("Debug Hud elements")) {
-    ImGui::CheckboxFlags("hud.Grid", (int *)&viz.m_environmentFlags,
-                         ENV_EL_GRID);
-    ImGui::CheckboxFlags("hud.Triad", (int *)&viz.m_environmentFlags,
-                         ENV_EL_TRIAD);
-    ImGui::TreePop();
+  auto &light = robotScene->directionalLight;
+  ImGuiWindowFlags window_flags = 0;
+  window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+  window_flags |= ImGuiWindowFlags_MenuBar;
+  ImGui::Begin("Renderer info & controls", nullptr, window_flags);
+
+  if (ImGui::BeginMenuBar()) {
+    ImGui::MenuItem("About Dear ImGui", NULL, &envStatus.show_imgui_about);
+    ImGui::MenuItem("About Candlewick", NULL, &envStatus.show_our_about);
+    ImGui::EndMenuBar();
+  }
+
+  ImGui::Text("Video driver: %s", SDL_GetCurrentVideoDriver());
+  ImGui::Text("Display pixel density: %.2f / scale: %.2f",
+              renderer.window.pixelDensity(), renderer.window.displayScale());
+  ImGui::Text("Device driver: %s", renderer.device.driverName());
+
+  ImGui::SeparatorText("Lights and camera controls");
+
+  add_light_controls_gui(light);
+  camera_params_gui(controller, cameraParams);
+
+  auto add_env_checkbox = [this](const char *title, entt::entity ent) {
+    char label[32];
+    SDL_snprintf(label, sizeof(label), "hud.%s", title);
+    auto &dmc = registry.get<DebugMeshComponent>(ent);
+    ImGui::Checkbox(label, &dmc.enable);
+  };
+  if (ImGui::CollapsingHeader("Settings (HUD and env)",
+                              ImGuiTreeNodeFlags_DefaultOpen)) {
+    add_env_checkbox("grid", m_grid);
+    ImGui::SameLine();
+    {
+      auto &dmc = registry.get<DebugMeshComponent>(m_grid);
+      ImGui::ColorEdit4("hud.grid.color", dmc.colors[0].data(),
+                        ImGuiColorEditFlags_AlphaPreview);
+    }
+    add_env_checkbox("triad", m_triad);
+    add_disable_checkbox("Render plane", registry, m_plane,
+                         envStatus.show_plane);
+  }
+
+  if (ImGui::CollapsingHeader("Robot model info",
+                              ImGuiTreeNodeFlags_DefaultOpen)) {
+    guiPinocchioModelInfo(m_model, visualModel(), registry);
   }
 
   ImGui::End();

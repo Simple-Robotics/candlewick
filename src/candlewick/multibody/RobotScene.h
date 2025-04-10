@@ -51,7 +51,7 @@ namespace multibody {
       }
     }
 
-    template <PipelineType t> struct pipeline_tag_component {};
+    template <PipelineType t> using pipeline_tag_component = entt::tag<t>;
 
     struct PipelineConfig {
       // shader set
@@ -134,8 +134,6 @@ namespace multibody {
     const entt::registry &registry() const { return m_registry; }
 
     const Device &device() { return m_renderer.device; }
-
-    void initGBuffer(const Renderer &renderer);
 
     SDL_GPUGraphicsPipeline *renderPipelines[kNumPipelineTypes];
     DirectionalLight directionalLight;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pinocchio/multibody/fwd.hpp>
+#include <entt/entity/registry.hpp>
 
 namespace candlewick {
 /// \brief Support for the Pinocchio rigid-body algorithms library and the Coal
@@ -16,5 +17,14 @@ namespace multibody {
 
   using SE3f = pin::SE3Tpl<float>;
   using Motionf = pin::MotionTpl<float>;
+  using Inertiaf = pin::InertiaTpl<float>;
+  using Forcef = pin::ForceTpl<float>;
+
+  /// \ingroup gui_util
+  /// \brief Display Pinocchio model and geometry model info in ImGui.
+  /// \image html robot-info-panel.png "Robot information panel."
+  void guiPinocchioModelInfo(const pin::Model &model,
+                             const pin::GeometryModel &geom_model,
+                             entt::registry &reg);
 } // namespace multibody
 } // namespace candlewick

@@ -4,7 +4,6 @@
 #include <SDL3/SDL_assert.h>
 #include <SDL3/SDL_log.h>
 
-#include <format>
 #define JSON_NO_IO
 #define JSON_USE_IMPLICIT_CONVERSIONS 0
 #include <nlohmann/json.hpp>
@@ -41,7 +40,6 @@ ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
   char shader_path[256];
   SDL_snprintf(shader_path, sizeof(shader_path), "%s/%s.%s", g_shader_dir,
                filename, shader_ext);
-  SDL_Log("Loading shader file %s", shader_path);
 
   size_t code_size;
   void *code = SDL_LoadFile(shader_path, &code_size);

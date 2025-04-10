@@ -274,9 +274,15 @@ int main(int argc, char **argv) {
   GuiSystem gui_system{
       renderer, [&](const Renderer &r) {
         static bool demo_window_open = true;
+        static bool show_about_window = false;
+        static bool show_plane_vis = true;
 
         ImGui::Begin("Renderer info & controls", nullptr,
                      ImGuiWindowFlags_AlwaysAutoResize);
+
+        ImGui::Text("Video driver: %s", SDL_GetCurrentVideoDriver());
+        ImGui::Text("Display pixel density: %.2f / scale: %.2f",
+                    r.window.pixelDensity(), r.window.displayScale());
         ImGui::Text("Device driver: %s", r.device.driverName());
         ImGui::SeparatorText("Camera");
         bool ortho_change, persp_change;
@@ -307,11 +313,8 @@ int main(int argc, char **argv) {
         }
 
         ImGui::SeparatorText("Env. status");
-        static bool plane_vis = true;
-        if (ImGui::Checkbox("Render plane", &plane_vis)) {
-          plane_vis ? (void)registry.remove<Disable>(plane_entity)
-                    : registry.emplace<Disable>(plane_entity);
-        }
+        add_disable_checkbox("Render plane", registry, plane_entity,
+                             show_plane_vis);
         ImGui::Checkbox("Render grid", &grid.enable);
         ImGui::Checkbox("Render triad", &triad.enable);
         ImGui::Checkbox("Render frustum", &showFrustum);
@@ -332,19 +335,28 @@ int main(int argc, char **argv) {
           ImGui::RadioButton("Heatmap", (int *)&depth_mode, 1);
         }
 
+        ImGui::SeparatorText("Robot model");
+        ImGui::SetItemTooltip("Information about the displayed robot model.");
+        multibody::guiPinocchioModelInfo(model, geom_model, registry);
+
         ImGui::SeparatorText("Lights");
-        ImGui::SliderFloat("intens.", &sceneLight.intensity, 0.1f, 10.0f);
-        ImGui::DragFloat3("direction", sceneLight.direction.data(), 0.0f, -1.f,
-                          1.f);
-        ImGui::ColorEdit3("color", sceneLight.color.data());
+        add_light_controls_gui(sceneLight);
+
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),
                           ImGuiColorEditFlags_AlphaPreview);
         ImGui::ColorEdit4("plane color",
                           plane_obj.materials[0].baseColor.data());
+
+        if (ImGui::Button("About candlewick"))
+          show_about_window = true;
+
         ImGui::End();
+
         ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
         ImGui::ShowDemoWindow(&demo_window_open);
+        if (show_about_window)
+          showCandlewickAboutWindow(&show_about_window);
       }};
 
   // MAIN APPLICATION LOOP

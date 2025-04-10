@@ -43,12 +43,13 @@ struct CameraControlParams {
 /// run until shouldExit() returns true.
 class Visualizer final : public BaseVisualizer {
 public:
-  enum EnvElements : int {
-    ENV_EL_GRID = 1 << 0,
-    ENV_EL_TRIAD = 1 << 1,
-  };
-
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
+
+  struct EnvStatus {
+    bool show_our_about = false;
+    bool show_imgui_about = false;
+    bool show_plane = false;
+  };
 
   using BaseVisualizer::setCameraPose;
   entt::registry registry;
@@ -58,6 +59,7 @@ public:
   std::optional<DebugScene> debugScene;
   CylindricalCamera controller;
   CameraControlParams cameraParams;
+  EnvStatus envStatus;
 
   struct Config {
     Uint32 width;
@@ -67,7 +69,7 @@ public:
 
   /// \brief Default GUI callback for the Visualizer; provide your own callback
   /// to the Visualizer constructor to change this behaviour.
-  static void default_gui_exec(Visualizer &viz);
+  void default_gui_exec();
 
   void resetCamera();
   void loadViewerModel() override;
@@ -79,7 +81,7 @@ public:
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model)
       : Visualizer(config, model, visual_model,
-                   [this](auto &) { default_gui_exec(*this); }) {}
+                   [this](auto &) { this->default_gui_exec(); }) {}
 
   ~Visualizer() override;
 
@@ -108,7 +110,7 @@ public:
 private:
   bool m_cameraControl = true;
   bool m_shouldExit = false;
-  EnvElements m_environmentFlags = ENV_EL_TRIAD;
+  entt::entity m_plane, m_grid, m_triad;
 
   void render();
 };
