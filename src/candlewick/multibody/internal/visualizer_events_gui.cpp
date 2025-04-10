@@ -113,6 +113,7 @@ void camera_params_gui(CylindricalCamera &controller,
 }
 
 void Visualizer::default_gui_exec() {
+  static bool show_plane = false;
   static bool show_imgui_about = false;
   static bool show_our_about = false;
 
@@ -145,7 +146,8 @@ void Visualizer::default_gui_exec() {
 
   ImGui::SeparatorText("Lights and camera controls");
 
-  add_light_gui(light);
+  add_disable_checkbox("Render plane", registry, m_plane, show_plane);
+  add_light_controls_gui(light);
   camera_params_gui(controller, cameraParams);
 
   auto env_checkbox_cb = [this](const char *title, entt::entity ent) {

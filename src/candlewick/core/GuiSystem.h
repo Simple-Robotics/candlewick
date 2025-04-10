@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "Tags.h"
 #include <functional>
+#include <entt/entity/fwd.hpp>
 
 namespace candlewick {
 
@@ -32,6 +33,12 @@ void showCandlewickAboutWindow(bool *p_open = NULL);
 
 struct DirectionalLight;
 
-void add_light_gui(DirectionalLight &light);
+/// \brief Adds a set of ImGui elements to control a DirectionalLight.
+void add_light_controls_gui(DirectionalLight &light);
+
+/// \brief Adds an ImGui::Checkbox which toggles the Disable component on the
+/// entity.
+void add_disable_checkbox(const char *label, entt::registry &reg,
+                          entt::entity id, bool &flag);
 
 } // namespace candlewick

@@ -313,10 +313,7 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Env. status");
         static bool plane_vis = true;
-        if (ImGui::Checkbox("Render plane", &plane_vis)) {
-          plane_vis ? (void)registry.remove<Disable>(plane_entity)
-                    : registry.emplace<Disable>(plane_entity);
-        }
+        add_disable_checkbox("Render plane", registry, plane_entity, plane_vis);
         ImGui::Checkbox("Render grid", &grid.enable);
         ImGui::Checkbox("Render triad", &triad.enable);
         ImGui::Checkbox("Render frustum", &showFrustum);
@@ -342,7 +339,7 @@ int main(int argc, char **argv) {
         multibody::guiPinocchioModelInfo(model, geom_model);
 
         ImGui::SeparatorText("Lights");
-        add_light_gui(sceneLight);
+        add_light_controls_gui(sceneLight);
 
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),

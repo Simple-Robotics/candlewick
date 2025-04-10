@@ -1,5 +1,6 @@
 #include "GuiSystem.h"
 #include "Renderer.h"
+#include "Components.h"
 #include "LightUniforms.h"
 #include "candlewick/config.h"
 #include "imgui_impl_sdl3.h"
@@ -96,11 +97,18 @@ void showCandlewickAboutWindow(bool *p_open) {
   ImGui::End();
 }
 
-void add_light_gui(DirectionalLight &light) {
+void add_light_controls_gui(DirectionalLight &light) {
   ImGui::SliderFloat("intensity", &light.intensity, 0.1f, 10.f);
   ImGui::DragFloat3("direction", light.direction.data(), 0.0f, -1.f, 1.f);
   light.direction.stableNormalize();
   ImGui::ColorEdit3("color", light.color.data());
+}
+
+void add_disable_checkbox(const char *label, entt::registry &reg,
+                          entt::entity id, bool &flag) {
+  if (ImGui::Checkbox(label, &flag)) {
+    flag ? (void)reg.remove<Disable>(id) : reg.emplace<Disable>(id);
+  }
 }
 
 } // namespace candlewick
