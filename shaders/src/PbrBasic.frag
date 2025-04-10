@@ -102,8 +102,8 @@ float geometrySmith(vec3 normal, vec3 V, vec3 L, float roughness) {
 
 #ifdef HAS_SHADOW_MAPS
 float calcShadowmap(float NdotL) {
-    float bias = max(0.05 * (1.0 - NdotL), 0.005);
-    // float bias = 0.005;
+    // float bias = max(0.05 * (1.0 - NdotL), 0.005);
+    float bias = 0.005;
     vec3 texCoords = fragLightPos;
     texCoords.x = 0.5 + texCoords.x * 0.5;
     texCoords.y = 0.5 - texCoords.y * 0.5;
