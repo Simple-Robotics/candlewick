@@ -1,5 +1,6 @@
 #include "Visualizer.h"
 #include "../core/Device.h"
+#include "../core/Components.h"
 #include "../core/CameraControls.h"
 #include "../core/DepthAndShadowPass.h"
 #include "../primitives/Plane.h"
@@ -42,6 +43,9 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
   const Uint32 prepeat = 25;
   m_plane = robotScene->addEnvironmentObject(
       loadPlaneTiled(0.5f, prepeat, prepeat), Mat4f::Identity());
+  if (!envStatus.show_plane) {
+    registry.emplace<Disable>(m_plane);
+  }
 
   this->resetCamera();
 }

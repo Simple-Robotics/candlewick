@@ -113,19 +113,16 @@ void camera_params_gui(CylindricalCamera &controller,
 }
 
 void Visualizer::default_gui_exec() {
-  static bool show_plane = false;
-  static bool show_imgui_about = false;
-  static bool show_our_about = false;
 
   // Verify ABI compatibility between caller code and compiled version of Dear
   // ImGui. This helps detects some build issues. Check demo code in
   // imgui_demo.cpp.
   IMGUI_CHECKVERSION();
 
-  if (show_imgui_about)
-    ImGui::ShowAboutWindow(&show_imgui_about);
-  if (show_our_about)
-    ::candlewick::showCandlewickAboutWindow(&show_our_about);
+  if (envStatus.show_imgui_about)
+    ImGui::ShowAboutWindow(&envStatus.show_imgui_about);
+  if (envStatus.show_our_about)
+    ::candlewick::showCandlewickAboutWindow(&envStatus.show_our_about);
 
   auto &light = robotScene->directionalLight;
   ImGuiWindowFlags window_flags = 0;
@@ -134,8 +131,8 @@ void Visualizer::default_gui_exec() {
   ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
   if (ImGui::BeginMenuBar()) {
-    ImGui::MenuItem("About Dear ImGui", NULL, &show_imgui_about);
-    ImGui::MenuItem("About Candlewick", NULL, &show_our_about);
+    ImGui::MenuItem("About Dear ImGui", NULL, &envStatus.show_imgui_about);
+    ImGui::MenuItem("About Candlewick", NULL, &envStatus.show_our_about);
     ImGui::EndMenuBar();
   }
 
@@ -146,21 +143,27 @@ void Visualizer::default_gui_exec() {
 
   ImGui::SeparatorText("Lights and camera controls");
 
-  add_disable_checkbox("Render plane", registry, m_plane, show_plane);
   add_light_controls_gui(light);
   camera_params_gui(controller, cameraParams);
 
-  auto env_checkbox_cb = [this](const char *title, entt::entity ent) {
+  auto add_env_checkbox = [this](const char *title, entt::entity ent) {
     char label[32];
     SDL_snprintf(label, sizeof(label), "hud.%s", title);
     auto &dmc = registry.get<DebugMeshComponent>(ent);
     ImGui::Checkbox(label, &dmc.enable);
   };
-  if (ImGui::CollapsingHeader("Debug Hud elements",
+  if (ImGui::CollapsingHeader("Settings (HUD and env)",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
-    env_checkbox_cb("grid", m_grid);
+    add_env_checkbox("grid", m_grid);
     ImGui::SameLine();
-    env_checkbox_cb("triad", m_triad);
+    {
+      auto &dmc = registry.get<DebugMeshComponent>(m_grid);
+      ImGui::ColorEdit4("hud.grid.color", dmc.colors[0].data(),
+                        ImGuiColorEditFlags_AlphaPreview);
+    }
+    add_env_checkbox("triad", m_triad);
+    add_disable_checkbox("Render plane", registry, m_plane,
+                         envStatus.show_plane);
   }
 
   if (ImGui::CollapsingHeader("Robot model info",

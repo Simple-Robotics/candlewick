@@ -45,6 +45,12 @@ class Visualizer final : public BaseVisualizer {
 public:
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
 
+  struct EnvStatus {
+    bool show_our_about = false;
+    bool show_imgui_about = false;
+    bool show_plane = false;
+  };
+
   using BaseVisualizer::setCameraPose;
   entt::registry registry;
   Renderer renderer;
@@ -53,6 +59,7 @@ public:
   std::optional<DebugScene> debugScene;
   CylindricalCamera controller;
   CameraControlParams cameraParams;
+  EnvStatus envStatus;
 
   struct Config {
     Uint32 width;

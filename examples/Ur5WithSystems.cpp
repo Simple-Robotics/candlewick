@@ -275,6 +275,7 @@ int main(int argc, char **argv) {
       renderer, [&](const Renderer &r) {
         static bool demo_window_open = true;
         static bool show_about_window = false;
+        static bool show_plane_vis = true;
 
         ImGui::Begin("Renderer info & controls", nullptr,
                      ImGuiWindowFlags_AlwaysAutoResize);
@@ -312,8 +313,8 @@ int main(int argc, char **argv) {
         }
 
         ImGui::SeparatorText("Env. status");
-        static bool plane_vis = true;
-        add_disable_checkbox("Render plane", registry, plane_entity, plane_vis);
+        add_disable_checkbox("Render plane", registry, plane_entity,
+                             show_plane_vis);
         ImGui::Checkbox("Render grid", &grid.enable);
         ImGui::Checkbox("Render triad", &triad.enable);
         ImGui::Checkbox("Render frustum", &showFrustum);
