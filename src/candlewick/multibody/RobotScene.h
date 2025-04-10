@@ -135,8 +135,6 @@ namespace multibody {
 
     const Device &device() { return m_renderer.device; }
 
-    void initGBuffer(const Renderer &renderer);
-
     SDL_GPUGraphicsPipeline *renderPipelines[kNumPipelineTypes];
     DirectionalLight directionalLight;
     ssao::SsaoPass ssaoPass{NoInit};

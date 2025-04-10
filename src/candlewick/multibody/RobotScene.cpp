@@ -120,7 +120,21 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
   }
 
   // initialize render target for GBuffer
-  this->initGBuffer(renderer);
+  const auto [width, height] = renderer.window.size();
+  gBuffer.normalMap = Texture{renderer.device,
+                              {
+                                  .type = SDL_GPU_TEXTURETYPE_2D,
+                                  .format = SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
+                                  .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
+                                           SDL_GPU_TEXTUREUSAGE_SAMPLER,
+                                  .width = Uint32(width),
+                                  .height = Uint32(height),
+                                  .layer_count_or_depth = 1,
+                                  .num_levels = 1,
+                                  .sample_count = SDL_GPU_SAMPLECOUNT_1,
+                                  .props = 0,
+                              },
+                              "GBuffer normal"};
   const bool enable_shadows = m_config.enable_shadows;
 
   for (pin::GeomIndex geom_id = 0; geom_id < geom_model.ngeoms; geom_id++) {
@@ -165,24 +179,6 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
       renderPipelines[pipeline_type] = pipeline;
     }
   }
-}
-
-void RobotScene::initGBuffer(const Renderer &renderer) {
-  auto [width, height] = renderer.window.size();
-  gBuffer.normalMap = Texture{renderer.device,
-                              {
-                                  .type = SDL_GPU_TEXTURETYPE_2D,
-                                  .format = SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
-                                  .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
-                                           SDL_GPU_TEXTUREUSAGE_SAMPLER,
-                                  .width = Uint32(width),
-                                  .height = Uint32(height),
-                                  .layer_count_or_depth = 1,
-                                  .num_levels = 1,
-                                  .sample_count = SDL_GPU_SAMPLECOUNT_1,
-                                  .props = 0,
-                              },
-                              "GBuffer normal"};
 }
 
 void updateRobotTransforms(entt::registry &registry,
