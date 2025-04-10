@@ -337,7 +337,7 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Robot model");
         ImGui::SetItemTooltip("Information about the displayed robot model.");
-        multibody::guiPinocchioModelInfo(model, geom_model);
+        multibody::guiPinocchioModelInfo(model, geom_model, registry);
 
         ImGui::SeparatorText("Lights");
         add_light_controls_gui(sceneLight);

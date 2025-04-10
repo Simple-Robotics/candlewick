@@ -1,5 +1,7 @@
 #include "../Visualizer.h"
+#include "../Components.h"
 #include "candlewick/core/CameraControls.h"
+#include "candlewick/core/Components.h"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_log.h>
@@ -10,14 +12,14 @@
 namespace candlewick::multibody {
 
 void guiPinocchioModelInfo(const pin::Model &model,
-                           const pin::GeometryModel &geom_model) {
+                           const pin::GeometryModel &geom_model,
+                           entt::registry &reg) {
   const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
   ImGuiTableFlags flags = 0;
   flags |= ImGuiTableFlags_SizingStretchProp;
   if (ImGui::BeginTable("pin_info_table", 4, flags)) {
     ImGui::TableSetupColumn("Name");
     ImGui::TableSetupColumn("No. of joints / frames");
-    ImGui::TableSetupColumn("No. of geometries");
     ImGui::TableSetupColumn("nq / nv");
     ImGui::TableHeadersRow();
 
@@ -26,8 +28,6 @@ void guiPinocchioModelInfo(const pin::Model &model,
     ImGui::Text("%s", model.name.c_str());
     ImGui::TableNextColumn();
     ImGui::Text("%d / %d", model.njoints, model.nframes);
-    ImGui::TableNextColumn();
-    ImGui::Text("%zu", geom_model.ngeoms);
     ImGui::TableNextColumn();
     ImGui::Text("%d / %d", model.nq, model.nv);
 
@@ -63,22 +63,30 @@ void guiPinocchioModelInfo(const pin::Model &model,
 
   ImGui::Text("Geometry model");
   ImGui::Spacing();
+  ImGui::Text("No. of geometries: %zu", geom_model.ngeoms);
 
-  if (ImGui::BeginTable("pin_geom_table", 4, flags, outer_size)) {
+  if (ImGui::BeginTable("pin_geom_table", 5, flags | ImGuiTableFlags_Sortable,
+                        outer_size)) {
     ImGui::TableSetupColumn("Index");
     ImGui::TableSetupColumn("Name");
     ImGui::TableSetupColumn("Object / node type");
     ImGui::TableSetupColumn("Parent joint");
+    ImGui::TableSetupColumn("Show");
     ImGui::TableHeadersRow();
 
-    for (size_t id = 0; id < geom_model.ngeoms; id++) {
+    auto view = reg.view<const PinGeomObjComponent>();
+    // grab storage for the Disable component
+    // we won't filter on it, but use it to query if entities are disabled
+    auto &disabled = reg.storage<Disable>();
+
+    for (auto [ent, id] : view.each()) {
       auto &gobj = geom_model.geometryObjects[id];
       const coal::CollisionGeometry &coll = *gobj.geometry;
       coal::OBJECT_TYPE objType = coll.getObjectType();
       coal::NODE_TYPE nodeType = coll.getNodeType();
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      ImGui::Text("%zu", id);
+      ImGui::Text("%zu", id.geom_index);
       ImGui::TableNextColumn();
       ImGui::Text("%s", gobj.name.c_str());
       ImGui::TableNextColumn();
@@ -88,6 +96,12 @@ void guiPinocchioModelInfo(const pin::Model &model,
       pin::JointIndex parent_joint = gobj.parentJoint;
       const char *parent_joint_name = model.names[parent_joint].c_str();
       ImGui::Text("%zu (%s)", parent_joint, parent_joint_name);
+
+      ImGui::TableNextColumn();
+      char chk_label[32];
+      bool enabled = !disabled.contains(ent);
+      SDL_snprintf(chk_label, 32, "enabled###%zu", id.geom_index);
+      add_disable_checkbox(chk_label, reg, ent, enabled);
     }
     ImGui::EndTable();
   }
@@ -168,7 +182,7 @@ void Visualizer::default_gui_exec() {
 
   if (ImGui::CollapsingHeader("Robot model info",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
-    guiPinocchioModelInfo(m_model, visualModel());
+    guiPinocchioModelInfo(m_model, visualModel(), registry);
   }
 
   ImGui::End();
