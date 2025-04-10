@@ -1,5 +1,6 @@
 #include "GuiSystem.h"
 #include "Renderer.h"
+#include "LightUniforms.h"
 #include "candlewick/config.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlgpu3.h"
@@ -93,6 +94,13 @@ void showCandlewickAboutWindow(bool *p_open) {
   ImGui::PopTextWrapPos();
 
   ImGui::End();
+}
+
+void add_light_gui(DirectionalLight &light) {
+  ImGui::SliderFloat("intensity", &light.intensity, 0.1f, 10.f);
+  ImGui::DragFloat3("direction", light.direction.data(), 0.0f, -1.f, 1.f);
+  light.direction.stableNormalize();
+  ImGui::ColorEdit3("color", light.color.data());
 }
 
 } // namespace candlewick

@@ -93,13 +93,6 @@ void guiPinocchioModelInfo(const pin::Model &model,
   }
 }
 
-void add_light_gui(DirectionalLight &light) {
-  ImGui::SliderFloat("intensity", &light.intensity, 0.1f, 10.f);
-  ImGui::DragFloat3("direction", light.direction.data(), 0.0f, -1.f, 1.f);
-  light.direction.stableNormalize();
-  ImGui::ColorEdit3("color", light.color.data());
-}
-
 void camera_params_gui(CylindricalCamera &controller,
                        CameraControlParams &params) {
   if (ImGui::TreeNode("Camera controls")) {

@@ -30,4 +30,8 @@ public:
 /// \brief Show an about window providing information about Candlewick.
 void showCandlewickAboutWindow(bool *p_open = NULL);
 
+struct DirectionalLight;
+
+void add_light_gui(DirectionalLight &light);
+
 } // namespace candlewick

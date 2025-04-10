@@ -342,10 +342,8 @@ int main(int argc, char **argv) {
         multibody::guiPinocchioModelInfo(model, geom_model);
 
         ImGui::SeparatorText("Lights");
-        ImGui::SliderFloat("intens.", &sceneLight.intensity, 0.1f, 10.0f);
-        ImGui::DragFloat3("direction", sceneLight.direction.data(), 0.0f, -1.f,
-                          1.f);
-        ImGui::ColorEdit3("color", sceneLight.color.data());
+        add_light_gui(sceneLight);
+
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),
                           ImGuiColorEditFlags_AlphaPreview);
