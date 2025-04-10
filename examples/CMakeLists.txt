@@ -36,5 +36,5 @@ if(BUILD_PINOCCHIO_VISUALIZER)
     CLI11::CLI11
     robot_descriptions_cpp
   )
-  add_candlewick_example(Visualizer.cpp robot_descriptions_cpp)
+  add_candlewick_example(Visualizer.cpp CLI11::CLI11 robot_descriptions_cpp)
 endif()
