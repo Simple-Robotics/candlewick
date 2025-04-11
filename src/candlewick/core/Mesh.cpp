@@ -4,8 +4,6 @@
 #include "MeshLayout.h"
 #include "./errors.h"
 
-#include <cassert>
-
 namespace candlewick {
 
 MeshView::MeshView(const MeshView &parent, Uint32 subVertexOffset,
@@ -17,9 +15,10 @@ MeshView::MeshView(const MeshView &parent, Uint32 subVertexOffset,
       indexOffset(parent.indexOffset + subIndexOffset),
       indexCount(subIndexCount) {
   // assumption: parent MeshView is validated
-  assert(validateMeshView(*this));
-  assert(subVertexOffset + subVertexCount <= parent.vertexCount);
-  assert(subIndexOffset + subIndexCount <= parent.indexCount);
+  CDW_ASSERT(validateMeshView(*this), "MeshView failed validation.");
+  CDW_ASSERT(subVertexOffset + subVertexCount <= parent.vertexCount &&
+                 subIndexOffset + subIndexCount <= parent.indexCount,
+             "");
 }
 
 Mesh::Mesh(NoInitT) {}

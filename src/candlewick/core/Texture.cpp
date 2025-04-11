@@ -3,7 +3,6 @@
 #include "errors.h"
 #include <magic_enum/magic_enum.hpp>
 
-#include <cassert>
 #include <format>
 
 namespace candlewick {
@@ -45,7 +44,8 @@ Texture &Texture::operator=(Texture &&other) noexcept {
 
 SDL_GPUBlitRegion Texture::blitRegion(Uint32 x, Uint32 y,
                                       Uint32 layer_or_depth_plane) const {
-  assert(layer_or_depth_plane < layerCount());
+  CDW_ASSERT(layer_or_depth_plane < layerCount(),
+             "layer is higher than layerCount!");
   return {
       .texture = _texture,
       .mip_level = 0,

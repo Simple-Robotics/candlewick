@@ -167,7 +167,7 @@ void Visualizer::default_gui_exec() {
   if (envStatus.show_our_about)
     ::candlewick::showCandlewickAboutWindow(&envStatus.show_our_about);
 
-  auto &light = robotScene->directionalLight;
+  auto &light = robotScene.directionalLight;
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
   window_flags |= ImGuiWindowFlags_MenuBar;

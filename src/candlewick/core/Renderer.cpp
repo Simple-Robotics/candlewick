@@ -3,7 +3,6 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <utility>
-#include <cassert>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 

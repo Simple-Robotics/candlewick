@@ -1,7 +1,6 @@
 /// \defgroup gui_util GUI utilities
 /// Tools, render systems, etc... for the Candlewick GUI.
 #include "Core.h"
-#include "Tags.h"
 #include <functional>
 #include <entt/entity/fwd.hpp>
 
@@ -14,17 +13,17 @@ class GuiSystem {
 public:
   using GuiBehavior = std::function<void(const Renderer &)>;
 
-  GuiSystem(NoInitT, GuiBehavior behav)
-      : m_renderer(nullptr), _callback(behav) {}
   GuiSystem(const Renderer &renderer, GuiBehavior behav);
 
-  bool init(const Renderer &renderer);
   void render(CommandBuffer &cmdBuf);
   void release();
 
   bool initialized() const { return m_initialized; }
 
   GuiBehavior _callback;
+
+private:
+  bool init(const Renderer &renderer);
 };
 
 /// \ingroup gui_util

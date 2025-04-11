@@ -3,7 +3,6 @@
 #include "Core.h"
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_log.h>
-#include <cassert>
 #include <utility>
 
 namespace candlewick {

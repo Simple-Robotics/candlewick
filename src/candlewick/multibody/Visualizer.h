@@ -55,7 +55,7 @@ public:
   entt::registry registry;
   Renderer renderer;
   GuiSystem guiSystem;
-  std::optional<RobotScene> robotScene;
+  RobotScene robotScene;
   std::optional<DebugScene> debugScene;
   CylindricalCamera controller;
   CameraControlParams cameraParams;
@@ -102,8 +102,8 @@ public:
 
   /// \brief Clear objects
   void clean() override {
-    robotScene->clearEnvironment();
-    robotScene->clearRobotGeometries();
+    robotScene.clearEnvironment();
+    robotScene.clearRobotGeometries();
     debugScene->registry().clear();
   }
 
