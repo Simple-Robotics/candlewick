@@ -1,7 +1,7 @@
-#include "../Visualizer.h"
-#include "../Components.h"
-#include "candlewick/core/CameraControls.h"
-#include "candlewick/core/Components.h"
+#include "Visualizer.h"
+#include "Components.h"
+#include "../core/CameraControls.h"
+#include "../core/Components.h"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_log.h>
@@ -67,12 +67,41 @@ void guiPinocchioModelInfo(const pin::Model &model,
 
   if (ImGui::BeginTable("pin_geom_table", 5, flags | ImGuiTableFlags_Sortable,
                         outer_size)) {
-    ImGui::TableSetupColumn("Index");
-    ImGui::TableSetupColumn("Name");
-    ImGui::TableSetupColumn("Object / node type");
-    ImGui::TableSetupColumn("Parent joint");
-    ImGui::TableSetupColumn("Show");
+    ImGui::TableSetupColumn("Index", ImGuiTableColumnFlags_DefaultSort, 0.0f,
+                            0);
+    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_DefaultSort, 0.0f, 1);
+    ImGui::TableSetupColumn("Object / node type", ImGuiTableColumnFlags_NoSort);
+    ImGui::TableSetupColumn("Parent joint", ImGuiTableColumnFlags_NoSort);
+    ImGui::TableSetupColumn("Show", ImGuiTableColumnFlags_NoSort);
     ImGui::TableHeadersRow();
+
+    if (ImGuiTableSortSpecs *sortSpecs = ImGui::TableGetSortSpecs()) {
+      reg.sort<PinGeomObjComponent>(
+          [&geom_model, sortSpecs](const PinGeomObjComponent &lhsId,
+                                   const PinGeomObjComponent &rhsId) {
+            auto &lhs = geom_model.geometryObjects[lhsId];
+            auto &rhs = geom_model.geometryObjects[rhsId];
+            for (int n = 0; n < sortSpecs->SpecsCount; n++) {
+              auto cid = sortSpecs->Specs[n].ColumnIndex;
+              auto dir = sortSpecs->Specs[n].SortDirection;
+              bool sort;
+              switch (cid) {
+              case 0: {
+                sort = lhsId < rhsId;
+                break;
+              }
+              case 1: {
+                sort = lhs.name.compare(rhs.name) <= 0;
+                break;
+              }
+              default:
+                return false;
+              }
+              return (dir == ImGuiSortDirection_Ascending) ? sort : !sort;
+            }
+            unreachable();
+          });
+    }
 
     auto view = reg.view<const PinGeomObjComponent>();
     // grab storage for the Disable component
@@ -138,7 +167,7 @@ void Visualizer::default_gui_exec() {
   if (envStatus.show_our_about)
     ::candlewick::showCandlewickAboutWindow(&envStatus.show_our_about);
 
-  auto &light = robotScene->directionalLight;
+  auto &light = robotScene.directionalLight;
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
   window_flags |= ImGuiWindowFlags_MenuBar;
