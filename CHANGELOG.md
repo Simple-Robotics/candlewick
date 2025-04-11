@@ -15,6 +15,7 @@ This is the first release to use a changelog.
 
 ### Added
 
+- `RobotScene.h`: move invalid_enum() out to public header
 - Add template class `strided_view<T>` for non-contiguous evenly-strided data
 - `errors.h`: Use `string_view` for `_error_message_impl`
 - Extend support for coal `CollisionGeometry` objects
