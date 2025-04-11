@@ -119,10 +119,9 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
 
 void RobotScene::loadModels(const pin::GeometryModel &geom_model,
                             const pin::GeometryData &geom_data) {
-  SDL_assert(!initialized());
+  SDL_assert(!(m_initialized || hasInternalPointers()));
   m_geomModel = &geom_model;
   m_geomData = &geom_data;
-  SDL_assert(initialized());
 
   for (size_t i = 0; i < kNumPipelineTypes; i++) {
     renderPipelines[i] = NULL;
@@ -197,6 +196,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
       renderPipelines[pipeline_type] = pipeline;
     }
   }
+  m_initialized = true;
 }
 
 void RobotScene::updateTransforms() {

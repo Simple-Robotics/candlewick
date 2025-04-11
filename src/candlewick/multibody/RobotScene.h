@@ -26,7 +26,9 @@ namespace multibody {
   /// This internally stores references to pinocchio::GeometryModel and
   /// pinocchio::GeometryData objects.
   class RobotScene final {
-    [[nodiscard]] bool initialized() const { return m_geomModel && m_geomData; }
+    [[nodiscard]] bool hasInternalPointers() const {
+      return m_geomModel && m_geomData;
+    }
 
     void renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                    const Camera &camera);
@@ -95,7 +97,8 @@ namespace multibody {
 
     /// \brief Non-initializing constructor.
     RobotScene(entt::registry &registry, const Renderer &renderer)
-        : m_registry(registry), m_renderer(renderer), m_config() {}
+        : m_registry(registry), m_renderer(renderer), m_config(),
+          m_initialized(false) {}
 
     /// \brief Constructor which initializes the system.
     ///
@@ -108,7 +111,7 @@ namespace multibody {
 
     void setConfig(const Config &config) {
       CDW_ASSERT(
-          !initialized(),
+          !m_initialized,
           "Cannot call setConfig() after render system was initialized.");
       m_config = config;
     }
@@ -179,6 +182,7 @@ namespace multibody {
     const pin::GeometryModel *m_geomModel;
     const pin::GeometryData *m_geomData;
     std::vector<OpaqueCastable> m_castables;
+    bool m_initialized;
   };
   static_assert(Scene<RobotScene>);
 
