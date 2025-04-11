@@ -16,14 +16,24 @@
 #include <pinocchio/multibody/fwd.hpp>
 
 namespace candlewick {
-
 namespace multibody {
 
   void updateRobotTransforms(entt::registry &registry,
                              const pin::GeometryData &geom_data);
 
-  /// \brief A scene/render system for robot geometries using Pinocchio.
-  class RobotScene {
+  /// \brief A render system for Pinocchio robot geometries using Pinocchio.
+  ///
+  /// This internally stores references to pinocchio::GeometryModel and
+  /// pinocchio::GeometryData objects.
+  class RobotScene final {
+    [[nodiscard]] bool initialized() const { return m_geomModel && m_geomData; }
+
+    void renderPBRTriangleGeometry(CommandBuffer &command_buffer,
+                                   const Camera &camera);
+
+    void renderOtherGeometry(CommandBuffer &command_buffer,
+                             const Camera &camera);
+
   public:
     enum PipelineType {
       PIPELINE_TRIANGLEMESH,
@@ -83,10 +93,32 @@ namespace multibody {
       ShadowPassConfig shadow_config;
     };
 
+    /// \brief Non-initializing constructor.
+    RobotScene(entt::registry &registry, const Renderer &renderer)
+        : m_registry(registry), m_renderer(renderer), m_config() {}
+
+    /// \brief Constructor which initializes the system.
+    ///
+    /// loadModels() will be called.
     RobotScene(entt::registry &registry, const Renderer &renderer,
                const pin::GeometryModel &geom_model,
                const pin::GeometryData &geom_data, Config config);
 
+    RobotScene(const RobotScene &) = delete;
+
+    void setConfig(const Config &config) {
+      CDW_ASSERT(
+          !initialized(),
+          "Cannot call setConfig() after render system was initialized.");
+      m_config = config;
+    }
+
+    /// \brief Set the internal geometry model and data pointers, and load the
+    /// corresponding models.
+    void loadModels(const pin::GeometryModel &geom_model,
+                    const pin::GeometryData &geom_data);
+
+    /// \brief Update the transform component of the GeometryObject entities.
     void updateTransforms();
 
     void collectOpaqueCastables();
@@ -112,12 +144,8 @@ namespace multibody {
     /// \warning Call updateRobotTransforms() before rendering the objects with
     /// this function.
     void render(CommandBuffer &command_buffer, const Camera &camera);
-    /// \brief PBR render pass for triangle meshes.
-    void renderPBRTriangleGeometry(CommandBuffer &command_buffer,
-                                   const Camera &camera);
-    /// \brief Render pass for other geometry.
-    void renderOtherGeometry(CommandBuffer &command_buffer,
-                             const Camera &camera);
+
+    /// \brief Release all resources.
     void release();
 
     Config &config() { return m_config; }
@@ -125,11 +153,11 @@ namespace multibody {
     inline bool pbrHasPrepass() const { return m_config.triangle_has_prepass; }
     inline bool shadowsEnabled() const { return m_config.enable_shadows; }
 
-    /// \brief Getter for the referenced pinocchio GeometryModel object.
-    const pin::GeometryModel &geomModel() const { return m_geomModel; }
+    /// \brief Getter for the pinocchio GeometryModel object.
+    const pin::GeometryModel &geomModel() const { return *m_geomModel; }
 
-    /// \brief Getter for the referenced pinocchio GeometryData object.
-    const pin::GeometryData &geomData() const { return m_geomData; }
+    /// \brief Getter for the pinocchio GeometryData object.
+    const pin::GeometryData &geomData() const { return *m_geomData; }
 
     const entt::registry &registry() const { return m_registry; }
 
@@ -146,10 +174,10 @@ namespace multibody {
 
   private:
     entt::registry &m_registry;
-    Config m_config;
     const Renderer &m_renderer;
-    std::reference_wrapper<pin::GeometryModel const> m_geomModel;
-    std::reference_wrapper<pin::GeometryData const> m_geomData;
+    Config m_config;
+    const pin::GeometryModel *m_geomModel;
+    const pin::GeometryData *m_geomData;
     std::vector<OpaqueCastable> m_castables;
   };
   static_assert(Scene<RobotScene>);

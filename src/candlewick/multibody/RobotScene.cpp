@@ -35,6 +35,16 @@ invalid_enum(const char *msg, T type,
       std::format("{:s} - {:s}", msg, magic_enum::enum_name(type)), location);
 }
 
+void updateRobotTransforms(entt::registry &registry,
+                           const pin::GeometryData &geom_data) {
+  auto robot_view =
+      registry.view<const PinGeomObjComponent, TransformComponent>();
+  for (auto [ent, geom_id, tr] : robot_view.each()) {
+    SE3f pose = geom_data.oMg[geom_id].cast<float>();
+    tr = pose.toHomogeneousMatrix();
+  }
+}
+
 auto RobotScene::pinGeomToPipeline(const coal::CollisionGeometry &geom)
     -> PipelineType {
   using enum coal::OBJECT_TYPE;
@@ -102,9 +112,17 @@ void RobotScene::clearRobotGeometries() {
 RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
                        const pin::GeometryModel &geom_model,
                        const pin::GeometryData &geom_data, Config config)
-    : // screenSpaceShadows{.sampler = nullptr, .pass{NoInit}},
-      m_registry(registry), m_config(config), m_renderer(renderer),
-      m_geomModel(geom_model), m_geomData(geom_data) {
+    : RobotScene(registry, renderer) {
+  m_config = config;
+  this->loadModels(geom_model, geom_data);
+}
+
+void RobotScene::loadModels(const pin::GeometryModel &geom_model,
+                            const pin::GeometryData &geom_data) {
+  SDL_assert(!initialized());
+  m_geomModel = &geom_model;
+  m_geomData = &geom_data;
+  SDL_assert(initialized());
 
   for (size_t i = 0; i < kNumPipelineTypes; i++) {
     renderPipelines[i] = NULL;
@@ -120,8 +138,8 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
   }
 
   // initialize render target for GBuffer
-  const auto [width, height] = renderer.window.size();
-  gBuffer.normalMap = Texture{renderer.device,
+  const auto [width, height] = m_renderer.window.size();
+  gBuffer.normalMap = Texture{m_renderer.device,
                               {
                                   .type = SDL_GPU_TEXTURETYPE_2D,
                                   .format = SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
@@ -143,29 +161,29 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
     auto meshDatas = loadGeometryObject(geom_obj);
     PipelineType pipeline_type = pinGeomToPipeline(*geom_obj.geometry);
     auto mesh = createMeshFromBatch(device(), meshDatas, true);
-    assert(validateMesh(mesh));
+    SDL_assert(validateMesh(mesh));
 
     // local copy for use
     const auto layout = mesh.layout();
 
     // add entity for this geometry
-    entt::entity entity = registry.create();
-    registry.emplace<PinGeomObjComponent>(entity, geom_id);
-    registry.emplace<TransformComponent>(entity);
+    entt::entity entity = m_registry.create();
+    m_registry.emplace<PinGeomObjComponent>(entity, geom_id);
+    m_registry.emplace<TransformComponent>(entity);
     if (pipeline_type != PIPELINE_POINTCLOUD)
-      registry.emplace<Opaque>(entity);
-    registry.emplace<MeshMaterialComponent>(entity, std::move(mesh),
-                                            extractMaterials(meshDatas));
+      m_registry.emplace<Opaque>(entity);
+    m_registry.emplace<MeshMaterialComponent>(entity, std::move(mesh),
+                                              extractMaterials(meshDatas));
     add_pipeline_tag_component(m_registry, entity, pipeline_type);
 
     if (pipeline_type == PIPELINE_TRIANGLEMESH) {
       if (!ssaoPass.pipeline) {
-        ssaoPass = ssao::SsaoPass(renderer, layout, gBuffer.normalMap);
+        ssaoPass = ssao::SsaoPass(m_renderer, layout, gBuffer.normalMap);
       }
       // configure shadow pass
       if (enable_shadows && !shadowPass.pipeline) {
         shadowPass =
-            ShadowPassInfo::create(renderer, layout, config.shadow_config);
+            ShadowPassInfo::create(m_renderer, layout, m_config.shadow_config);
       }
     }
 
@@ -173,26 +191,16 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
       SDL_Log("Building pipeline for type %s",
               magic_enum::enum_name(pipeline_type).data());
       SDL_GPUGraphicsPipeline *pipeline =
-          createPipeline(layout, renderer.getSwapchainTextureFormat(),
-                         renderer.depthFormat(), pipeline_type);
-      assert(pipeline);
+          createPipeline(layout, m_renderer.getSwapchainTextureFormat(),
+                         m_renderer.depthFormat(), pipeline_type);
+      SDL_assert(pipeline);
       renderPipelines[pipeline_type] = pipeline;
     }
   }
 }
 
-void updateRobotTransforms(entt::registry &registry,
-                           const pin::GeometryData &geom_data) {
-  auto robot_view =
-      registry.view<const PinGeomObjComponent, TransformComponent>();
-  for (auto [ent, geom_id, tr] : robot_view.each()) {
-    SE3f pose = geom_data.oMg[geom_id].cast<float>();
-    tr = pose.toHomogeneousMatrix();
-  }
-}
-
 void RobotScene::updateTransforms() {
-  ::candlewick::multibody::updateRobotTransforms(m_registry, m_geomData);
+  ::candlewick::multibody::updateRobotTransforms(m_registry, *m_geomData);
 }
 
 void RobotScene::collectOpaqueCastables() {
@@ -312,7 +320,7 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
       .pushFragmentUniform(2, &_useSsao, sizeof(_useSsao));
 
   auto *pipeline = renderPipelines[PIPELINE_TRIANGLEMESH];
-  assert(pipeline);
+  SDL_assert(pipeline);
   SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
 
   auto all_view =
