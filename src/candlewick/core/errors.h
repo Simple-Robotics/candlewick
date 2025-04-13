@@ -21,7 +21,8 @@ struct RAIIException : std::runtime_error {
 
 namespace detail {
 
-  std::string _error_message_impl(const char *fname, std::string_view fmtstr,
+  std::string _error_message_impl(std::string_view fname,
+                                  std::string_view fmtstr,
                                   std::format_args args);
 
   template <typename... Ts>

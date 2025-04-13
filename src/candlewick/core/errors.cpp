@@ -9,9 +9,10 @@ RAIIException::RAIIException(std::string_view msg,
                       location.file_name(), location.line(), msg.data())) {}
 
 namespace detail {
-  std::string _error_message_impl(const char *fname, std::string_view _fmtstr,
+  std::string _error_message_impl(std::string_view fname,
+                                  std::string_view fmtstr,
                                   std::format_args args) {
-    return std::format("{:s} :: {:s}", fname, std::vformat(_fmtstr, args));
+    return std::format("{:s} :: {:s}", fname, std::vformat(fmtstr, args));
   }
 } // namespace detail
 } // namespace candlewick
