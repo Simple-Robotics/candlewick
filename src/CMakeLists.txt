@@ -1,7 +1,5 @@
 # Copyright (c) 2024-2025 ManifoldFR
 
-find_package(ZeroMQ REQUIRED)
-
 add_library(
   candlewick_core
   SHARED
@@ -114,11 +112,15 @@ if(BUILD_PINOCCHIO_VISUALIZER)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 
-  find_package(cppzmq)
-  add_executable(candlewick_visualizer candlewick/runtime/main.cpp)
+  find_package(nng REQUIRED)
+  add_executable(
+    candlewick_visualizer
+    candlewick/runtime/main.cpp
+    candlewick/runtime/util.cpp
+  )
   target_link_libraries(
     candlewick_visualizer
-    PRIVATE cppzmq candlewick_multibody
+    PRIVATE nng::nng candlewick_multibody
   )
 endif()
 
