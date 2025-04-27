@@ -39,6 +39,13 @@ project(${PROJECT_NAME} ${PROJECT_ARGS})
 include(cmake/ide.cmake)
 include(cmake/apple.cmake)
 
+# Remove a CXX compiler flag (added by jrl-cmakemodules)
+macro(remove_cxx_flag name)
+  string(REPLACE ${name} "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+endmacro()
+
+remove_cxx_flag(-pedantic)
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<CONFIG>/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<CONFIG>/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<CONFIG>/bin)
