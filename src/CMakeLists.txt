@@ -72,7 +72,7 @@ target_link_libraries(
 target_compile_definitions(
   candlewick_core
   PUBLIC
-    $<BUILD_INTERFACE:CANDLEWICK_SHADER_BIN_DIR="${CANDLEWICK_SHADERS_DIR}/compiled">
+    $<BUILD_INTERFACE:CANDLEWICK_SHADER_BIN_DIR="${CANDLEWICK_SHADER_SRC_DIR}/compiled">
     $<INSTALL_INTERFACE:CANDLEWICK_SHADER_BIN_DIR="${CANDLEWICK_SHADER_INSTALL_DIR}/compiled">
 )
 target_include_directories(
