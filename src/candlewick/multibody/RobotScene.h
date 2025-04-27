@@ -96,9 +96,7 @@ namespace multibody {
     };
 
     /// \brief Non-initializing constructor.
-    RobotScene(entt::registry &registry, const Renderer &renderer)
-        : m_registry(registry), m_renderer(renderer), m_config(),
-          m_initialized(false) {}
+    RobotScene(entt::registry &registry, const Renderer &renderer);
 
     /// \brief Constructor which initializes the system.
     ///

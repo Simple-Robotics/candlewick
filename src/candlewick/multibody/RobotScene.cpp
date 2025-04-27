@@ -109,6 +109,12 @@ void RobotScene::clearRobotGeometries() {
   m_registry.destroy(view.begin(), view.end());
 }
 
+RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer)
+    : m_registry(registry), m_renderer(renderer), m_config(),
+      m_geomModel(nullptr), m_geomData(nullptr), m_initialized(false) {
+  assert(!hasInternalPointers());
+}
+
 RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
                        const pin::GeometryModel &geom_model,
                        const pin::GeometryData &geom_data, Config config)
@@ -119,7 +125,7 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
 
 void RobotScene::loadModels(const pin::GeometryModel &geom_model,
                             const pin::GeometryData &geom_data) {
-  SDL_assert(!(m_initialized || hasInternalPointers()));
+  assert(!(m_initialized || hasInternalPointers()));
   m_geomModel = &geom_model;
   m_geomData = &geom_data;
 
