@@ -13,11 +13,7 @@ Python3_add_library(pycandlewick MODULE WITH_SOABI ${pycandlewick_SOURCES})
 target_link_libraries(pycandlewick PRIVATE candlewick eigenpy::eigenpy)
 target_include_directories(
   pycandlewick
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-)
-target_compile_definitions(
-  pycandlewick
-  PRIVATE SHADERS_INSTALL_DIR="${CANDLEWICK_SHADER_INSTALL_DIR}/compiled"
+  PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 if(BUILD_PINOCCHIO_VISUALIZER)
   target_sources(pycandlewick PRIVATE src/expose-visualizer.cpp)

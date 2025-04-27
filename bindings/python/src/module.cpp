@@ -20,7 +20,7 @@ BOOST_PYTHON_MODULE(pycandlewick) {
     throw std::runtime_error(std::format(
         "Failed to initialize SDL subsystems: \'%s\'", SDL_GetError()));
   }
-  ::candlewick::setShadersDirectory(SHADERS_INSTALL_DIR);
+  bp::def("setShadersDirectory", &setShadersDirectory, ("path"_a));
   bp::def("currentShaderDirectory", &currentShaderDirectory);
 
   // Register SDL_Quit() as a function to call when interpreter exits.
