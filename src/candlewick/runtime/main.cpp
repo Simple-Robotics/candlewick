@@ -1,5 +1,7 @@
-#include <zmq.hpp>
-#include <zmq_addon.hpp>
+#include <nng/nng.h>
+#include <nng/protocol/pipeline0/pull.h>
+#include <nng/protocol/pipeline0/push.h>
+
 #include "candlewick/multibody/Multibody.h"
 #include "candlewick/multibody/Visualizer.h"
 
@@ -14,6 +16,43 @@ namespace cdw = candlewick;
 namespace pin = pinocchio;
 using cdw::multibody::Visualizer;
 
+/// \brief Terminate if the condition is true.
+#define CDW_THROW_IF(cond, msg)                                                \
+  if ((cond))                                                                  \
+  ::candlewick::terminate_with_message(msg)
+
+const char *str_from_nng_erro(int val);
+
+void load_models_from_sock(nng_socket sock, const char *url, pin::Model &model,
+                           pin::GeometryModel &geom_model) {
+  SDL_Log("Loading Pinocchio models...");
+  int rv;
+  std::string model_str, geom_str;
+
+  rv = nng_pull0_open(&sock);
+  CDW_THROW_IF(rv != 0,
+               std::string("Failed to open socket: ") + str_from_nng_erro(rv));
+
+  rv = nng_listen(sock, url, NULL, 0);
+  CDW_THROW_IF(rv != 0, "Failed to listen");
+
+  char *buf = NULL;
+  size_t sz;
+  rv = nng_recv(sock, &buf, &sz, NNG_FLAG_ALLOC);
+  CDW_THROW_IF(rv != 0, "Failed to receive message on socket");
+  model_str.assign(buf, sz);
+  SDL_Log("Loaded model string:\n%s\n", buf);
+  nng_free(buf, sz);
+
+  model.loadFromString(model_str);
+
+  rv = nng_recv(sock, &buf, &sz, NNG_FLAG_ALLOC);
+  CDW_THROW_IF(rv != 0, "Failed to receive message on socket");
+  geom_str.assign(buf, sz);
+  nng_free(buf, sz);
+  geom_model.loadFromString(geom_str);
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Candlewick visualizer runtime"};
   argv = app.ensure_utf8(argv);
@@ -24,29 +63,14 @@ int main(int argc, char **argv) {
 
   CLI11_PARSE(app, argc, argv);
 
-  if (window_dims.size() != 2) {
-    cdw::terminate_with_message("Expected only two values for argument --dims");
-  }
+  CDW_THROW_IF(window_dims.size() != 2,
+               "Expected only two values for argument --dims");
 
-  zmq::context_t ctx;
-  zmq::socket_t sock{ctx, zmq::socket_type::pull};
-  sock.bind("tcp://127.0.0.1:12000");
-  const std::string endpoint = sock.get(zmq::sockopt::last_endpoint);
-  printf("ZMQ endpoint: %s\n", endpoint.c_str());
-
+  const char *url = "ipc:///tmp/candlewick.ipc";
+  nng_socket sock;
   pin::Model model;
   pin::GeometryModel geom_model;
-
-  std::vector<zmq::message_t> recv_models;
-
-  printf("Receiving Model and GeometryModel...\n");
-
-  const auto ret = zmq::recv_multipart(sock, std::back_inserter(recv_models));
-  assert(*ret == 2);
-  printf("Received %zu messages\n", ret.value());
-
-  model.loadFromString(recv_models[0].to_string());
-  geom_model.loadFromString(recv_models[1].to_string());
+  load_models_from_sock(sock, url, model, geom_model);
 
   Visualizer::Config config;
   config.width = window_dims[0];
