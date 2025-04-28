@@ -26,17 +26,16 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     : BaseVisualizer{model, visual_model}, registry{},
       renderer{_create_renderer(config)},
       guiSystem{renderer, std::move(gui_callback)},
-      robotScene{registry, renderer} {
+      robotScene{registry, renderer}, debugScene{registry, renderer} {
 
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
   robotScene.setConfig(rconfig);
   robotScene.loadModels(visualModel(), visualData());
 
-  debugScene.emplace(registry, renderer);
-  debugScene->addSystem<RobotDebugSystem>(this->model(), data());
-  std::tie(m_triad, std::ignore) = debugScene->addTriad();
-  std::tie(m_grid, std::ignore) = debugScene->addLineGrid();
+  debugScene.addSystem<RobotDebugSystem>(this->model(), data());
+  std::tie(m_triad, std::ignore) = debugScene.addTriad();
+  std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
 
   robotScene.directionalLight = {
       .direction = {0., -1., -1.},
@@ -87,7 +86,7 @@ void Visualizer::setCameraPose(const Eigen::Ref<const Matrix4> &pose) {
 
 Visualizer::~Visualizer() {
   robotScene.release();
-  debugScene->release();
+  debugScene.release();
   guiSystem.release();
   renderer.destroy();
   SDL_Quit();
@@ -96,7 +95,7 @@ Visualizer::~Visualizer() {
 void Visualizer::displayImpl() {
   this->processEvents();
 
-  debugScene->update();
+  debugScene.update();
   robotScene.updateTransforms();
   render();
 }
@@ -113,7 +112,7 @@ void Visualizer::render() {
 
     auto &camera = controller.camera;
     robotScene.render(cmdBuf, camera);
-    debugScene->render(cmdBuf, camera);
+    debugScene.render(cmdBuf, camera);
     guiSystem.render(cmdBuf);
   }
 

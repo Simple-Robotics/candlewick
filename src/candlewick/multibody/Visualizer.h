@@ -56,7 +56,7 @@ public:
   Renderer renderer;
   GuiSystem guiSystem;
   RobotScene robotScene;
-  std::optional<DebugScene> debugScene;
+  DebugScene debugScene;
   CylindricalCamera controller;
   CameraControlParams cameraParams;
   EnvStatus envStatus;
@@ -104,7 +104,6 @@ public:
   void clean() override {
     robotScene.clearEnvironment();
     robotScene.clearRobotGeometries();
-    debugScene->registry().clear();
   }
 
 private:
