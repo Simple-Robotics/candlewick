@@ -10,8 +10,6 @@
 
 namespace candlewick {
 
-const char *g_default_shader_dir = CANDLEWICK_SHADER_BIN_DIR;
-
 SDL_GPUShaderStage detect_shader_stage(const char *filename) {
   SDL_GPUShaderStage stage;
   if (SDL_strstr(filename, ".vert"))
@@ -38,8 +36,8 @@ struct ShaderCode {
 
 ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
   char shader_path[256];
-  SDL_snprintf(shader_path, sizeof(shader_path), "%s/%s.%s", g_shader_dir,
-               filename, shader_ext);
+  SDL_snprintf(shader_path, sizeof(shader_path), "%s/%s.%s",
+               g_shader_dir.c_str(), filename, shader_ext);
 
   size_t code_size;
   void *code = SDL_LoadFile(shader_path, &code_size);
