@@ -1,4 +1,5 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Simple-Robotics/candlewick/main.svg)](https://results.pre-commit.ci/latest/github/Simple-Robotics/candlewick/main)
+[![Conda package](https://img.shields.io/conda/vn/conda-forge/candlewick.svg)](https://anaconda.org/conda-forge/candlewick)
 
 
 # Candlewick: a WIP renderer based on SDL_gpu
