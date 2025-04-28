@@ -22,7 +22,6 @@ def _process():
     shaders_dir = os.path.abspath(shaders_dir)
     compiled_shaders_dir = os.path.join(shaders_dir, "compiled")
     pycandlewick.setShadersDirectory(compiled_shaders_dir)
-    print("Compiled shaders dir: {}".format(compiled_shaders_dir))
 
 
 _process()
