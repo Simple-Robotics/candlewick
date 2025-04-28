@@ -29,6 +29,7 @@ dt = 0.02
 M = pin.SE3.Identity()
 ee_name = "ee_link"
 ee_id = model.getFrameId(ee_name)
+print(viz.model)
 
 for i in range(1000):
     alpha = np.sin(t)
