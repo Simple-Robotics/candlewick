@@ -3,7 +3,7 @@ authors = ["ManifoldFR <wilson.jallet@polytechnique.org>"]
 channels = ["conda-forge"]
 name = "candlewick"
 platforms = ["osx-64", "osx-arm64", "linux-64"]
-version = "0.0.4"
+version = "0.0.5"
 license = "BSD-2-Clause"
 license-file = "LICENSE"
 
