@@ -10,6 +10,11 @@
 
 namespace candlewick {
 
+std::string g_shader_dir = g_default_shader_dir;
+
+void setShadersDirectory(const char *path) { g_shader_dir = path; }
+const char *currentShaderDirectory() { return g_shader_dir.c_str(); }
+
 SDL_GPUShaderStage detect_shader_stage(const char *filename) {
   SDL_GPUShaderStage stage;
   if (SDL_strstr(filename, ".vert"))
@@ -38,6 +43,9 @@ ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
   char shader_path[256];
   SDL_snprintf(shader_path, sizeof(shader_path), "%s/%s.%s",
                g_shader_dir.c_str(), filename, shader_ext);
+#ifndef NDEBUG
+  SDL_Log("Loading shader file %s", shader_path);
+#endif
 
   size_t code_size;
   void *code = SDL_LoadFile(shader_path, &code_size);

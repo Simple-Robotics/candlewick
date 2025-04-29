@@ -6,13 +6,13 @@
 
 namespace candlewick {
 
-namespace {
-  static const char *g_default_shader_dir = CANDLEWICK_SHADER_BIN_DIR;
-  static std::string g_shader_dir = g_default_shader_dir;
-} // namespace
+constexpr const char *g_default_shader_dir = CANDLEWICK_SHADER_BIN_DIR;
 
-inline void setShadersDirectory(const char *path) { g_shader_dir = path; }
-inline const char *currentShaderDirectory() { return g_shader_dir.c_str(); }
+/// \brief Set the current (global) directory where shaders are to be found.
+/// \sa currentShaderDirectory()
+void setShadersDirectory(const char *path);
+/// \brief Get the current (global) directory where shaders are found.
+const char *currentShaderDirectory();
 
 SDL_GPUShaderStage detect_shader_stage(const char *filename);
 
