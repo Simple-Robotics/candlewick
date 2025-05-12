@@ -18,7 +18,6 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
   Float4 meshColor = gobj.meshColor.cast<float>();
   Float3 meshScale = gobj.meshScale.cast<float>();
   const char *meshPath = gobj.meshPath.c_str();
-  bool overrideMaterial = gobj.overrideMaterial;
 
   Eigen::Affine3f T;
   T.setIdentity();
@@ -42,7 +41,7 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
   }
   for (auto &data : meshData) {
     apply3DTransformInPlace(data, T);
-    if (overrideMaterial)
+    if (gobj.overrideMaterial)
       data.material.baseColor = meshColor;
   }
 }
