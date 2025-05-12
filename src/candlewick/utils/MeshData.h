@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Utils.h"
+#include "../core/errors.h"
 #include "../core/MeshLayout.h"
 #include "../core/MaterialUniform.h"
 #include "../core/Tags.h"
@@ -82,12 +83,11 @@ public:
 
   template <typename T>
   [[nodiscard]] T &getAttribute(const Uint64 vertexId, VertexAttrib loc) {
-    auto attr = layout.getAttribute(loc);
-    if (!attr) {
-      throw std::runtime_error("Vertex attribute " +
-                               std::to_string(Uint16(loc)) + "not found.");
+    if (auto attr = layout.getAttribute(loc)) {
+      return this->getAttribute<T>(vertexId, *attr);
     }
-    return this->getAttribute<T>(vertexId, *attr);
+    terminate_with_message(
+        std::format("Vertex attribute %d not found.", Uint16(loc)));
   }
 
   std::span<const char> vertexData() const { return m_vertexData; }

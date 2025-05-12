@@ -1,4 +1,5 @@
 #include "LoadMaterial.h"
+#include "candlewick/core/errors.h"
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -91,6 +92,6 @@ PbrMaterial loadFromAssimpMaterial(aiMaterial *material) {
 
   std::string msg = "Failed to load material: return code ";
   msg += magic_enum::enum_name(retc);
-  throw std::runtime_error(msg);
+  terminate_with_message(msg);
 }
 } // namespace candlewick

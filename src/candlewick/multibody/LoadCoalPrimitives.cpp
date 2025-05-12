@@ -20,8 +20,9 @@ decltype(auto) castGeom(const coal::CollisionGeometry &geometry) {
   return static_cast<const T &>(geometry);
 }
 
-void getPlaneOrHalfspaceNormalOffset(const coal::CollisionGeometry &geometry,
-                                     Float3 &n, float &d) {
+static void
+getPlaneOrHalfspaceNormalOffset(const coal::CollisionGeometry &geometry,
+                                Float3 &n, float &d) {
   using namespace coal;
   switch (geometry.getNodeType()) {
   case GEOM_PLANE: {
@@ -100,7 +101,7 @@ MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry) {
     break;
   }
   default:
-    throw std::runtime_error("Unsupported geometry type.");
+    terminate_with_message("Unsupported geometry type.");
     break;
   }
   // apply appropriate transform for converting to Coal geometry's scaling
@@ -135,7 +136,7 @@ MeshData loadCoalHeightField(const coal::CollisionGeometry &collGeom) {
     return detail::load_coal_heightfield_impl(geom);
   }
   default:
-    throw std::runtime_error("Unsupported nodeType.");
+    terminate_with_message("Unsupported nodeType.");
   }
 }
 } // namespace candlewick
