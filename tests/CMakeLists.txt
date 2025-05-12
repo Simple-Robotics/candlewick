@@ -11,3 +11,4 @@ function(add_candlewick_test filename)
 endfunction()
 
 add_candlewick_test(TestMeshData.cpp)
+add_candlewick_test(TestStrided.cpp)

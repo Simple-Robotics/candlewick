@@ -9,33 +9,6 @@ bool operator==(const DefaultVertex &lhs, const DefaultVertex &rhs) {
          (lhs.color == rhs.color);
 }
 
-GTEST_TEST(TestErasedBlob, default_vertex) {
-  auto layout = meshLayoutFor<DefaultVertex>();
-  EXPECT_TRUE(layout == layout);
-  std::vector<DefaultVertex> vertexData;
-  Uint64 size = 10;
-  for (Uint64 i = 0; i < size; i++) {
-    vertexData.push_back(
-        {Float3::Random(), Float3::Zero(), 0.5f * Float4::Random()});
-  }
-
-  MeshData data(SDL_GPU_PRIMITIVETYPE_TRIANGLELIST, vertexData);
-  EXPECT_EQ(data.numVertices(), size);
-
-  std::span<const DefaultVertex> view = data.viewAs<DefaultVertex>();
-  EXPECT_EQ(view.size(), size);
-
-  for (Uint64 i = 0; i < size; i++) {
-    EXPECT_TRUE(view[i] == vertexData[i]);
-    EXPECT_TRUE(vertexData[i].pos ==
-                data.getAttribute<Float3>(i, VertexAttrib::Position));
-    EXPECT_TRUE(vertexData[i].normal ==
-                data.getAttribute<Float3>(i, VertexAttrib::Normal));
-    EXPECT_TRUE(vertexData[i].color ==
-                data.getAttribute<Float4>(i, VertexAttrib::Color0));
-  }
-}
-
 struct alignas(16) CustomVertex {
   GpuVec4 pos;
   alignas(16) GpuVec3 color;
@@ -63,6 +36,40 @@ template <> struct VertexTraits<CustomVertex> {
 
 bool operator==(const CustomVertex &lhs, const CustomVertex &rhs) {
   return (lhs.pos == rhs.pos) && (lhs.color == rhs.color) && (lhs.uv == rhs.uv);
+}
+
+GTEST_TEST(TestErasedBlob, default_vertex) {
+  auto layout = meshLayoutFor<DefaultVertex>();
+  EXPECT_TRUE(layout == layout);
+  std::vector<DefaultVertex> vertexData;
+  const Uint64 size = 10;
+  for (Uint64 i = 0; i < size; i++) {
+    vertexData.push_back(
+        {(i + 1) * Float3::Ones(), Float3::Zero(), 0.5f * Float4::Random()});
+  }
+
+  MeshData data(SDL_GPU_PRIMITIVETYPE_TRIANGLELIST, vertexData);
+  EXPECT_EQ(data.numVertices(), size);
+
+  std::span<const DefaultVertex> view = data.viewAs<DefaultVertex>();
+  EXPECT_EQ(view.size(), size);
+
+  for (Uint64 i = 0; i < size; i++) {
+    EXPECT_TRUE(view[i] == vertexData[i]);
+    EXPECT_TRUE(vertexData[i].pos ==
+                data.getAttribute<Float3>(i, VertexAttrib::Position));
+    EXPECT_TRUE(vertexData[i].normal ==
+                data.getAttribute<Float3>(i, VertexAttrib::Normal));
+    EXPECT_TRUE(vertexData[i].color ==
+                data.getAttribute<Float4>(i, VertexAttrib::Color0));
+  }
+
+  auto pos_attr = data.getAttribute<GpuVec3>(VertexAttrib::Position);
+  EXPECT_EQ(pos_attr.size(), size);
+  for (Uint64 i = 0; i < size; i++) {
+    std::cout << i << " -- " << pos_attr[i].transpose() << std::endl;
+    EXPECT_EQ(pos_attr[i], vertexData[i].pos);
+  }
 }
 
 GTEST_TEST(TestErasedBlob, custom_vertex) {
