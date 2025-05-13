@@ -12,10 +12,4 @@ using candlewick::NoInit;
 
 const float kScrollZoom = 0.05f;
 
-[[nodiscard]] SDL_GPUGraphicsPipeline *
-initGridPipeline(const Device &device, SDL_Window *window,
-                 const candlewick::MeshLayout &layout,
-                 SDL_GPUTextureFormat depth_stencil_format,
-                 SDL_GPUPrimitiveType primitive_type);
-
 MeshData loadCube(float size, const Float2 &loc);
