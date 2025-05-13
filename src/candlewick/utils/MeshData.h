@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Utils.h"
+#include "StridedView.h"
+#include "../core/errors.h"
 #include "../core/MeshLayout.h"
 #include "../core/MaterialUniform.h"
 #include "../core/Tags.h"
@@ -23,16 +25,23 @@ template <typename Derived> struct MeshDataBase {
   bool isIndexed() const { return numIndices() > 0; }
 };
 
+/// \brief A class to store type-erased vertex data and index data.
+///
+/// This is to be used as an intermediate data representation class to map to
+/// Mesh objects.
+///
 class MeshData : public MeshDataBase<MeshData> {
   std::vector<char> m_vertexData; //< Type-erased vertex data
   Uint32 m_numVertices;           //< Actual number of vertices
-  Uint32 m_vertexSize;            //< Size of an individual vertex (in bytes)
+
+  MeshData(const MeshData &) = default;
+
 public:
   using IndexType = Uint32;
   SDL_GPUPrimitiveType primitiveType; //< Geometry primitive for the mesh.
   MeshLayout layout;                  //< %Mesh layout.
   std::vector<IndexType> indexData;   //< Indices for indexed mesh. Optional.
-  PbrMaterial material;               //< PBR material
+  PbrMaterial material;               //< Mesh material.
 
   explicit MeshData(NoInitT);
 
@@ -40,9 +49,11 @@ public:
   explicit MeshData(SDL_GPUPrimitiveType primitiveType,
                     std::vector<VertexT> vertexData,
                     std::vector<IndexType> indexData = {});
+
   explicit MeshData(SDL_GPUPrimitiveType primitiveType,
                     const MeshLayout &layout, std::vector<char> vertexData,
                     std::vector<IndexType> indexData = {});
+
   MeshData(MeshData &&) noexcept = default;
   MeshData &operator=(MeshData &&) noexcept = default;
   MeshData &operator=(const MeshData &) noexcept = delete;
@@ -55,45 +66,62 @@ public:
   /// \brief Number of individual vertices.
   Uint32 numVertices() const noexcept { return m_numVertices; }
   /// \brief Size of each vertex, in bytes.
-  Uint32 vertexSize() const noexcept { return m_vertexSize; }
-  /// \brief Size of the vertex data, in bytes.
+  Uint32 vertexSize() const noexcept { return layout.vertexSize(); }
+  /// \brief Size of the overall vertex data, in bytes.
   Uint64 vertexBytes() const noexcept { return m_vertexData.size(); }
 
-  template <typename U> std::span<const U> viewAs() const {
-    const U *begin = reinterpret_cast<const U *>(m_vertexData.data());
-    return std::span<const U>(begin, m_numVertices);
-  }
-
+  /// \brief Obtain a typed view to the underlying vertex data.
+  ///
+  /// This should be used in tandem with the typed constructor.
   template <typename U> std::span<U> viewAs() {
     U *begin = reinterpret_cast<U *>(m_vertexData.data());
     return std::span<U>(begin, m_numVertices);
   }
 
+  /// \copybrief viewAs().
+  template <typename U> std::span<const U> viewAs() const {
+    const U *begin = reinterpret_cast<const U *>(m_vertexData.data());
+    return std::span<const U>(begin, m_numVertices);
+  }
+
   /// \brief Access an attribute. Use this when the underlying vertex data type
   /// is unknown.
   template <typename T>
-  [[nodiscard]] T &getAttribute(const Uint64 vertexId,
-                                const SDL_GPUVertexAttribute &attr) {
-    SDL_assert(vertexId < m_numVertices);
+  [[nodiscard]] strided_view<T>
+  getAttribute(const SDL_GPUVertexAttribute &attr) {
     const Uint32 stride = layout.vertexSize();
-    return *reinterpret_cast<T *>(m_vertexData.data() + vertexId * stride +
-                                  attr.offset);
+    auto ptr = m_vertexData.data() + attr.offset;
+    return strided_view(reinterpret_cast<T *>(ptr), m_numVertices, stride);
   }
 
   template <typename T>
-  [[nodiscard]] T &getAttribute(const Uint64 vertexId, VertexAttrib loc) {
-    auto attr = layout.getAttribute(loc);
-    if (!attr) {
-      throw std::runtime_error("Vertex attribute " +
-                               std::to_string(Uint16(loc)) + "not found.");
+  [[nodiscard]] strided_view<const T>
+  getAttribute(const SDL_GPUVertexAttribute &attr) const {
+    const Uint32 stride = layout.vertexSize();
+    auto ptr = m_vertexData.data() + attr.offset;
+    return strided_view(reinterpret_cast<const T *>(ptr), m_numVertices,
+                        stride);
+  }
+
+  template <typename T>
+  [[nodiscard]] strided_view<T> getAttribute(VertexAttrib loc) {
+    if (auto attr = layout.getAttribute(loc)) {
+      return this->getAttribute<T>(*attr);
     }
-    return this->getAttribute<T>(vertexId, *attr);
+    terminate_with_message(
+        std::format("Vertex attribute %d not found.", Uint16(loc)));
+  }
+
+  template <typename T>
+  [[nodiscard]] strided_view<const T> getAttribute(VertexAttrib loc) const {
+    if (auto attr = layout.getAttribute(loc)) {
+      return this->getAttribute<T>(*attr);
+    }
+    terminate_with_message(
+        std::format("Vertex attribute %d not found.", Uint16(loc)));
   }
 
   std::span<const char> vertexData() const { return m_vertexData; }
-
-private:
-  MeshData(const MeshData &) = default;
 };
 
 template <IsVertexType VertexT>
@@ -137,10 +165,11 @@ MeshData::MeshData(SDL_GPUPrimitiveType primitiveType,
 void uploadMeshToDevice(const Device &device, const MeshView &meshView,
                         const MeshData &meshData);
 
+/// \copybrief uploadMeshToDevice().
 void uploadMeshToDevice(const Device &device, const Mesh &mesh,
                         const MeshData &meshData);
 
-inline std::vector<PbrMaterial>
+[[nodiscard]] inline std::vector<PbrMaterial>
 extractMaterials(std::span<const MeshData> meshDatas) {
   std::vector<PbrMaterial> out;
   out.reserve(meshDatas.size());

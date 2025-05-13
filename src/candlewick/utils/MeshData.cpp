@@ -12,11 +12,10 @@ MeshData::MeshData(NoInitT) {}
 MeshData::MeshData(SDL_GPUPrimitiveType primitiveType, const MeshLayout &layout,
                    std::vector<char> vertexData,
                    std::vector<IndexType> indexData)
-    : m_vertexData(std::move(vertexData)), primitiveType(primitiveType),
-      layout(layout), indexData(std::move(indexData)) {
-  m_vertexSize = this->layout.vertexSize();
-  m_numVertices = static_cast<Uint32>(m_vertexData.size()) / m_vertexSize;
-}
+    : m_vertexData(std::move(vertexData)),
+      m_numVertices(Uint32(vertexBytes()) / layout.vertexSize()),
+      primitiveType(primitiveType), layout(layout),
+      indexData(std::move(indexData)) {}
 
 Mesh createMesh(const Device &device, const MeshData &meshData, bool upload) {
   auto &layout = meshData.layout;

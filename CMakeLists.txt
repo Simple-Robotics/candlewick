@@ -95,12 +95,16 @@ message(STATUS "Shader install dir: ${CANDLEWICK_SHADER_INSTALL_DIR}")
 
 add_subdirectory(external)
 add_subdirectory(src)
+
 if(BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
+
 if(BUILD_TESTING)
+  enable_testing()
   add_subdirectory(tests)
 endif()
+
 if(BUILD_PYTHON_BINDINGS)
   add_subdirectory(bindings/python)
   # WIP nanobind bindings

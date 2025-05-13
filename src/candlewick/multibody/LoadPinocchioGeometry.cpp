@@ -1,10 +1,11 @@
 #include "LoadPinocchioGeometry.h"
-#include "LoadCoalPrimitives.h"
+#include "LoadCoalGeometries.h"
 #include "../core/errors.h"
 #include "../utils/LoadMesh.h"
 #include "../utils/MeshTransforms.h"
 
 #include <pinocchio/multibody/geometry.hpp>
+#include <coal/hfield.h>
 
 namespace candlewick::multibody {
 
@@ -18,7 +19,6 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
   Float4 meshColor = gobj.meshColor.cast<float>();
   Float3 meshScale = gobj.meshScale.cast<float>();
   const char *meshPath = gobj.meshPath.c_str();
-  bool overrideMaterial = gobj.overrideMaterial;
 
   Eigen::Affine3f T;
   T.setIdentity();
@@ -29,11 +29,25 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
     break;
   }
   case OT_GEOM: {
-    meshData.emplace_back(loadCoalPrimitive(collgom));
+    const ShapeBase &shape = castCoalGeom<ShapeBase>(collgom);
+    meshData.emplace_back(loadCoalPrimitive(shape));
     break;
   }
   case OT_HFIELD: {
-    meshData.emplace_back(loadCoalHeightField(collgom));
+    MeshData md{NoInit};
+    switch (collgom.getNodeType()) {
+    case HF_AABB: {
+      md = loadCoalHeightField(castCoalGeom<HeightField<AABB>>(collgom));
+      break;
+    }
+    case HF_OBBRSS: {
+      md = loadCoalHeightField(castCoalGeom<HeightField<OBBRSS>>(collgom));
+      break;
+    }
+    default:
+      terminate_with_message("Geometry must be a heightfield!");
+    }
+    meshData.push_back(std::move(md));
     break;
   }
   default:
@@ -42,7 +56,7 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
   }
   for (auto &data : meshData) {
     apply3DTransformInPlace(data, T);
-    if (overrideMaterial)
+    if (gobj.overrideMaterial)
       data.material.baseColor = meshColor;
   }
 }

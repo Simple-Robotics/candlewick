@@ -11,6 +11,8 @@ namespace candlewick {
 /// transforming its vertices.
 void apply3DTransformInPlace(MeshData &meshData, const Eigen::Affine3f &tr);
 
+/// \brief Generate indices for a triangle strip geometry, given the vertex
+/// count.
 void triangleStripGenerateIndices(Uint32 vertexCount,
                                   std::vector<Uint32> &indices);
 
