@@ -78,7 +78,7 @@ MeshData loadCoalConvex(const coal::ConvexBase &geom_) {
   return MeshData{SDL_GPU_PRIMITIVETYPE_TRIANGLELIST, std::move(vertexData)};
 }
 
-MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry) {
+MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {
   using namespace coal;
   CDW_ASSERT(geometry.getObjectType() == OT_GEOM,
              "CollisionGeometry object type must be OT_GEOM !");

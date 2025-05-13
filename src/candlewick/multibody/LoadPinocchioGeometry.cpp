@@ -5,6 +5,7 @@
 #include "../utils/MeshTransforms.h"
 
 #include <pinocchio/multibody/geometry.hpp>
+#include <coal/hfield.h>
 
 namespace candlewick::multibody {
 
@@ -28,11 +29,25 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
     break;
   }
   case OT_GEOM: {
-    meshData.emplace_back(loadCoalPrimitive(collgom));
+    const ShapeBase &shape = castCoalGeom<ShapeBase>(collgom);
+    meshData.emplace_back(loadCoalPrimitive(shape));
     break;
   }
   case OT_HFIELD: {
-    meshData.emplace_back(loadCoalHeightField(collgom));
+    MeshData md{NoInit};
+    switch (collgom.getNodeType()) {
+    case HF_AABB: {
+      md = loadCoalHeightField(castCoalGeom<HeightField<AABB>>(collgom));
+      break;
+    }
+    case HF_OBBRSS: {
+      md = loadCoalHeightField(castCoalGeom<HeightField<OBBRSS>>(collgom));
+      break;
+    }
+    default:
+      terminate_with_message("Geometry must be a heightfield!");
+    }
+    meshData.push_back(std::move(md));
     break;
   }
   default:
