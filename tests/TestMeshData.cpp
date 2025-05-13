@@ -54,14 +54,14 @@ GTEST_TEST(TestErasedBlob, default_vertex) {
   std::span<const DefaultVertex> view = data.viewAs<DefaultVertex>();
   EXPECT_EQ(view.size(), size);
 
+  strided_view pos_view = data.getAttribute<Float3>(VertexAttrib::Position);
+  strided_view nor_view = data.getAttribute<Float3>(VertexAttrib::Normal);
+  strided_view col_view = data.getAttribute<Float4>(VertexAttrib::Color0);
   for (Uint64 i = 0; i < size; i++) {
     EXPECT_TRUE(view[i] == vertexData[i]);
-    EXPECT_TRUE(vertexData[i].pos ==
-                data.getAttribute<Float3>(i, VertexAttrib::Position));
-    EXPECT_TRUE(vertexData[i].normal ==
-                data.getAttribute<Float3>(i, VertexAttrib::Normal));
-    EXPECT_TRUE(vertexData[i].color ==
-                data.getAttribute<Float4>(i, VertexAttrib::Color0));
+    EXPECT_TRUE(vertexData[i].pos == pos_view[i]);
+    EXPECT_TRUE(vertexData[i].normal == nor_view[i]);
+    EXPECT_TRUE(vertexData[i].color == col_view[i]);
   }
 
   auto pos_attr = data.getAttribute<GpuVec3>(VertexAttrib::Position);
@@ -90,14 +90,14 @@ GTEST_TEST(TestErasedBlob, custom_vertex) {
   std::span<const CustomVertex> view = data.viewAs<CustomVertex>();
   EXPECT_EQ(view.size(), size);
 
+  strided_view pos_view = data.getAttribute<Float4>(VertexAttrib::Position);
+  strided_view col_view = data.getAttribute<Float3>(VertexAttrib::Color0);
+  strided_view uv_view = data.getAttribute<Float2>(VertexAttrib::TexCoord0);
   for (Uint64 i = 0; i < size; i++) {
-    EXPECT_TRUE(view[i] == vertexData[i]);
-    EXPECT_TRUE(vertexData[i].pos ==
-                data.getAttribute<Float4>(i, VertexAttrib ::Position));
-    EXPECT_TRUE(vertexData[i].color ==
-                data.getAttribute<Float3>(i, VertexAttrib::Color0));
-    EXPECT_TRUE(vertexData[i].uv ==
-                data.getAttribute<Float2>(i, VertexAttrib::TexCoord0));
+    EXPECT_EQ(view[i], vertexData[i]);
+    EXPECT_EQ(vertexData[i].pos, pos_view[i]);
+    EXPECT_EQ(vertexData[i].color, col_view[i]);
+    EXPECT_EQ(vertexData[i].uv, uv_view[i]);
   }
 }
 

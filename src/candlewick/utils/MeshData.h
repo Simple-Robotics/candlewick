@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Utils.h"
+#include "StridedView.h"
 #include "../core/errors.h"
 #include "../core/MeshLayout.h"
 #include "../core/MaterialUniform.h"
@@ -86,18 +87,35 @@ public:
   /// \brief Access an attribute. Use this when the underlying vertex data type
   /// is unknown.
   template <typename T>
-  [[nodiscard]] T &getAttribute(const Uint64 vertexId,
-                                const SDL_GPUVertexAttribute &attr) {
-    SDL_assert(vertexId < m_numVertices);
+  [[nodiscard]] strided_view<T>
+  getAttribute(const SDL_GPUVertexAttribute &attr) {
     const Uint32 stride = layout.vertexSize();
-    return *reinterpret_cast<T *>(m_vertexData.data() + vertexId * stride +
-                                  attr.offset);
+    auto ptr = m_vertexData.data() + attr.offset;
+    return strided_view(reinterpret_cast<T *>(ptr), m_numVertices, stride);
   }
 
   template <typename T>
-  [[nodiscard]] T &getAttribute(const Uint64 vertexId, VertexAttrib loc) {
+  [[nodiscard]] strided_view<const T>
+  getAttribute(const SDL_GPUVertexAttribute &attr) const {
+    const Uint32 stride = layout.vertexSize();
+    auto ptr = m_vertexData.data() + attr.offset;
+    return strided_view(reinterpret_cast<const T *>(ptr), m_numVertices,
+                        stride);
+  }
+
+  template <typename T>
+  [[nodiscard]] strided_view<T> getAttribute(VertexAttrib loc) {
     if (auto attr = layout.getAttribute(loc)) {
-      return this->getAttribute<T>(vertexId, *attr);
+      return this->getAttribute<T>(*attr);
+    }
+    terminate_with_message(
+        std::format("Vertex attribute %d not found.", Uint16(loc)));
+  }
+
+  template <typename T>
+  [[nodiscard]] strided_view<const T> getAttribute(VertexAttrib loc) const {
+    if (auto attr = layout.getAttribute(loc)) {
+      return this->getAttribute<T>(*attr);
     }
     terminate_with_message(
         std::format("Vertex attribute %d not found.", Uint16(loc)));
