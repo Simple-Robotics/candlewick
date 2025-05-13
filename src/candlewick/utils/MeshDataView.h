@@ -32,10 +32,11 @@ template <IsVertexType V>
 MeshDataView::MeshDataView(SDL_GPUPrimitiveType primitiveType,
                            std::span<const V> vertices,
                            std::span<const IndexType> indices)
-    : primitiveType(primitiveType), layout(meshLayoutFor<V>()),
-      vertexData(reinterpret_cast<const char *>(vertices.data()),
-                 vertices.size() * sizeof(V)),
-      indexData(indices) {}
+    : primitiveType(primitiveType)
+    , layout(meshLayoutFor<V>())
+    , vertexData(reinterpret_cast<const char *>(vertices.data()),
+                 vertices.size() * sizeof(V))
+    , indexData(indices) {}
 
 template <IsVertexType V, size_t N, size_t M>
 MeshDataView::MeshDataView(SDL_GPUPrimitiveType primitiveType,

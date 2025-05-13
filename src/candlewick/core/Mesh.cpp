@@ -9,11 +9,12 @@ namespace candlewick {
 MeshView::MeshView(const MeshView &parent, Uint32 subVertexOffset,
                    Uint32 subVertexCount, Uint32 subIndexOffset,
                    Uint32 subIndexCount)
-    : vertexBuffers(parent.vertexBuffers), indexBuffer(parent.indexBuffer),
-      vertexOffset(parent.vertexOffset + subVertexOffset),
-      vertexCount(subVertexCount),
-      indexOffset(parent.indexOffset + subIndexOffset),
-      indexCount(subIndexCount) {
+    : vertexBuffers(parent.vertexBuffers)
+    , indexBuffer(parent.indexBuffer)
+    , vertexOffset(parent.vertexOffset + subVertexOffset)
+    , vertexCount(subVertexCount)
+    , indexOffset(parent.indexOffset + subIndexOffset)
+    , indexCount(subIndexCount) {
   // assumption: parent MeshView is validated
   CDW_ASSERT(validateMeshView(*this), "MeshView failed validation.");
   CDW_ASSERT(subVertexOffset + subVertexCount <= parent.vertexCount &&
@@ -30,11 +31,13 @@ Mesh::Mesh(const Device &device, const MeshLayout &layout)
 }
 
 Mesh::Mesh(Mesh &&other) noexcept
-    : m_device(other.m_device), m_views(std::move(other.m_views)),
-      m_layout(other.m_layout), vertexCount(other.vertexCount),
-      indexCount(other.indexCount),
-      vertexBuffers(std::move(other.vertexBuffers)),
-      indexBuffer(other.indexBuffer) {
+    : m_device(other.m_device)
+    , m_views(std::move(other.m_views))
+    , m_layout(other.m_layout)
+    , vertexCount(other.vertexCount)
+    , indexCount(other.indexCount)
+    , vertexBuffers(std::move(other.vertexBuffers))
+    , indexBuffer(other.indexBuffer) {
   other.m_device = nullptr;
   other.indexBuffer = nullptr;
 }

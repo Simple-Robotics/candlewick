@@ -9,8 +9,9 @@ namespace candlewick {
 
 Texture::Texture(const Device &device, SDL_GPUTextureCreateInfo texture_desc,
                  const char *name)
-    : _texture(nullptr), _device(&device),
-      _description(std::move(texture_desc)) {
+    : _texture(nullptr)
+    , _device(&device)
+    , _description(std::move(texture_desc)) {
   if (!(_texture = SDL_CreateGPUTexture(*_device, &_description))) {
     std::string msg = std::format("Failed to create texture with format (%s)",
                                   magic_enum::enum_name(_description.format));

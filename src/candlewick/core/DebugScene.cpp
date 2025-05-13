@@ -9,8 +9,10 @@
 namespace candlewick {
 
 DebugScene::DebugScene(entt::registry &reg, const Renderer &renderer)
-    : _registry(reg), _renderer(renderer), _trianglePipeline(nullptr),
-      _linePipeline(nullptr) {
+    : _registry(reg)
+    , _renderer(renderer)
+    , _trianglePipeline(nullptr)
+    , _linePipeline(nullptr) {
   _swapchainTextureFormat = renderer.getSwapchainTextureFormat();
   _depthFormat = renderer.depthFormat();
 }
