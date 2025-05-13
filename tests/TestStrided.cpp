@@ -34,6 +34,7 @@ GTEST_TEST(TestStridedView, vector_int) {
   EXPECT_EQ(view.at(3), 6);
   EXPECT_EQ(view.at(4), 8);
   EXPECT_EQ(view.at(5), 10);
+  EXPECT_THROW((void)view.at(6), std::out_of_range);
 }
 
 struct test_data {
@@ -67,4 +68,5 @@ GTEST_TEST(TestStridedView, span) {
   EXPECT_EQ(view[1], data[3]);
   EXPECT_EQ(view[2], data[6]);
   EXPECT_EQ(view.at(3), data.at(9));
+  EXPECT_THROW((void)view.at(4), std::out_of_range);
 }
