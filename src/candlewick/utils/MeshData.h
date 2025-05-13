@@ -24,16 +24,23 @@ template <typename Derived> struct MeshDataBase {
   bool isIndexed() const { return numIndices() > 0; }
 };
 
+/// \brief A class to store type-erased vertex data and index data.
+///
+/// This is to be used as an intermediate data representation class to map to
+/// Mesh objects.
+///
 class MeshData : public MeshDataBase<MeshData> {
   std::vector<char> m_vertexData; //< Type-erased vertex data
   Uint32 m_numVertices;           //< Actual number of vertices
-  Uint32 m_vertexSize;            //< Size of an individual vertex (in bytes)
+
+  MeshData(const MeshData &) = default;
+
 public:
   using IndexType = Uint32;
   SDL_GPUPrimitiveType primitiveType; //< Geometry primitive for the mesh.
   MeshLayout layout;                  //< %Mesh layout.
   std::vector<IndexType> indexData;   //< Indices for indexed mesh. Optional.
-  PbrMaterial material;               //< PBR material
+  PbrMaterial material;               //< Mesh material.
 
   explicit MeshData(NoInitT);
 
@@ -41,9 +48,11 @@ public:
   explicit MeshData(SDL_GPUPrimitiveType primitiveType,
                     std::vector<VertexT> vertexData,
                     std::vector<IndexType> indexData = {});
+
   explicit MeshData(SDL_GPUPrimitiveType primitiveType,
                     const MeshLayout &layout, std::vector<char> vertexData,
                     std::vector<IndexType> indexData = {});
+
   MeshData(MeshData &&) noexcept = default;
   MeshData &operator=(MeshData &&) noexcept = default;
   MeshData &operator=(const MeshData &) noexcept = delete;
@@ -56,18 +65,22 @@ public:
   /// \brief Number of individual vertices.
   Uint32 numVertices() const noexcept { return m_numVertices; }
   /// \brief Size of each vertex, in bytes.
-  Uint32 vertexSize() const noexcept { return m_vertexSize; }
-  /// \brief Size of the vertex data, in bytes.
+  Uint32 vertexSize() const noexcept { return layout.vertexSize(); }
+  /// \brief Size of the overall vertex data, in bytes.
   Uint64 vertexBytes() const noexcept { return m_vertexData.size(); }
 
-  template <typename U> std::span<const U> viewAs() const {
-    const U *begin = reinterpret_cast<const U *>(m_vertexData.data());
-    return std::span<const U>(begin, m_numVertices);
-  }
-
+  /// \brief Obtain a typed view to the underlying vertex data.
+  ///
+  /// This should be used in tandem with the typed constructor.
   template <typename U> std::span<U> viewAs() {
     U *begin = reinterpret_cast<U *>(m_vertexData.data());
     return std::span<U>(begin, m_numVertices);
+  }
+
+  /// \copybrief viewAs().
+  template <typename U> std::span<const U> viewAs() const {
+    const U *begin = reinterpret_cast<const U *>(m_vertexData.data());
+    return std::span<const U>(begin, m_numVertices);
   }
 
   /// \brief Access an attribute. Use this when the underlying vertex data type
@@ -91,9 +104,6 @@ public:
   }
 
   std::span<const char> vertexData() const { return m_vertexData; }
-
-private:
-  MeshData(const MeshData &) = default;
 };
 
 template <IsVertexType VertexT>
@@ -137,10 +147,11 @@ MeshData::MeshData(SDL_GPUPrimitiveType primitiveType,
 void uploadMeshToDevice(const Device &device, const MeshView &meshView,
                         const MeshData &meshData);
 
+/// \copybrief uploadMeshToDevice().
 void uploadMeshToDevice(const Device &device, const Mesh &mesh,
                         const MeshData &meshData);
 
-inline std::vector<PbrMaterial>
+[[nodiscard]] inline std::vector<PbrMaterial>
 extractMaterials(std::span<const MeshData> meshDatas) {
   std::vector<PbrMaterial> out;
   out.reserve(meshDatas.size());
