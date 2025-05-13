@@ -104,8 +104,10 @@ namespace frustum_debug {
 
 FrustumBoundsDebugSystem::FrustumBoundsDebugSystem(entt::registry &registry,
                                                    const Renderer &renderer)
-    : renderer(renderer), device(renderer.device), pipeline(nullptr),
-      _registry(registry) {
+    : renderer(renderer)
+    , device(renderer.device)
+    , pipeline(nullptr)
+    , _registry(registry) {
   pipeline = frustum_debug::createFrustumDebugPipeline(renderer);
 }
 

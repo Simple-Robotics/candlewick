@@ -5,3 +5,6 @@ SortIncludes: false
 
 IndentPPDirectives: None
 NamespaceIndentation: Inner
+
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: NextLine

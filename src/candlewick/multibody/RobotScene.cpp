@@ -97,8 +97,12 @@ void RobotScene::clearRobotGeometries() {
 }
 
 RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer)
-    : m_registry(registry), m_renderer(renderer), m_config(),
-      m_geomModel(nullptr), m_geomData(nullptr), m_initialized(false) {
+    : m_registry(registry)
+    , m_renderer(renderer)
+    , m_config()
+    , m_geomModel(nullptr)
+    , m_geomData(nullptr)
+    , m_initialized(false) {
   assert(!hasInternalPointers());
 }
 

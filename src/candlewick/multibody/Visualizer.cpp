@@ -23,10 +23,12 @@ static Renderer _create_renderer(const Visualizer::Config &config) {
 Visualizer::Visualizer(const Config &config, const pin::Model &model,
                        const pin::GeometryModel &visual_model,
                        GuiSystem::GuiBehavior gui_callback)
-    : BaseVisualizer{model, visual_model}, registry{},
-      renderer{_create_renderer(config)},
-      guiSystem{renderer, std::move(gui_callback)},
-      robotScene{registry, renderer}, debugScene{registry, renderer} {
+    : BaseVisualizer{model, visual_model}
+    , registry{}
+    , renderer{_create_renderer(config)}
+    , guiSystem{renderer, std::move(gui_callback)}
+    , robotScene{registry, renderer}
+    , debugScene{registry, renderer} {
 
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
