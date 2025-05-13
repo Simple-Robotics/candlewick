@@ -107,7 +107,6 @@ MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {
   case GEOM_CONVEX: {
     auto &g = castCoalGeom<ConvexBase>(geometry);
     meshData = loadCoalConvex(g);
-    terminate_with_message("Geometry type \'GEOM_CONVEX\' not supported.");
     break;
   }
   case GEOM_ELLIPSOID: {
