@@ -54,6 +54,7 @@ MeshData loadCoalConvex(const coal::ConvexBase &geom_) {
   const auto &points = *geom.points;
   for (Uint32 i = 0; i < num_vertices; i++) {
     vertexData[i].pos = points[i].cast<float>();
+    vertexData[i].color.setOnes();
   }
 
   const auto &faces = *geom.polygons;
@@ -75,7 +76,8 @@ MeshData loadCoalConvex(const coal::ConvexBase &geom_) {
     vertexData[i].pos.normalized();
   }
 
-  return MeshData{SDL_GPU_PRIMITIVETYPE_TRIANGLELIST, std::move(vertexData)};
+  return MeshData{SDL_GPU_PRIMITIVETYPE_TRIANGLELIST, std::move(vertexData),
+                  std::move(indexData)};
 }
 
 MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {

@@ -29,11 +29,15 @@
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/geometry.hpp>
 
+#include <coal/mesh_loader/loader.h>
+#include <coal/BVH/BVH_model.h>
+
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_assert.h>
 #include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_filesystem.h>
 
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
@@ -85,6 +89,24 @@ static void updateOrtho(float zoom) {
   g_camera.camera.projection =
       orthographicMatrix({iz * aspectRatio, iz}, -8., 8.);
   currentOrthoScale = zoom;
+}
+
+static std::shared_ptr<coal::ConvexBase>
+loadConvexMeshFromFile(const std::string &filename) {
+  coal::NODE_TYPE bv_type = coal::BV_AABB;
+  coal::MeshLoader load{bv_type};
+  coal::BVHModelPtr_t bvh = load.load(filename);
+  bvh->buildConvexHull(true, "Qt");
+  return bvh->convex;
+}
+
+static pin::GeometryObject
+loadGeomObjFromFile(const char *name, const std::string &filename,
+                    pin::SE3 pl = pin::SE3::Identity()) {
+  auto convex = loadConvexMeshFromFile(filename);
+  Eigen::Vector3d scale;
+  scale.setConstant(0.1);
+  return pin::GeometryObject{name, 0, convex, pl, "", scale};
 }
 
 void eventLoop(const Renderer &renderer) {
@@ -202,6 +224,24 @@ int main(int argc, char **argv) {
   //   gobj.meshColor = 0xA03232FF_rgba;
   //   geom_model.addGeometryObject(gobj);
   // }
+  {
+    // add a geom obj
+    const char *basePath = SDL_GetBasePath();
+    char meshPath[256];
+    SDL_snprintf(meshPath, 256, "%s../../../%s", basePath,
+                 "assets/meshes/teapot.obj");
+    pin::SE3 pl = pin::SE3::Identity();
+    pl.translation() << -1.f, 1.f, 0.4;
+    using Eigen::Matrix3d;
+    using Eigen::Vector3d;
+    Matrix3d R = Eigen::AngleAxisd(constants::Pi_2, Vector3d::UnitX()).matrix();
+    pl.rotation().applyOnTheLeft(R);
+    auto convex_obj = loadGeomObjFromFile("teapot", meshPath, pl);
+    convex_obj.meshColor = 0xaab023ff_rgba;
+    convex_obj.overrideMaterial = true;
+    geom_model.addGeometryObject(convex_obj);
+  }
+
   pin::Data pin_data{model};
   pin::GeometryData geom_data{geom_model};
 
