@@ -16,29 +16,19 @@ namespace candlewick {
 
 constexpr float kPlaneScale = 10.f;
 
-// helper
-template <typename T>
-decltype(auto) castGeom(const coal::CollisionGeometry &geometry) {
-#ifndef DEBUG
-  return static_cast<const T &>(geometry);
-#else
-  return dynamic_cast<const T &>(geometry);
-#endif
-}
-
 static void
 getPlaneOrHalfspaceNormalOffset(const coal::CollisionGeometry &geometry,
                                 Float3 &n, float &d) {
   using namespace coal;
   switch (geometry.getNodeType()) {
   case GEOM_PLANE: {
-    auto &g = castGeom<Plane>(geometry);
+    auto &g = castCoalGeom<Plane>(geometry);
     n = g.n.cast<float>();
     d = float(g.d);
     return;
   }
   case GEOM_HALFSPACE: {
-    auto &g = castGeom<Halfspace>(geometry);
+    auto &g = castCoalGeom<Halfspace>(geometry);
     n = g.n.cast<float>();
     d = float(g.d);
     return;
@@ -50,7 +40,7 @@ getPlaneOrHalfspaceNormalOffset(const coal::CollisionGeometry &geometry,
   }
 }
 
-static MeshData loadCoalConvex(const coal::ConvexBase &geom_) {
+MeshData loadCoalConvex(const coal::ConvexBase &geom_) {
   std::vector<DefaultVertex> vertexData;
   std::vector<MeshData::IndexType> indexData;
 
@@ -97,13 +87,13 @@ MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry) {
   const NODE_TYPE nodeType = geometry.getNodeType();
   switch (nodeType) {
   case GEOM_BOX: {
-    auto &g = castGeom<Box>(geometry);
+    auto &g = castCoalGeom<Box>(geometry);
     transform.scale(g.halfSide.cast<float>());
     meshData = loadCubeSolid().toOwned();
     break;
   }
   case GEOM_SPHERE: {
-    auto &g = castGeom<Sphere>(geometry);
+    auto &g = castCoalGeom<Sphere>(geometry);
     // sphere loader doesn't have a radius argument, so apply scaling
     transform.scale(float(g.radius));
     meshData = loadUvSphereSolid(8u, 16u);
@@ -115,32 +105,32 @@ MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry) {
     break;
   }
   case GEOM_CONVEX: {
-    auto &g = castGeom<ConvexBase>(geometry);
+    auto &g = castCoalGeom<ConvexBase>(geometry);
     meshData = loadCoalConvex(g);
     terminate_with_message("Geometry type \'GEOM_CONVEX\' not supported.");
     break;
   }
   case GEOM_ELLIPSOID: {
-    auto &g = castGeom<Ellipsoid>(geometry);
+    auto &g = castCoalGeom<Ellipsoid>(geometry);
     transform.scale(g.radii.cast<float>());
     meshData = loadUvSphereSolid(8u, 16u);
     break;
   }
   case GEOM_CAPSULE: {
-    auto &g = castGeom<Capsule>(geometry);
+    auto &g = castCoalGeom<Capsule>(geometry);
     const float length = static_cast<float>(2 * g.halfLength);
     transform.scale(float(g.radius));
     meshData = loadCapsuleSolid(6u, 16u, length);
     break;
   }
   case GEOM_CONE: {
-    auto &g = castGeom<Cone>(geometry);
+    auto &g = castCoalGeom<Cone>(geometry);
     float length = 2 * float(g.halfLength);
     meshData = loadConeSolid(16u, float(g.radius), length);
     break;
   }
   case GEOM_CYLINDER: {
-    auto &g = castGeom<Cylinder>(geometry);
+    auto &g = castCoalGeom<Cylinder>(geometry);
     float height = 2.f * float(g.halfLength);
     meshData = loadCylinderSolid(6u, 16u, float(g.radius), height);
     break;
