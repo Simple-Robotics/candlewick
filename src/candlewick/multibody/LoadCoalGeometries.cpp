@@ -98,7 +98,7 @@ MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {
     auto &g = castCoalGeom<Sphere>(geometry);
     // sphere loader doesn't have a radius argument, so apply scaling
     transform.scale(float(g.radius));
-    meshData = loadUvSphereSolid(8u, 16u);
+    meshData = loadUvSphereSolid(12u, 24u);
     break;
   }
   case GEOM_TRIANGLE: {
@@ -114,7 +114,7 @@ MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {
   case GEOM_ELLIPSOID: {
     auto &g = castCoalGeom<Ellipsoid>(geometry);
     transform.scale(g.radii.cast<float>());
-    meshData = loadUvSphereSolid(8u, 16u);
+    meshData = loadUvSphereSolid(12u, 24u);
     break;
   }
   case GEOM_CAPSULE: {

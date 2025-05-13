@@ -85,9 +85,6 @@ public:
 
   ~Visualizer() override;
 
-  void displayPrecall() override {}
-  void displayImpl() override;
-
   void setCameraTarget(const Eigen::Ref<const Vector3> &target) override;
 
   void setCameraPosition(const Eigen::Ref<const Vector3> &position) override;
@@ -112,6 +109,10 @@ private:
   entt::entity m_plane, m_grid, m_triad;
 
   void render();
+
+  void displayPrecall() override {}
+
+  void displayImpl() override;
 };
 
 } // namespace candlewick::multibody
