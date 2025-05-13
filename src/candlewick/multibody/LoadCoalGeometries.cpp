@@ -1,10 +1,12 @@
-#include "LoadCoalPrimitives.h"
+#include "LoadCoalGeometries.h"
 
 #include "../core/errors.h"
+#include "../core/DefaultVertex.h"
 
 #include "../primitives/Primitives.h"
 #include "../utils/MeshTransforms.h"
 
+#include <coal/shape/convex.h>
 #include <coal/shape/geometric_shapes.h>
 #include <coal/hfield.h>
 #include <SDL3/SDL_assert.h>
@@ -48,9 +50,48 @@ getPlaneOrHalfspaceNormalOffset(const coal::CollisionGeometry &geometry,
   }
 }
 
+static MeshData loadCoalConvex(const coal::ConvexBase &geom_) {
+  std::vector<DefaultVertex> vertexData;
+  std::vector<MeshData::IndexType> indexData;
+
+  auto &geom = dynamic_cast<const coal::Convex<coal::Triangle> &>(geom_);
+  Uint32 num_vertices = geom.num_points;
+  Uint32 num_tris = geom.num_polygons;
+
+  vertexData.resize(num_vertices);
+  indexData.resize(3 * num_tris);
+
+  const auto &points = *geom.points;
+  for (Uint32 i = 0; i < num_vertices; i++) {
+    vertexData[i].pos = points[i].cast<float>();
+  }
+
+  const auto &faces = *geom.polygons;
+  for (Uint32 i = 0; i < num_tris; i++) {
+    auto f0 = indexData[3 * i + 0] = static_cast<Uint32>(faces[i][0]);
+    auto f1 = indexData[3 * i + 1] = static_cast<Uint32>(faces[i][1]);
+    auto f2 = indexData[3 * i + 2] = static_cast<Uint32>(faces[i][2]);
+
+    Float3 p0 = vertexData[f0].pos;
+    Float3 p1 = vertexData[f1].pos;
+    Float3 p2 = vertexData[f2].pos;
+    Float3 fn = (p2 - p1).cross(p0 - p1);
+    vertexData[f0].normal += fn;
+    vertexData[f1].normal += fn;
+    vertexData[f2].normal += fn;
+  }
+
+  for (Uint32 i = 0; i < num_vertices; i++) {
+    vertexData[i].pos.normalized();
+  }
+
+  return MeshData{SDL_GPU_PRIMITIVETYPE_TRIANGLELIST, std::move(vertexData)};
+}
+
 MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry) {
   using namespace coal;
-  SDL_assert_always(geometry.getObjectType() == OT_GEOM);
+  CDW_ASSERT(geometry.getObjectType() == OT_GEOM,
+             "CollisionGeometry object type must be OT_GEOM !");
   MeshData meshData{NoInit};
   Eigen::Affine3f transform = Eigen::Affine3f::Identity();
   const NODE_TYPE nodeType = geometry.getNodeType();
@@ -66,6 +107,17 @@ MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry) {
     // sphere loader doesn't have a radius argument, so apply scaling
     transform.scale(float(g.radius));
     meshData = loadUvSphereSolid(8u, 16u);
+    break;
+  }
+  case GEOM_TRIANGLE: {
+    // auto &g = castGeom<TriangleP>(geometry);
+    terminate_with_message("Geometry type \'GEOM_TRIANGLE\' not supported");
+    break;
+  }
+  case GEOM_CONVEX: {
+    auto &g = castGeom<ConvexBase>(geometry);
+    meshData = loadCoalConvex(g);
+    terminate_with_message("Geometry type \'GEOM_CONVEX\' not supported.");
     break;
   }
   case GEOM_ELLIPSOID: {
@@ -125,22 +177,11 @@ namespace detail {
   }
 } // namespace detail
 
-MeshData loadCoalHeightField(const coal::CollisionGeometry &collGeom) {
-  SDL_assert(collGeom.getObjectType() == coal::OT_HFIELD);
-  const coal::NODE_TYPE nodeType = collGeom.getNodeType();
-  switch (nodeType) {
-  case coal::HF_AABB:
-  case coal::BV_AABB: {
-    auto &geom = castGeom<coal::HeightField<coal::AABB>>(collGeom);
-    return detail::load_coal_heightfield_impl(geom);
-  }
-  case coal::HF_OBBRSS:
-  case coal::BV_OBBRSS: {
-    auto &geom = castGeom<coal::HeightField<coal::OBBRSS>>(collGeom);
-    return detail::load_coal_heightfield_impl(geom);
-  }
-  default:
-    terminate_with_message("Unsupported nodeType.");
-  }
+MeshData loadCoalHeightField(const coal::HeightField<coal::AABB> &geom) {
+  return detail::load_coal_heightfield_impl(geom);
+}
+
+MeshData loadCoalHeightField(const coal::HeightField<coal::OBBRSS> &geom) {
+  return detail::load_coal_heightfield_impl(geom);
 }
 } // namespace candlewick

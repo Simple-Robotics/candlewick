@@ -1,18 +1,8 @@
 #pragma once
 
-#include "../utils/Utils.h"
-#include "../core/math_types.h"
+#include "candlewick/deprecated.h"
+#include "candlewick/multibody/LoadCoalGeometries.h"
 
-#include <coal/fwd.hh>
-
-namespace candlewick {
-
-/// \brief Load primitive given a coal::CollisionGeometry.
-///
-/// See the documentation on the available primitives.
-/// \sa primitives1
-MeshData loadCoalPrimitive(const coal::CollisionGeometry &geometry);
-
-MeshData loadCoalHeightField(const coal::CollisionGeometry &collGeom);
-
-} // namespace candlewick
+CANDLEWICK_DEPRECATED_HEADER(
+    "This header is deprecated. Use "
+    "<candlewick/multibody/LoadCoalGeometries.h> instead.")

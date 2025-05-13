@@ -1,5 +1,5 @@
 #include "LoadPinocchioGeometry.h"
-#include "LoadCoalPrimitives.h"
+#include "LoadCoalGeometries.h"
 #include "../core/errors.h"
 #include "../utils/LoadMesh.h"
 #include "../utils/MeshTransforms.h"
