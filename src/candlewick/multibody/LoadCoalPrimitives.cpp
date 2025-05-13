@@ -17,7 +17,11 @@ constexpr float kPlaneScale = 10.f;
 // helper
 template <typename T>
 decltype(auto) castGeom(const coal::CollisionGeometry &geometry) {
+#ifndef DEBUG
   return static_cast<const T &>(geometry);
+#else
+  return dynamic_cast<const T &>(geometry);
+#endif
 }
 
 static void
