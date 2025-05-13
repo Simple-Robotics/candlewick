@@ -12,18 +12,54 @@ namespace candlewick {
 /// The stride is specified in terms of bytes instead of \c T.
 /// \tparam T Stored data type.
 template <typename T> class strided_view {
-  [[nodiscard]] char *erased_ptr() const {
-    return reinterpret_cast<char *>(m_data);
+  using erased_type =
+      std::conditional_t<std::is_const_v<T>, const char, char> *;
+
+  [[nodiscard]] erased_type erased_ptr() const {
+    return reinterpret_cast<erased_type>(m_data);
   }
 
 public:
   using element_type = T;
   using value_type = std::remove_cv_t<T>;
-  using size_type = size_t;
+  using size_type = std::size_t;
+  using difference_type = std::ptrdiff_t;
   using pointer = T *;
   using const_pointer = const T *;
   using reference = element_type &;
   using const_reference = const element_type &;
+
+  class iterator final {
+    pointer _ptr;
+    size_type _stride;
+
+  public:
+    using iterator_concept = std::forward_iterator_tag;
+    using value_type = strided_view::value_type;
+    using difference_type = strided_view::difference_type;
+
+    iterator() : _ptr(nullptr), _stride(0) {}
+
+    iterator(pointer ptr, size_type stride) : _ptr(ptr), _stride(stride) {}
+
+    reference operator*() const { return *_ptr; }
+    pointer operator->() const { return _ptr; }
+
+    iterator &operator++() {
+      auto p = reinterpret_cast<erased_type>(_ptr) + _stride;
+      _ptr = reinterpret_cast<pointer>(p);
+      return *this;
+    }
+
+    iterator operator++(int) {
+      iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    bool operator<=>(const iterator &) const = default;
+  };
+  static_assert(std::forward_iterator<iterator>);
 
   constexpr strided_view() noexcept : m_data(nullptr), m_size(0), m_stride(0) {}
 
@@ -56,6 +92,17 @@ public:
 
   strided_view &operator=(const strided_view &) noexcept = default;
 
+  iterator begin() const { return iterator{m_data, m_stride}; }
+
+  iterator end() const {
+    return iterator{
+        reinterpret_cast<pointer>(erased_ptr() + m_stride * max_index()),
+        m_stride};
+  }
+
+  iterator cbegin() const { return this->begin(); }
+  iterator cend() const { return this->end(); }
+
   /// \brief Size (number of elements) of the view.
   [[nodiscard]] size_type size() const noexcept { return m_size; }
 
@@ -74,7 +121,8 @@ public:
   [[nodiscard]] reference front() const noexcept { return *m_data; }
 
   [[nodiscard]] reference back() const noexcept {
-    return *reinterpret_cast<pointer>(erased_ptr() + m_stride * (m_size - 1));
+    return *reinterpret_cast<pointer>(erased_ptr() +
+                                      m_stride * (max_index() - 1));
   }
 
   [[nodiscard]] reference operator[](size_type idx) const noexcept {

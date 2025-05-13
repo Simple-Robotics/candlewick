@@ -22,7 +22,7 @@ GTEST_TEST(TestStridedView, vector_int) {
   std::iota(data.begin(), data.end(), 0);
 
   auto stride = 2 * sizeof(int);
-  auto view = strided_view(data.data(), data.size(), stride);
+  strided_view<const int> view{data.data(), data.size(), stride};
   EXPECT_EQ(view.size(), data.size());
   EXPECT_EQ(view.stride_bytes(), stride);
   EXPECT_EQ(view.max_index(), 6);
@@ -35,6 +35,13 @@ GTEST_TEST(TestStridedView, vector_int) {
   EXPECT_EQ(view.at(4), 8);
   EXPECT_EQ(view.at(5), 10);
   EXPECT_THROW((void)view.at(6), std::out_of_range);
+
+  int count = 0;
+  for (auto it = view.begin(); it != view.end(); it++) {
+    EXPECT_EQ(*it, count);
+    count += 2;
+  }
+  EXPECT_EQ(count, 2 * view.max_index());
 }
 
 struct test_data {
