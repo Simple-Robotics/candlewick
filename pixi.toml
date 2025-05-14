@@ -43,6 +43,7 @@ configure = { cmd = [
 ] }
 build = { cmd = "cmake --build build --target all", depends-on = ["configure"]}
 clean = { cmd = "rm -rf build" }
+doc = { cmd = "cmake -B build --target doc", depends-on = ["configure"] }
 
 [feature.pinocchio.dependencies]
 pinocchio = ">=3.5"
@@ -56,9 +57,14 @@ gtest = "*"
 [feature.test.activation]
 env = { CANDLEWICK_BUILD_TESTS = "ON" }
 
+[feature.doc.dependencies]
+doxygen = "*"
+
 [environments]
 pinocchio = { features = ["pinocchio"] }
 # test core
 test = { features = ["test"] }
 # test all (pinocchio)
 all-test = { features = ["pinocchio", "test"]}
+# doc environment
+doc = { features = ["doc", "default"] }
