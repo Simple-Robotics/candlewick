@@ -15,13 +15,13 @@ pkg-config = ">=0.29.2"
 ccache = ">=4.9.1"
 
 [dependencies]
-sdl3 = ">=3.2.8"
+sdl3 = ">=3.2.12,<4"
 magic_enum = ">=0.9.7,<0.10"
 entt = ">=3.15.0,<4"
-nlohmann_json = ">=3.10"
-coal = ">=3.0.1"
-assimp = ">=5.3.0"
-eigenpy = ">=3.10"
+nlohmann_json = ">=3.12.0,<4"
+coal = ">=3.0.1,<4"
+assimp = ">=5.4.3,<6"
+eigenpy = ">=3.10.3,<4"
 
 [activation]
 scripts = ["scripts/pixi/activation.sh"]
