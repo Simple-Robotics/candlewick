@@ -366,8 +366,8 @@ int main(int argc, char **argv) {
         }
 
         ImGui::SeparatorText("Env. status");
-        add_disable_checkbox("Render plane", registry, plane_entity,
-                             show_plane_vis);
+        guiAddDisableCheckbox("Render plane", registry, plane_entity,
+                              show_plane_vis);
         ImGui::Checkbox("Render grid", &grid.enable);
         ImGui::Checkbox("Render triad", &triad.enable);
         ImGui::Checkbox("Render frustum", &showFrustum);
@@ -393,7 +393,7 @@ int main(int argc, char **argv) {
         multibody::guiPinocchioModelInfo(model, geom_model, registry);
 
         ImGui::SeparatorText("Lights");
-        add_light_controls_gui(sceneLight);
+        guiAddLightControls(sceneLight);
 
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),
@@ -452,8 +452,6 @@ int main(int argc, char **argv) {
     pin::updateFramePlacements(model, pin_data);
     pin::updateGeometryPlacements(model, pin_data, geom_model, geom_data);
     debug_scene.update();
-
-    FrustumCornersType main_cam_frustum = frustumFromCamera(g_camera);
 
     // acquire command buffer and swapchain
     CommandBuffer command_buffer = renderer.acquireCommandBuffer();

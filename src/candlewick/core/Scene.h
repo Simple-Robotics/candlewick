@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer.h"
+#include "Core.h"
 #include <concepts>
 
 namespace candlewick {
