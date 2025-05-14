@@ -18,6 +18,7 @@ ADD_PROJECT_DEPENDENCY(
   avcodec
   swscale
 )
+find_package(ZeroMQ REQUIRED)
 
 add_library(
   candlewick_core
@@ -129,6 +130,13 @@ if(BUILD_PINOCCHIO_VISUALIZER)
     EXPORT ${TARGETS_EXPORT_NAME}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  find_package(cppzmq)
+  add_executable(candlewick_visualizer candlewick/runtime/main.cpp)
+  target_link_libraries(
+    candlewick_visualizer
+    PRIVATE cppzmq candlewick_multibody
   )
 endif()
 
