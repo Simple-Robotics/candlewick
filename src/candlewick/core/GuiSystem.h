@@ -27,17 +27,19 @@ private:
 };
 
 /// \ingroup gui_util
+/// \{
 /// \brief Show an about window providing information about Candlewick.
 void showCandlewickAboutWindow(bool *p_open = NULL);
 
 struct DirectionalLight;
 
 /// \brief Adds a set of ImGui elements to control a DirectionalLight.
-void add_light_controls_gui(DirectionalLight &light);
+void guiAddLightControls(DirectionalLight &light);
 
 /// \brief Adds an ImGui::Checkbox which toggles the Disable component on the
 /// entity.
-void add_disable_checkbox(const char *label, entt::registry &reg,
-                          entt::entity id, bool &flag);
+void guiAddDisableCheckbox(const char *label, entt::registry &reg,
+                           entt::entity id, bool &flag);
+/// \}
 
 } // namespace candlewick

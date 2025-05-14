@@ -130,7 +130,7 @@ void guiPinocchioModelInfo(const pin::Model &model,
       char chk_label[32];
       bool enabled = !disabled.contains(ent);
       SDL_snprintf(chk_label, 32, "enabled###%zu", id.geom_index);
-      add_disable_checkbox(chk_label, reg, ent, enabled);
+      guiAddDisableCheckbox(chk_label, reg, ent, enabled);
     }
     ImGui::EndTable();
   }
@@ -186,7 +186,7 @@ void Visualizer::default_gui_exec() {
 
   ImGui::SeparatorText("Lights and camera controls");
 
-  add_light_controls_gui(light);
+  guiAddLightControls(light);
   camera_params_gui(controller, cameraParams);
 
   auto add_env_checkbox = [this](const char *title, entt::entity ent) {
@@ -205,8 +205,8 @@ void Visualizer::default_gui_exec() {
                         ImGuiColorEditFlags_AlphaPreview);
     }
     add_env_checkbox("triad", m_triad);
-    add_disable_checkbox("Render plane", registry, m_plane,
-                         envStatus.show_plane);
+    guiAddDisableCheckbox("Render plane", registry, m_plane,
+                          envStatus.show_plane);
   }
 
   if (ImGui::CollapsingHeader("Robot model info",
