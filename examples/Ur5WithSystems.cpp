@@ -51,8 +51,8 @@ using multibody::RobotScene;
 
 /// Application constants
 
-constexpr Uint32 wWidth = 1680;
-constexpr Uint32 wHeight = 900;
+constexpr Uint32 wWidth = 1920;
+constexpr Uint32 wHeight = 1050;
 constexpr float aspectRatio = float(wWidth) / float(wHeight);
 
 /// Application state
@@ -405,8 +405,6 @@ int main(int argc, char **argv) {
 
         ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
         ImGui::ShowDemoWindow(&demo_window_open);
-        if (show_about_window)
-          showCandlewickAboutWindow(&show_about_window);
       }};
 
   // MAIN APPLICATION LOOP
