@@ -51,8 +51,8 @@ using multibody::RobotScene;
 
 /// Application constants
 
-constexpr Uint32 wWidth = 1680;
-constexpr Uint32 wHeight = 900;
+constexpr Uint32 wWidth = 1920;
+constexpr Uint32 wHeight = 1050;
 constexpr float aspectRatio = float(wWidth) / float(wHeight);
 
 /// Application state
@@ -325,6 +325,7 @@ int main(int argc, char **argv) {
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
         window_flags |= ImGuiWindowFlags_MenuBar;
+        ImGui::SetNextWindowPos({20, 20}, ImGuiCond_FirstUseEver);
         ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
         if (ImGui::BeginMenuBar()) {
@@ -390,7 +391,7 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Robot model");
         ImGui::SetItemTooltip("Information about the displayed robot model.");
-        multibody::guiPinocchioModelInfo(model, geom_model, registry);
+        multibody::guiAddPinocchioModelInfo(registry, model, geom_model);
 
         ImGui::SeparatorText("Lights");
         guiAddLightControls(sceneLight);
@@ -405,8 +406,6 @@ int main(int argc, char **argv) {
 
         ImGui::SetNextWindowCollapsed(true, ImGuiCond_Once);
         ImGui::ShowDemoWindow(&demo_window_open);
-        if (show_about_window)
-          showCandlewickAboutWindow(&show_about_window);
       }};
 
   // MAIN APPLICATION LOOP

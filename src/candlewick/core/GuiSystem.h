@@ -29,7 +29,7 @@ private:
 /// \ingroup gui_util
 /// \{
 /// \brief Show an about window providing information about Candlewick.
-void showCandlewickAboutWindow(bool *p_open = NULL);
+void showCandlewickAboutWindow(bool *p_open = NULL, float wrap_width = 400.f);
 
 struct DirectionalLight;
 

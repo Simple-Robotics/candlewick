@@ -11,10 +11,9 @@
 
 namespace candlewick::multibody {
 
-void guiPinocchioModelInfo(const pin::Model &model,
-                           const pin::GeometryModel &geom_model,
-                           entt::registry &reg) {
-  const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
+                              const pin::GeometryModel &geom_model,
+                              int table_height_lines) {
   ImGuiTableFlags flags = 0;
   flags |= ImGuiTableFlags_SizingStretchProp;
   if (ImGui::BeginTable("pin_info_table", 4, flags)) {
@@ -36,7 +35,8 @@ void guiPinocchioModelInfo(const pin::Model &model,
 
   flags |= ImGuiTableFlags_RowBg;
   flags |= ImGuiTableFlags_ScrollY;
-  ImVec2 outer_size{0.0f, TEXT_BASE_HEIGHT * 12};
+  const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+  ImVec2 outer_size{0.0f, TEXT_BASE_HEIGHT * float(table_height_lines)};
 
   ImGui::Text("Frames");
   ImGui::Spacing();
@@ -136,8 +136,8 @@ void guiPinocchioModelInfo(const pin::Model &model,
   }
 }
 
-void camera_params_gui(CylindricalCamera &controller,
-                       CameraControlParams &params) {
+static void camera_params_gui(CylindricalCamera &controller,
+                              CameraControlParams &params) {
   if (ImGui::TreeNode("Camera controls")) {
     ImGui::SliderFloat("Rot. sensitivity", &params.rotSensitivity, 0.001f,
                        0.01f);
@@ -171,6 +171,7 @@ void Visualizer::default_gui_exec() {
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
   window_flags |= ImGuiWindowFlags_MenuBar;
+  ImGui::SetNextWindowPos({20, 20}, ImGuiCond_FirstUseEver);
   ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
   if (ImGui::BeginMenuBar()) {
@@ -211,21 +212,21 @@ void Visualizer::default_gui_exec() {
 
   if (ImGui::CollapsingHeader("Robot model info",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
-    guiPinocchioModelInfo(m_model, visualModel(), registry);
+    guiAddPinocchioModelInfo(registry, m_model, visualModel());
   }
 
   ImGui::End();
 }
 
-void mouse_wheel_handler(CylindricalCamera &controller,
-                         const CameraControlParams &params,
-                         SDL_MouseWheelEvent event) {
+static void mouse_wheel_handler(CylindricalCamera &controller,
+                                const CameraControlParams &params,
+                                SDL_MouseWheelEvent event) {
   controller.moveInOut(1.f - params.zoomSensitivity, event.y);
 }
 
-void mouse_motion_handler(CylindricalCamera &controller,
-                          const CameraControlParams &params,
-                          const SDL_MouseMotionEvent &event) {
+static void mouse_motion_handler(CylindricalCamera &controller,
+                                 const CameraControlParams &params,
+                                 const SDL_MouseMotionEvent &event) {
   Float2 mvt{event.xrel, event.yrel};
   SDL_MouseButtonFlags mb = event.state;
   // check if left mouse pressed

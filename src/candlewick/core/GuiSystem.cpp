@@ -6,14 +6,12 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlgpu3.h"
 
-#include <stdexcept>
-
 namespace candlewick {
 
 GuiSystem::GuiSystem(const Renderer &renderer, GuiBehavior behav)
     : m_renderer(&renderer), _callback(behav) {
   if (!init(renderer)) {
-    throw std::runtime_error("Failed to initialize ImGui for SDLGPU3.");
+    terminate_with_message("Failed to initialize ImGui for SDLGPU3.");
   }
 }
 
@@ -70,7 +68,7 @@ void GuiSystem::release() {
   ImGui::DestroyContext();
 }
 
-void showCandlewickAboutWindow(bool *p_open) {
+void showCandlewickAboutWindow(bool *p_open, float wrap_width) {
   if (!ImGui::Begin("About Candlewick", p_open,
                     ImGuiWindowFlags_AlwaysAutoResize)) {
     ImGui::End();
@@ -88,7 +86,6 @@ void showCandlewickAboutWindow(bool *p_open) {
 
   ImGui::Separator();
   ImGui::Text("Copyright (c) 2024-2025 Inria");
-  constexpr float wrap_width = 400.f;
   ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + wrap_width);
   ImGui::Text("Candlewick is licensed under the BSD 2-Clause License, see "
               "LICENSE file for more information.");

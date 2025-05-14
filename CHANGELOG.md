@@ -25,6 +25,9 @@ This is the first release to use a changelog.
 
 ### Changed
 
+- multibody : change signature and rename { guiPinocchioModelInfo() => guiAddPinocchioModelInfo() } ([#54](https://github.com/Simple-Robotics/candlewick/pull/54))
+- core : pass wrap width to showCandlewickAboutWindow ([#54](https://github.com/Simple-Robotics/candlewick/pull/54))
+- Visualizer: set next window pos ([#54](https://github.com/Simple-Robotics/candlewick/pull/54))
 - core/GuiSystem.h : rename some free functions, group them in topic
 - Read geometry object `meshColor` `meshScale` when updating robot scene ([#50](https://github.com/Simple-Robotics/candlewick/pull/50))
 - Set minimum version of ffmpeg to 7.x ([#50](https://github.com/Simple-Robotics/candlewick/pull/50))
