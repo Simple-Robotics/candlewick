@@ -26,7 +26,10 @@ bool GuiSystem::init(const Renderer &renderer) {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
   io.IniFilename = nullptr;
 
-  ImGui::StyleColorsDark();
+  ImGuiStyle &style = ImGui::GetStyle();
+  ImGui::StyleColorsDark(&style);
+  style.WindowBorderSize = 0.5f;
+  style.WindowRounding = 6;
   if (!ImGui_ImplSDL3_InitForSDLGPU(renderer.window)) {
     return false;
   }
