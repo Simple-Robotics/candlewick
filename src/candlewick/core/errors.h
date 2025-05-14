@@ -1,6 +1,8 @@
 #pragma once
 
-#include "unreachable.h"
+#if (__cpp_lib_unreachable >= 202202L)
+#include <utility>
+#endif
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_assert.h>
@@ -11,6 +13,16 @@
 #include <source_location>
 
 namespace candlewick {
+
+[[noreturn]] inline void unreachable() {
+#if (__cpp_lib_unreachable >= 202202L)
+  std::unreachable();
+#elif defined(_MSC_VER)
+  __assume(false);
+#else
+  __builtin_unreachable();
+#endif
+}
 
 /// \brief Wrapper for std::runtime_error, which prints out the filename and
 /// code line.
