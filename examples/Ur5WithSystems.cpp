@@ -325,6 +325,7 @@ int main(int argc, char **argv) {
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
         window_flags |= ImGuiWindowFlags_MenuBar;
+        ImGui::SetNextWindowPos({20, 20}, ImGuiCond_FirstUseEver);
         ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
         if (ImGui::BeginMenuBar()) {
@@ -390,7 +391,7 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Robot model");
         ImGui::SetItemTooltip("Information about the displayed robot model.");
-        multibody::guiPinocchioModelInfo(model, geom_model, registry);
+        multibody::guiAddPinocchioModelInfo(registry, model, geom_model);
 
         ImGui::SeparatorText("Lights");
         guiAddLightControls(sceneLight);

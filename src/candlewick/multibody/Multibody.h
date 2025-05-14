@@ -23,8 +23,8 @@ namespace multibody {
   /// \ingroup gui_util
   /// \brief Display Pinocchio model and geometry model info in ImGui.
   /// \image html robot-info-panel.png "Robot information panel."
-  void guiPinocchioModelInfo(const pin::Model &model,
-                             const pin::GeometryModel &geom_model,
-                             entt::registry &reg);
+  void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
+                                const pin::GeometryModel &geom_model,
+                                int table_height_lines = 6);
 } // namespace multibody
 } // namespace candlewick
