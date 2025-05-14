@@ -6,7 +6,7 @@ set(PROJECT_NAME candlewick)
 set(PROJECT_CUSTOM_HEADER_EXTENSION "h")
 set(PROJECT_DESCRIPTION "A renderer")
 set(PROJECT_CUSTOM_HEADER_DIR)
-set(PROJECT_URL "https://github.com/ManifoldFR/candlewick")
+set(PROJECT_URL "https://github.com/Simple-Robotics/candlewick")
 set(PROJECT_GENERATED_HEADERS_SKIP_WARNING True)
 
 set(CMAKE_CXX_STANDARD 20)
