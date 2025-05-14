@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.6] - 2025-05-14
 
-## [0.0.6] - 2025-05-14
-
 This is the first release to use a changelog.
 
 ### Removed
