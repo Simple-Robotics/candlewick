@@ -1,3 +1,6 @@
+/// \file Visualizer.h
+/// \author ManifoldFR
+/// \copyright 2025 INRIA
 #pragma once
 
 #include "Multibody.h"
