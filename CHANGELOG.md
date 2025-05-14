@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6] - 2025-05-14
+
+## [0.0.6] - 2025-05-14
+
 This is the first release to use a changelog.
 
 ### Removed
@@ -39,4 +43,6 @@ This is the first release to use a changelog.
 - Visual bug (uninitialized data) when disabling SSAO
 
 
-[Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.6...HEAD
+[0.0.6]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.6...v0.0.6
+[0.0.6]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.5...v0.0.6
