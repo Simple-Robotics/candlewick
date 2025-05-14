@@ -159,14 +159,12 @@ void main() {
     // Ambient term (very simple)
     vec3 ambient = vec3(0.03) * material.baseColor.rgb * material.ao;
 #ifdef HAS_SSAO
-    float ssao_val;
     vec2 ssaoTexSize = textureSize(ssaoTex, 0).xy;
     vec2 ssaoUV;
     ssaoUV = gl_FragCoord.xy / ssaoTexSize;
     if(params.useSsao == 1) {
-        ssao_val = texture(ssaoTex, ssaoUV).r;
+        ambient *= texture(ssaoTex, ssaoUV).r;
     }
-    ambient *= ssao_val;
 #endif
 
     // Final color

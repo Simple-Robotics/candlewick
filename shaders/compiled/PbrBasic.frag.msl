@@ -217,12 +217,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Material& _335 [[buf
     float3 ambient = (float3(0.02999999932944774627685546875) * _335.material.baseColor.xyz) * _335.material.ao;
     float2 ssaoTexSize = float2(int2(ssaoTex.get_width(), ssaoTex.get_height()));
     float2 ssaoUV = gl_FragCoord.xy / ssaoTexSize;
-    float ssao_val;
     if (params.useSsao == 1u)
     {
-        ssao_val = ssaoTex.sample(ssaoTexSmplr, ssaoUV).x;
+        ambient *= ssaoTex.sample(ssaoTexSmplr, ssaoUV).x;
     }
-    ambient *= ssao_val;
     float3 color = ambient + Lo;
     float3 param_10 = color;
     color = uncharted2ToneMapping(param_10);

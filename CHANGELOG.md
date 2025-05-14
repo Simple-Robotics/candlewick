@@ -34,6 +34,9 @@ This is the first release to use a changelog.
 - Change signature of `loadCoalPrimitive()` to take `coal::ShapeBase`
 - Change signature of `MeshData::getAttribute()` template member function to use strided view
 
+### Fixed
+
+- Visual bug (uninitialized data) when disabling SSAO
 
 
 [Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.5...HEAD
