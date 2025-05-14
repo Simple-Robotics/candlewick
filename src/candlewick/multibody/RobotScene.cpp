@@ -25,12 +25,21 @@ struct alignas(16) light_ubo_t {
 };
 
 void updateRobotTransforms(entt::registry &registry,
+                           const pin::GeometryModel &geom_model,
                            const pin::GeometryData &geom_data) {
-  auto robot_view =
-      registry.view<const PinGeomObjComponent, TransformComponent>();
-  for (auto [ent, geom_id, tr] : robot_view.each()) {
+  auto view = registry.view<const PinGeomObjComponent, TransformComponent,
+                            MeshMaterialComponent>();
+  for (auto [ent, geom_id, tr, mmc] : view.each()) {
+    auto &gobj = geom_model.geometryObjects[geom_id];
     SE3f pose = geom_data.oMg[geom_id].cast<float>();
+    Float3 scale = gobj.meshScale.cast<float>();
+    auto D = scale.asDiagonal();
     tr = pose.toHomogeneousMatrix();
+    tr.topLeftCorner<3, 3>().applyOnTheRight(D);
+    if (gobj.overrideMaterial) {
+      for (auto &mat : mmc.materials)
+        mat.baseColor = gobj.meshColor.cast<float>();
+    }
   }
 }
 
@@ -194,7 +203,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
 }
 
 void RobotScene::updateTransforms() {
-  ::candlewick::multibody::updateRobotTransforms(m_registry, *m_geomData);
+  updateRobotTransforms(m_registry, geomModel(), geomData());
 }
 
 void RobotScene::collectOpaqueCastables() {

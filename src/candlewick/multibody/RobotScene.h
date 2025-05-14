@@ -31,7 +31,14 @@ invalid_enum(const char *msg, T type,
 
 namespace multibody {
 
+  /// \brief A system for updating the transform components for robot geometry
+  /// entities.
+  ///
+  /// This will also update the mesh materials.
+  ///
+  /// Reads PinGeomObjComponent, updates TransformComponent.
   void updateRobotTransforms(entt::registry &registry,
+                             const pin::GeometryModel &geom_model,
                              const pin::GeometryData &geom_data);
 
   /// \brief A render system for Pinocchio robot geometries using Pinocchio.
@@ -148,14 +155,17 @@ namespace multibody {
       return addEnvironmentObject(std::move(data), T.matrix(), pipe_type);
     }
 
+    /// \brief Destroy all entities with the EnvironmentTag component.
     void clearEnvironment();
+    /// \brief Destroy all entities with the PinGeomObjComponent component
+    /// (Pinocchio geometry objects).
     void clearRobotGeometries();
 
     [[nodiscard]] SDL_GPUGraphicsPipeline *createPipeline(
         const MeshLayout &layout, SDL_GPUTextureFormat render_target_format,
         SDL_GPUTextureFormat depth_stencil_format, PipelineType type);
 
-    /// \warning Call updateRobotTransforms() before rendering the objects with
+    /// \warning Call updateTransforms() before rendering the objects with
     /// this function.
     void render(CommandBuffer &command_buffer, const Camera &camera);
 

@@ -17,12 +17,8 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
   const OBJECT_TYPE objType = collgom.getObjectType();
 
   Float4 meshColor = gobj.meshColor.cast<float>();
-  Float3 meshScale = gobj.meshScale.cast<float>();
   const char *meshPath = gobj.meshPath.c_str();
 
-  Eigen::Affine3f T;
-  T.setIdentity();
-  T.scale(meshScale);
   switch (objType) {
   case OT_BVH: {
     loadSceneMeshes(meshPath, meshData);
@@ -55,7 +51,6 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
     break;
   }
   for (auto &data : meshData) {
-    apply3DTransformInPlace(data, T);
     if (gobj.overrideMaterial)
       data.material.baseColor = meshColor;
   }
