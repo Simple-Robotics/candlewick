@@ -4,7 +4,6 @@
 #include "Collision.h"
 #include "Camera.h"
 
-#include <stdexcept>
 #include <format>
 #include <SDL3/SDL_log.h>
 
@@ -13,7 +12,7 @@ namespace candlewick {
 DepthPassInfo DepthPassInfo::create(const Renderer &renderer,
                                     const MeshLayout &layout,
                                     SDL_GPUTexture *depth_texture,
-                                    Config config) {
+                                    const Config &config) {
   if (depth_texture == nullptr)
     depth_texture = renderer.depth_texture;
   const Device &device = renderer.device;
@@ -39,25 +38,24 @@ DepthPassInfo DepthPassInfo::create(const Renderer &renderer,
                    .depth_stencil_format = renderer.depthFormat(),
                    .has_depth_stencil_target = true},
   };
-  auto *pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
-  DepthPassInfo out;
-  out.depthTexture = depth_texture;
-  out.pipeline = pipeline;
-  out._device = device;
-  return out;
+  return DepthPassInfo{
+      .depthTexture = depth_texture,
+      .pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc),
+      ._device = device,
+  };
 }
 
 void DepthPassInfo::release() {
   // do not release depth texture here, because it is assumed to be borrowed.
   if (_device && pipeline) {
     SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
-    pipeline = nullptr;
   }
+  pipeline = nullptr;
 }
 
 ShadowPassInfo ShadowPassInfo::create(const Renderer &renderer,
                                       const MeshLayout &layout,
-                                      const ShadowPassConfig &config) {
+                                      const Config &config) {
   const Device &device = renderer.device;
 
   // TEXTURE
@@ -78,9 +76,8 @@ ShadowPassInfo ShadowPassInfo::create(const Renderer &renderer,
   SDL_GPUTexture *shadowMap = SDL_CreateGPUTexture(device, &texInfo);
   SDL_SetGPUTextureName(device, shadowMap, "Shadow map");
   if (!shadowMap) {
-    auto msg =
-        std::format("Failed to create shadow map texture: %s", SDL_GetError());
-    throw std::runtime_error(msg);
+    terminate_with_message(
+        std::format("Failed to create shadow map texture: %s", SDL_GetError()));
   }
 
   DepthPassInfo passInfo =
@@ -94,9 +91,8 @@ ShadowPassInfo ShadowPassInfo::create(const Renderer &renderer,
                             });
   if (!passInfo.pipeline) {
     SDL_ReleaseGPUTexture(device, shadowMap);
-    auto msg =
-        std::format("Failed to create shadow map pipeline: %s", SDL_GetError());
-    throw std::runtime_error(msg);
+    terminate_with_message(std::format(
+        "Failed to create shadow map pipeline: %s", SDL_GetError()));
   }
 
   SDL_GPUSamplerCreateInfo sample_desc{
@@ -116,12 +112,12 @@ void ShadowPassInfo::release() {
   DepthPassInfo::release();
   if (depthTexture) {
     SDL_ReleaseGPUTexture(_device, depthTexture);
-    depthTexture = nullptr;
   }
+  depthTexture = nullptr;
   if (sampler) {
     SDL_ReleaseGPUSampler(_device, sampler);
-    sampler = nullptr;
   }
+  sampler = nullptr;
 }
 
 void renderDepthOnlyPass(CommandBuffer &cmdBuf, const DepthPassInfo &passInfo,

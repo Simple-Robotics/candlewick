@@ -48,6 +48,7 @@ struct DepthPassInfo {
   };
   SDL_GPUTexture *depthTexture = nullptr;
   SDL_GPUGraphicsPipeline *pipeline = nullptr;
+  SDL_GPUDevice *_device = nullptr;
 
   /// \brief Create DepthPass (e.g. for a depth pre-pass) from a Renderer
   /// and specified MeshLayout.
@@ -57,27 +58,25 @@ struct DepthPassInfo {
   /// state.
   /// \param depth_texture If null, we assume that the depth texture to use is
   /// the shared depth texture stored in \p renderer.
-  /// \sa createShadowPass()
+  /// \sa ShadowPassInfo::create()
   [[nodiscard]] static DepthPassInfo
   create(const Renderer &renderer, const MeshLayout &layout,
-         SDL_GPUTexture *depth_texture = NULL, Config config = {});
+         SDL_GPUTexture *depth_texture = nullptr, const Config &config = {});
+
   /// Release the pass pipeline.
   /// \warning We do not depth texture here, because it is assumed to be
   /// borrowed.
   void release();
-
-protected:
-  SDL_GPUDevice *_device = nullptr;
 };
 
-/// \brief Shadow pass configuration, to use in createShadowPass().
-struct ShadowPassConfig {
-  // default is 2k x 2k texture
-  Uint32 width = 2048;
-  Uint32 height = 2048;
-};
-
+/// \ingroup depth_pass
+/// \brief Helper struct for shadow mapping pass.
 struct ShadowPassInfo : DepthPassInfo {
+  struct Config {
+    // default is 2k x 2k texture
+    Uint32 width = 2048;
+    Uint32 height = 2048;
+  };
   /// Sampler to use for main render passes.
   SDL_GPUSampler *sampler;
   Camera cam;
@@ -85,10 +84,12 @@ struct ShadowPassInfo : DepthPassInfo {
   /// \sa DepthPassInfo::create()
   [[nodiscard]] static ShadowPassInfo create(const Renderer &renderer,
                                              const MeshLayout &layout,
-                                             const ShadowPassConfig &config);
+                                             const Config &config);
 
   void release();
 };
+
+using ShadowPassConfig = ShadowPassInfo::Config;
 
 /// \ingroup depth_pass
 /// \brief Render a depth-only pass, built from a set of OpaqueCastable.
