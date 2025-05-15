@@ -57,6 +57,9 @@ namespace multibody {
     void renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                    const Camera &camera);
 
+    void renderTransparentTriangleGeometry(CommandBuffer &command_buffer,
+                                           const Camera &camera);
+
     void renderOtherGeometry(CommandBuffer &command_buffer,
                              const Camera &camera);
 
@@ -119,6 +122,24 @@ namespace multibody {
       ShadowPassConfig shadow_config;
     };
 
+    struct Pipelines {
+      struct {
+        SDL_GPUGraphicsPipeline *opaque = nullptr;
+        SDL_GPUGraphicsPipeline *transparent = nullptr;
+      } triangleMesh;
+      SDL_GPUGraphicsPipeline *heightfield = nullptr;
+      SDL_GPUGraphicsPipeline *pointcloud = nullptr;
+      SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
+    } pipelines;
+
+    DirectionalLight directionalLight;
+    ssao::SsaoPass ssaoPass{NoInit};
+    struct GBuffer {
+      Texture normalMap{NoInit};
+    } gBuffer;
+    ShadowPassInfo shadowPass;
+    AABB worldSpaceBounds;
+
     /// \brief Non-initializing constructor.
     RobotScene(entt::registry &registry, const Renderer &renderer);
 
@@ -165,9 +186,10 @@ namespace multibody {
     /// (Pinocchio geometry objects).
     void clearRobotGeometries();
 
-    [[nodiscard]] SDL_GPUGraphicsPipeline *createPipeline(
-        const MeshLayout &layout, SDL_GPUTextureFormat render_target_format,
-        SDL_GPUTextureFormat depth_stencil_format, PipelineType type);
+    void createPipeline(const MeshLayout &layout,
+                        SDL_GPUTextureFormat render_target_format,
+                        SDL_GPUTextureFormat depth_stencil_format,
+                        PipelineType type, bool transparent);
 
     /// \warning Call updateTransforms() before rendering the objects with
     /// this function.
@@ -191,14 +213,10 @@ namespace multibody {
 
     const Device &device() { return m_renderer.device; }
 
-    SDL_GPUGraphicsPipeline *renderPipelines[kNumPipelineTypes];
-    DirectionalLight directionalLight;
-    ssao::SsaoPass ssaoPass{NoInit};
-    struct GBuffer {
-      Texture normalMap{NoInit};
-    } gBuffer;
-    ShadowPassInfo shadowPass;
-    AABB worldSpaceBounds;
+    SDL_GPUGraphicsPipeline *getPipeline(PipelineType type,
+                                         bool transparent = false) {
+      return *routePipeline(type, transparent);
+    }
 
   private:
     entt::registry &m_registry;
@@ -208,6 +226,19 @@ namespace multibody {
     const pin::GeometryData *m_geomData;
     std::vector<OpaqueCastable> m_castables;
     bool m_initialized;
+
+    SDL_GPUGraphicsPipeline **routePipeline(PipelineType type,
+                                            bool transparent) {
+      switch (type) {
+      case PIPELINE_TRIANGLEMESH:
+        return transparent ? &pipelines.triangleMesh.transparent
+                           : &pipelines.triangleMesh.opaque;
+      case PIPELINE_HEIGHTFIELD:
+        return &pipelines.heightfield;
+      case PIPELINE_POINTCLOUD:
+        return &pipelines.pointcloud;
+      }
+    }
   };
   static_assert(Scene<RobotScene>);
 
