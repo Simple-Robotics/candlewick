@@ -36,9 +36,8 @@ void RobotDebugSystem::updateFrames(entt::registry &reg) {
                        TransformComponent>();
   for (auto &&[ent, frame_id, dmc, tr] : view.each()) {
     Mat4f pose{m_robotData.oMf[frame_id].cast<float>()};
-    auto D = dmc.scale.asDiagonal();
-    pose.topLeftCorner<3, 3>().applyOnTheRight(D);
-    tr = pose;
+    auto D = dmc.scale.homogeneous().asDiagonal();
+    tr.noalias() = pose * D;
   }
 }
 

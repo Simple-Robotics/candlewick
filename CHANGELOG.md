@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - core : make DepthPassInfo an aggregate
+- core : add `updateTransparencyClassification()` to tag an entity as opaque or untag it
 
 ## [0.0.6] - 2025-05-14
 
