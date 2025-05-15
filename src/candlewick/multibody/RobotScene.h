@@ -57,9 +57,6 @@ namespace multibody {
     void renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                    const Camera &camera);
 
-    void renderTransparentTriangleGeometry(CommandBuffer &command_buffer,
-                                           const Camera &camera);
-
     void renderOtherGeometry(CommandBuffer &command_buffer,
                              const Camera &camera);
 

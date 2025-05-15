@@ -228,8 +228,6 @@ void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
 
   renderPBRTriangleGeometry(command_buffer, camera);
 
-  renderTransparentTriangleGeometry(command_buffer, camera);
-
   renderOtherGeometry(command_buffer, camera);
 }
 
@@ -357,15 +355,6 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   }
 
   SDL_EndGPURenderPass(render_pass);
-}
-
-void RobotScene::renderTransparentTriangleGeometry(
-    CommandBuffer &command_buffer, const Camera &camera) {
-  auto *pipeline = getPipeline(PIPELINE_TRIANGLEMESH, true);
-  if (!pipeline) {
-    return;
-  }
-  (void)command_buffer;
 }
 
 void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
