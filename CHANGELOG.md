@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- core : make DepthPassInfo an aggregate (https://github.com/Simple-Robotics/candlewick/pull/57)
+- core : add `updateTransparencyClassification()` to tag an entity as opaque or untag it (https://github.com/Simple-Robotics/candlewick/pull/57)
+
 ## [0.0.6] - 2025-05-14
 
 This is the first release to use a changelog.

@@ -24,6 +24,7 @@ add_library(
   SHARED
   candlewick/core/Camera.cpp
   candlewick/core/CommandBuffer.cpp
+  candlewick/core/Components.cpp
   candlewick/core/DebugScene.cpp
   candlewick/core/DepthAndShadowPass.cpp
   candlewick/core/Device.cpp

@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   argv = app.ensure_utf8(argv);
   double fps;
   app.add_option<double, unsigned int>("--fps", fps, "Framerate")
-      ->default_val(50);
+      ->default_val(60);
 
   CLI11_PARSE(app, argc, argv);
 
@@ -35,14 +35,14 @@ int main(int argc, char **argv) {
 
   double dt = 1. / static_cast<double>(fps);
   std::chrono::duration<double> dt_ms{dt};
-  static_assert(std::same_as<decltype(dt_ms.count()), double>);
+  Eigen::VectorXd q = q0;
   double t = 0.;
 
   while (!visualizer.shouldExit()) {
     const auto now = steady_clock::now();
 
     double alpha = std::sin(t);
-    Eigen::VectorXd q = pin::interpolate(model, q0, q1, alpha);
+    pin::interpolate(model, q0, q1, alpha, q);
 
     visualizer.display(q);
     std::this_thread::sleep_until(now + dt_ms);

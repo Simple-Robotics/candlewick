@@ -33,12 +33,17 @@ void updateRobotTransforms(entt::registry &registry,
     auto &gobj = geom_model.geometryObjects[geom_id];
     SE3f pose = geom_data.oMg[geom_id].cast<float>();
     Float3 scale = gobj.meshScale.cast<float>();
-    auto D = scale.asDiagonal();
-    tr = pose.toHomogeneousMatrix();
-    tr.topLeftCorner<3, 3>().applyOnTheRight(D);
+    Float4 color = gobj.meshColor.cast<float>();
+    auto D = scale.homogeneous().asDiagonal();
+    tr.noalias() = pose.toHomogeneousMatrix() * D;
     if (gobj.overrideMaterial) {
       for (auto &mat : mmc.materials)
-        mat.baseColor = gobj.meshColor.cast<float>();
+        mat.baseColor = color;
+      if (color.w() < 1.0f) {
+        registry.remove<Opaque>(ent);
+      } else {
+        registry.emplace_or_replace<Opaque>(ent);
+      }
     }
   }
 }
@@ -89,8 +94,9 @@ entt::entity RobotScene::addEnvironmentObject(MeshData &&data, Mat4f placement,
     m_registry.emplace<Opaque>(entity);
   // add tag type
   m_registry.emplace<EnvironmentTag>(entity);
-  m_registry.emplace<MeshMaterialComponent>(
+  const auto &mmc = m_registry.emplace<MeshMaterialComponent>(
       entity, std::move(mesh), std::vector{std::move(data.material)});
+  updateTransparencyClassification(m_registry, entity, mmc);
   add_pipeline_tag_component(m_registry, entity, pipe_type);
   return entity;
 }
@@ -184,8 +190,9 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
     m_registry.emplace<TransformComponent>(entity);
     if (pipeline_type != PIPELINE_POINTCLOUD)
       m_registry.emplace<Opaque>(entity);
-    m_registry.emplace<MeshMaterialComponent>(entity, std::move(mesh),
-                                              extractMaterials(meshDatas));
+    const auto &mmc = m_registry.emplace<MeshMaterialComponent>(
+        entity, std::move(mesh), extractMaterials(meshDatas));
+    updateTransparencyClassification(m_registry, entity, mmc);
     add_pipeline_tag_component(m_registry, entity, pipeline_type);
 
     if (pipeline_type == PIPELINE_TRIANGLEMESH) {
