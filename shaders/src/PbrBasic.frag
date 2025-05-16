@@ -22,8 +22,6 @@ layout(set=3, binding=1) uniform LightBlock {
     vec3 direction;
     vec3 color;
     float intensity;
-    // direction in NDC space
-    mat4 camProjection;
 } light;
 
 layout(set=3, binding=2) uniform EffectParams {

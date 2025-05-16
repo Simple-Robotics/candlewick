@@ -21,7 +21,6 @@ struct alignas(16) light_ubo_t {
   GpuVec3 viewSpaceDir;
   alignas(16) GpuVec3 color;
   float intensity;
-  alignas(16) GpuMat4 projMat;
 };
 
 void updateRobotTransforms(entt::registry &registry,
@@ -413,7 +412,6 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
       camera.transformVector(directionalLight.direction),
       directionalLight.color,
       directionalLight.intensity,
-      camera.projection,
   };
 
   const bool enable_shadows = m_config.enable_shadows;
