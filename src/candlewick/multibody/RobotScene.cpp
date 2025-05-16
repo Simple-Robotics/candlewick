@@ -370,6 +370,9 @@ enum FragmentSamplerSlots {
 };
 
 void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
+  if (!pipelines.wboitComposite)
+    return;
+
   SDL_GPUColorTargetInfo target;
   SDL_zero(target);
   target.texture = m_renderer.swapchain;
@@ -504,6 +507,8 @@ void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
       return;
 
     auto *pipeline = getPipeline(current_pipeline_type);
+    if (!pipeline)
+      return;
     SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
 
     auto env_view =
