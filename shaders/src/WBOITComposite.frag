@@ -11,12 +11,11 @@ void main() {
     vec4 accum = texture(accumTexture, uv);
     float reveal = texture(revealTexture, uv).r;
 
-    // Prevent division by zero
-    vec3 color = accum.rgb / max(accum.a, 0.00001);
-
-    // Calculate alpha
-    float alpha = 1.0 - reveal;
+    vec3 color = accum.rgb;
+    if (accum.a > 0.001) {
+        color = accum.rgb / accum.a;
+    }
 
     // Output final color
-    outColor = vec4(color, alpha);
+    outColor = vec4(color, reveal);
 }

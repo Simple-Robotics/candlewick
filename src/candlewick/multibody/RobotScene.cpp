@@ -187,17 +187,27 @@ void RobotScene::initGBuffer() {
   gBuffer.sampler = SDL_CreateGPUSampler(device(), &sic);
 }
 
-void RobotScene::initCompositePipeline() {
+void RobotScene::initCompositePipeline(const MeshLayout &layout) {
   Shader vertexShader = Shader::fromMetadata(device(), "DrawQuad.vert");
   Shader fragmentShader = Shader::fromMetadata(device(), "WBOITComposite.frag");
 
   SDL_GPUColorTargetDescription color_target;
   SDL_zero(color_target);
   color_target.format = m_renderer.getSwapchainTextureFormat();
+  color_target.blend_state = {
+      .src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+      .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+      .color_blend_op = SDL_GPU_BLENDOP_ADD,
+      .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
+      .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+      .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+      .enable_blend = true,
+  };
 
   SDL_GPUGraphicsPipelineCreateInfo desc{
       .vertex_shader = vertexShader,
       .fragment_shader = fragmentShader,
+      .vertex_input_state = layout,
       .primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
       .rasterizer_state{
           .fill_mode = SDL_GPU_FILLMODE_FILL,
@@ -215,6 +225,10 @@ void RobotScene::initCompositePipeline() {
   };
 
   pipelines.wboitComposite = SDL_CreateGPUGraphicsPipeline(device(), &desc);
+  if (!pipelines.wboitComposite) {
+    terminate_with_message(
+        std::format("Failed to create WBOIT pipeline: %s", SDL_GetError()));
+  }
 }
 
 void RobotScene::loadModels(const pin::GeometryModel &geom_model,
@@ -263,6 +277,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
         shadowPass =
             ShadowPassInfo::create(m_renderer, layout, m_config.shadow_config);
       }
+      this->initCompositePipeline(layout);
     }
   }
   m_initialized = true;
@@ -296,6 +311,8 @@ void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
   renderPBRTriangleGeometry(command_buffer, camera, true);
 
   renderOtherGeometry(command_buffer, camera);
+
+  compositeTransparencyPass(command_buffer);
 }
 
 /// Function private to this translation unit.
@@ -306,13 +323,12 @@ static SDL_GPURenderPass *
 getRenderPass(const Renderer &renderer, CommandBuffer &command_buffer,
               SDL_GPULoadOp color_load_op, SDL_GPULoadOp depth_load_op,
               bool has_normals_target, const RobotScene::GBuffer &gbuffer) {
-  SDL_GPUColorTargetInfo main_color_target;
-  SDL_zero(main_color_target);
-  main_color_target.texture = renderer.swapchain;
-  main_color_target.clear_color = SDL_FColor{0., 0., 0., 0.};
-  main_color_target.load_op = color_load_op;
-  main_color_target.store_op = SDL_GPU_STOREOP_STORE;
-  main_color_target.cycle = false;
+  SDL_GPUColorTargetInfo color_targets[2];
+  SDL_zero(color_targets);
+  color_targets[0].texture = renderer.swapchain;
+  color_targets[0].load_op = color_load_op;
+  color_targets[0].store_op = SDL_GPU_STOREOP_STORE;
+  color_targets[0].cycle = false;
 
   SDL_GPUDepthStencilTargetInfo depth_target;
   SDL_zero(depth_target);
@@ -322,21 +338,15 @@ getRenderPass(const Renderer &renderer, CommandBuffer &command_buffer,
   depth_target.store_op = SDL_GPU_STOREOP_STORE;
   depth_target.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
   depth_target.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
-  if (!has_normals_target) {
-    return SDL_BeginGPURenderPass(command_buffer, &main_color_target, 1,
-                                  &depth_target);
-  } else {
-    SDL_GPUColorTargetInfo color_targets[2];
-    SDL_zero(color_targets);
-    color_targets[0] = main_color_target;
+  if (has_normals_target) {
     color_targets[1].texture = gbuffer.normalMap;
-    color_targets[1].clear_color = SDL_FColor{};
     color_targets[1].load_op = SDL_GPU_LOADOP_CLEAR;
     color_targets[1].store_op = SDL_GPU_STOREOP_STORE;
     color_targets[1].cycle = false;
-    return SDL_BeginGPURenderPass(command_buffer, color_targets,
-                                  SDL_arraysize(color_targets), &depth_target);
   }
+  Uint32 num_color_targets = has_normals_target ? 2 : 1;
+  return SDL_BeginGPURenderPass(command_buffer, color_targets,
+                                num_color_targets, &depth_target);
 }
 
 static SDL_GPURenderPass *
@@ -375,8 +385,8 @@ void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
   SDL_GPUColorTargetInfo target;
   SDL_zero(target);
   target.texture = m_renderer.swapchain;
-  target.load_op =
-      SDL_GPU_LOADOP_LOAD; // Don't clear - we want to keep opaque results
+  // op is LOAD - we want to keep opaque results
+  target.load_op = SDL_GPU_LOADOP_LOAD;
   target.store_op = SDL_GPU_STOREOP_STORE;
 
   SDL_GPURenderPass *render_pass =
@@ -401,10 +411,8 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                            const Camera &camera,
                                            bool transparent) {
 
-  auto *pipeline = pipelines.triangleMesh.opaque;
+  auto *pipeline = getPipeline(PIPELINE_TRIANGLEMESH, transparent);
   if (!pipeline) {
-    // skip of no triangle pipeline to use
-    SDL_Log("Skipping triangle render pass...");
     return;
   }
 
@@ -486,9 +494,6 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   }
 
   SDL_EndGPURenderPass(render_pass);
-
-  if (transparent)
-    compositeTransparencyPass(command_buffer);
 }
 
 void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,

@@ -64,7 +64,7 @@ namespace multibody {
 
     void initGBuffer();
 
-    void initCompositePipeline();
+    void initCompositePipeline(const MeshLayout &layout);
 
   public:
     enum PipelineType {
@@ -110,7 +110,8 @@ namespace multibody {
         };
         PipelineConfig transparent{
             .vertex_shader_path = "PbrBasic.vert",
-            .fragment_shader_path = "PbrBasicTransparent.frag",
+            .fragment_shader_path = "PbrTransparent.frag",
+            .cull_mode = SDL_GPU_CULLMODE_NONE,
         };
       } triangle_config;
       PipelineConfig heightfield_config{

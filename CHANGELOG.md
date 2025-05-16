@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - core : make DepthPassInfo an aggregate (https://github.com/Simple-Robotics/candlewick/pull/57)
 - core : add `updateTransparencyClassification()` to tag an entity as opaque or untag it (https://github.com/Simple-Robotics/candlewick/pull/57)
+- proper support for transparent objects (https://github.com/Simple-Robotics/candlewick/pull/58)
+- shaders : add WBOIT composite shader, PBR transparent shader, `utils.glsl` util module, `pbr_lighting.glsl` (https://github.com/Simple-Robotics/candlewick/pull/58)
+
+### Changed
+
+- remove `projMatrix` from PBR shader ubo (https://github.com/Simple-Robotics/candlewick/pull/58)
+- multibody/RobotScene : early return if pipeline is nullptr (https://github.com/Simple-Robotics/candlewick/pull/58)
+- multibody/RobotScene : reorganize pipelines (accomodate for transparent PBR shader)
+- shaders : refactor basic PBR shader (move some functions to new `pbr_lighting.glsl`) (https://github.com/Simple-Robotics/candlewick/pull/58)
 
 ## [0.0.6] - 2025-05-14
 
