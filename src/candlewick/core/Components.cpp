@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace candlewick {
-void updateTransparencyClassification(entt::registry &reg, entt::entity entity,
+bool updateTransparencyClassification(entt::registry &reg, entt::entity entity,
                                       const MeshMaterialComponent &mmc) {
   bool hasTransparency = std::ranges::any_of(mmc.materials, [](auto &material) {
     return material.baseColor.w() < 1.0f;
@@ -13,5 +13,6 @@ void updateTransparencyClassification(entt::registry &reg, entt::entity entity,
   } else {
     reg.emplace_or_replace<Opaque>(entity);
   }
+  return hasTransparency;
 }
 } // namespace candlewick

@@ -54,11 +54,17 @@ namespace multibody {
       return m_geomModel && m_geomData;
     }
 
+    void compositeTransparencyPass(CommandBuffer &command_buffer);
+
     void renderPBRTriangleGeometry(CommandBuffer &command_buffer,
-                                   const Camera &camera);
+                                   const Camera &camera, bool transparent);
 
     void renderOtherGeometry(CommandBuffer &command_buffer,
                              const Camera &camera);
+
+    void initGBuffer();
+
+    void initCompositePipeline(const MeshLayout &layout);
 
   public:
     enum PipelineType {
@@ -97,19 +103,22 @@ namespace multibody {
       SDL_GPUFillMode fill_mode = SDL_GPU_FILLMODE_FILL;
     };
     struct Config {
-      std::unordered_map<PipelineType, PipelineConfig> pipeline_configs = {
-          {PIPELINE_TRIANGLEMESH,
-           {
-               .vertex_shader_path = "PbrBasic.vert",
-               .fragment_shader_path = "PbrBasic.frag",
-           }},
-          {PIPELINE_HEIGHTFIELD,
-           {
-               .vertex_shader_path = "Hud3dElement.vert",
-               .fragment_shader_path = "Hud3dElement.frag",
-           }},
-          // {PIPELINE_POINTCLOUD, {}}
+      struct TrianglePipelineConfig {
+        PipelineConfig opaque{
+            .vertex_shader_path = "PbrBasic.vert",
+            .fragment_shader_path = "PbrBasic.frag",
+        };
+        PipelineConfig transparent{
+            .vertex_shader_path = "PbrBasic.vert",
+            .fragment_shader_path = "PbrTransparent.frag",
+            .cull_mode = SDL_GPU_CULLMODE_NONE,
+        };
+      } triangle_config;
+      PipelineConfig heightfield_config{
+          .vertex_shader_path = "Hud3dElement.vert",
+          .fragment_shader_path = "Hud3dElement.frag",
       };
+      PipelineConfig pointcloud_config;
       bool enable_msaa = false;
       bool enable_shadows = true;
       bool enable_ssao = true;
@@ -118,6 +127,29 @@ namespace multibody {
       SDL_GPUSampleCount msaa_samples = SDL_GPU_SAMPLECOUNT_1;
       ShadowPassConfig shadow_config;
     };
+
+    struct Pipelines {
+      struct {
+        SDL_GPUGraphicsPipeline *opaque = nullptr;
+        SDL_GPUGraphicsPipeline *transparent = nullptr;
+      } triangleMesh;
+      SDL_GPUGraphicsPipeline *heightfield = nullptr;
+      SDL_GPUGraphicsPipeline *pointcloud = nullptr;
+      SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
+    } pipelines;
+
+    DirectionalLight directionalLight;
+    ssao::SsaoPass ssaoPass{NoInit};
+    struct GBuffer {
+      Texture normalMap{NoInit};
+
+      // WBOIT buffers
+      Texture accumTexture{NoInit};
+      Texture revealTexture{NoInit};
+      SDL_GPUSampler *sampler = nullptr; // composite pass
+    } gBuffer;
+    ShadowPassInfo shadowPass;
+    AABB worldSpaceBounds;
 
     /// \brief Non-initializing constructor.
     RobotScene(entt::registry &registry, const Renderer &renderer);
@@ -165,9 +197,10 @@ namespace multibody {
     /// (Pinocchio geometry objects).
     void clearRobotGeometries();
 
-    [[nodiscard]] SDL_GPUGraphicsPipeline *createPipeline(
-        const MeshLayout &layout, SDL_GPUTextureFormat render_target_format,
-        SDL_GPUTextureFormat depth_stencil_format, PipelineType type);
+    void createPipeline(const MeshLayout &layout,
+                        SDL_GPUTextureFormat render_target_format,
+                        SDL_GPUTextureFormat depth_stencil_format,
+                        PipelineType type, bool transparent);
 
     /// \warning Call updateTransforms() before rendering the objects with
     /// this function.
@@ -191,14 +224,10 @@ namespace multibody {
 
     const Device &device() { return m_renderer.device; }
 
-    SDL_GPUGraphicsPipeline *renderPipelines[kNumPipelineTypes];
-    DirectionalLight directionalLight;
-    ssao::SsaoPass ssaoPass{NoInit};
-    struct GBuffer {
-      Texture normalMap{NoInit};
-    } gBuffer;
-    ShadowPassInfo shadowPass;
-    AABB worldSpaceBounds;
+    SDL_GPUGraphicsPipeline *getPipeline(PipelineType type,
+                                         bool transparent = false) {
+      return *routePipeline(type, transparent);
+    }
 
   private:
     entt::registry &m_registry;
@@ -208,6 +237,19 @@ namespace multibody {
     const pin::GeometryData *m_geomData;
     std::vector<OpaqueCastable> m_castables;
     bool m_initialized;
+
+    SDL_GPUGraphicsPipeline **routePipeline(PipelineType type,
+                                            bool transparent) {
+      switch (type) {
+      case PIPELINE_TRIANGLEMESH:
+        return transparent ? &pipelines.triangleMesh.transparent
+                           : &pipelines.triangleMesh.opaque;
+      case PIPELINE_HEIGHTFIELD:
+        return &pipelines.heightfield;
+      case PIPELINE_POINTCLOUD:
+        return &pipelines.pointcloud;
+      }
+    }
   };
   static_assert(Scene<RobotScene>);
 

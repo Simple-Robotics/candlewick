@@ -1,5 +1,7 @@
 #version 450
 
+#include "utils.glsl"
+
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out float fragShadow;
 
@@ -24,10 +26,6 @@ layout(set=3, binding=0) uniform ShadowParams {
 vec3 computeViewPos(vec3 ndcPos) {
     vec4 viewPos = invProjection * vec4(ndcPos, 1.0);
     return viewPos.xyz / viewPos.w;
-}
-
-bool isCoordsInRange(vec2 uv) {
-    return uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
 }
 
 const float SSS_THICKNESS = 0.02;

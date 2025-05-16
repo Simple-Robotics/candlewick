@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
     Matrix3d R = Eigen::AngleAxisd(constants::Pi_2, Vector3d::UnitX()).matrix();
     pl.rotation().applyOnTheLeft(R);
     auto convex_obj = loadGeomObjFromFile("teapot", meshPath, pl);
-    convex_obj.meshColor = 0xaab023ff_rgba;
+    convex_obj.meshColor = 0xAAB02355_rgba;
     convex_obj.overrideMaterial = true;
     geom_model.addGeometryObject(convex_obj);
   }
@@ -279,7 +279,9 @@ int main(int argc, char **argv) {
     T.scale(0.1f);
     T.rotate(Eigen::AngleAxisf{constants::Pi_2f, Float3{0., 1., 0.f}});
     T.rotate(Eigen::AngleAxisf{Radf(45._degf), Float3{0., 0., 1.f}});
-    robot_scene.addEnvironmentObject(loadCapsuleSolid(6u, 16u, 1.5f), T);
+    auto md = loadCapsuleSolid(6u, 16u, 1.5f);
+    md.material.baseColor.w() = 0.6f;
+    robot_scene.addEnvironmentObject(std::move(md), T);
   }
 
   const size_t numRobotShapes =

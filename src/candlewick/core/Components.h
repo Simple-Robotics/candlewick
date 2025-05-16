@@ -34,7 +34,8 @@ struct MeshMaterialComponent {
 /// \param entity The entity
 /// \param mmc The mesh-material element to inspect for existence of any
 /// transparent subobjects.
-void updateTransparencyClassification(entt::registry &reg, entt::entity entity,
+/// \returns whether the entity is transparent.
+bool updateTransparencyClassification(entt::registry &reg, entt::entity entity,
                                       const MeshMaterialComponent &mmc);
 
 } // namespace candlewick
