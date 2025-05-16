@@ -25,47 +25,47 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-float3 computeViewPos(thread const float3& ndcPos, constant ShadowParams& _27)
+float3 computeViewPos(thread const float3& ndcPos, constant ShadowParams& _56)
 {
-    float4 viewPos = _27.invProjection * float4(ndcPos, 1.0);
+    float4 viewPos = _56.invProjection * float4(ndcPos, 1.0);
     return viewPos.xyz / float3(viewPos.w);
 }
 
 static inline __attribute__((always_inline))
 bool isCoordsInRange(thread const float2& uv)
 {
-    bool _54 = uv.x >= 0.0;
-    bool _60;
-    if (_54)
+    bool _26 = uv.x >= 0.0;
+    bool _33;
+    if (_26)
     {
-        _60 = uv.x <= 1.0;
+        _33 = uv.y >= 0.0;
     }
     else
     {
-        _60 = _54;
+        _33 = _26;
     }
-    bool _67;
-    if (_60)
+    bool _40;
+    if (_33)
     {
-        _67 = uv.y >= 0.0;
+        _40 = uv.x <= 1.0;
     }
     else
     {
-        _67 = _60;
+        _40 = _33;
     }
-    bool _73;
-    if (_67)
+    bool _46;
+    if (_40)
     {
-        _73 = uv.y <= 1.0;
+        _46 = uv.y <= 1.0;
     }
     else
     {
-        _73 = _67;
+        _46 = _40;
     }
-    return _73;
+    return _46;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant ShadowParams& _27 [[buffer(0)]], texture2d<float> depthTexture [[texture(0)]], sampler depthTextureSmplr [[sampler(0)]])
+fragment main0_out main0(main0_in in [[stage_in]], constant ShadowParams& _56 [[buffer(0)]], texture2d<float> depthTexture [[texture(0)]], sampler depthTextureSmplr [[sampler(0)]])
 {
     main0_out out = {};
     float depth = depthTexture.sample(depthTextureSmplr, in.fragUV).x;
@@ -76,16 +76,16 @@ fragment main0_out main0(main0_in in [[stage_in]], constant ShadowParams& _27 [[
     }
     float3 ndcPos = float3((in.fragUV * 2.0) - float2(1.0), depth);
     float3 param = ndcPos;
-    float3 viewPos = computeViewPos(param, _27);
+    float3 viewPos = computeViewPos(param, _56);
     float3 rayPos = viewPos;
-    float stepSize = 0.0500000007450580596923828125 / float(_27.numSteps);
-    float3 toLight = fast::normalize(-float3(_27.lightDir));
+    float stepSize = 0.0500000007450580596923828125 / float(_56.numSteps);
+    float3 toLight = fast::normalize(-float3(_56.lightDir));
     float3 rayStep = toLight * stepSize;
     float occlusion = 0.0;
-    for (int i = 0; i < _27.numSteps; i++)
+    for (int i = 0; i < _56.numSteps; i++)
     {
         rayPos += rayStep;
-        float4 projectedPos = _27.projection * float4(rayPos, 1.0);
+        float4 projectedPos = _56.projection * float4(rayPos, 1.0);
         float3 screenPos = projectedPos.xyz / float3(projectedPos.w);
         float2 rayUV = float2(0.5) + (screenPos.xy * 0.5);
         float rayDepth = screenPos.z;
