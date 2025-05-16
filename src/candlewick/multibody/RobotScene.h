@@ -206,6 +206,10 @@ namespace multibody {
     /// this function.
     void render(CommandBuffer &command_buffer, const Camera &camera);
 
+    void renderOpaque(CommandBuffer &command_buffer, const Camera &camera);
+
+    void renderTransparent(CommandBuffer &command_buffer, const Camera &camera);
+
     /// \brief Release all resources.
     void release();
 

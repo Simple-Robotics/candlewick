@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - multibody/RobotScene : early return if pipeline is nullptr (https://github.com/Simple-Robotics/candlewick/pull/58)
 - multibody/RobotScene : reorganize pipelines (accomodate for transparent PBR shader)
 - shaders : refactor basic PBR shader (move some functions to new `pbr_lighting.glsl`) (https://github.com/Simple-Robotics/candlewick/pull/58)
+- interleave debug scene render between robot render system opaque and transparent passes
 
 ## [0.0.6] - 2025-05-14
 

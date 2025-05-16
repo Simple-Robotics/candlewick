@@ -301,20 +301,27 @@ void RobotScene::collectOpaqueCastables() {
   });
 }
 
-void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
+void RobotScene::renderOpaque(CommandBuffer &command_buffer,
+                              const Camera &camera) {
   if (m_config.enable_ssao) {
     ssaoPass.render(command_buffer, camera);
   }
 
   renderPBRTriangleGeometry(command_buffer, camera, false);
 
+  renderOtherGeometry(command_buffer, camera);
+}
+
+void RobotScene::renderTransparent(CommandBuffer &command_buffer,
+                                   const Camera &camera) {
   renderPBRTriangleGeometry(command_buffer, camera, true);
 
-  renderOtherGeometry(command_buffer, camera);
+  compositeTransparencyPass(command_buffer);
+}
 
-  // transparent triangle pipeline required
-  if (pipelines.triangleMesh.transparent)
-    compositeTransparencyPass(command_buffer);
+void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
+  renderOpaque(command_buffer, camera);
+  renderTransparent(command_buffer, camera);
 }
 
 /// Function private to this translation unit.
@@ -381,7 +388,8 @@ enum FragmentSamplerSlots {
 };
 
 void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
-  if (!pipelines.wboitComposite)
+  // transparent triangle pipeline required
+  if (!pipelines.triangleMesh.transparent || !pipelines.wboitComposite)
     return;
 
   SDL_GPUColorTargetInfo target;
