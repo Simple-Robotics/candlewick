@@ -68,11 +68,11 @@ void DebugScene::renderMeshComponents(CommandBuffer &cmdBuf,
     }
 
     const GpuMat4 mvp = viewProj * tr;
-    cmdBuf.pushVertexUniformRaw(TRANSFORM_SLOT, &mvp, sizeof(mvp));
+    cmdBuf.pushVertexUniform(TRANSFORM_SLOT, mvp);
     rend::bindMesh(render_pass, cmd.mesh);
     for (size_t i = 0; i < cmd.mesh.numViews(); i++) {
       const auto &color = cmd.colors[i];
-      cmdBuf.pushFragmentUniformRaw(COLOR_SLOT, &color, sizeof(color));
+      cmdBuf.pushFragmentUniform(COLOR_SLOT, color);
       rend::drawView(render_pass, cmd.mesh.view(i));
     }
   });

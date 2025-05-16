@@ -83,7 +83,7 @@ void renderDepthDebug(const Renderer &renderer, CommandBuffer &command_buffer,
   cam_param_ubo_t cam_ubo{opts.mode, opts.near, opts.far,
                           opts.cam_proj == CameraProjection::ORTHOGRAPHIC};
 
-  command_buffer.pushFragmentUniformRaw(0, &cam_ubo, sizeof(cam_ubo));
+  command_buffer.pushFragmentUniform(0, cam_ubo);
   SDL_DrawGPUPrimitives(render_pass, 6, 1, 0, 0);
 
   SDL_EndGPURenderPass(render_pass);

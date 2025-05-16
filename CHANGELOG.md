@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core : add `updateTransparencyClassification()` to tag an entity as opaque or untag it (https://github.com/Simple-Robotics/candlewick/pull/57)
 - proper support for transparent objects (https://github.com/Simple-Robotics/candlewick/pull/58)
 - shaders : add WBOIT composite shader, PBR transparent shader, `utils.glsl` util module, `pbr_lighting.glsl` (https://github.com/Simple-Robotics/candlewick/pull/58)
+- core/`CommandBuffer` : type-safe wrappers for pushing uniforms, add `Raw` suffix to raw methods (https://github.com/Simple-Robotics/candlewick/pull/59)
 
 ### Changed
 

@@ -112,7 +112,7 @@ namespace effects {
         config.maxDist,
         config.numSteps,
     };
-    cmdBuf.pushFragmentUniformRaw(0, &ubo, sizeof(ubo));
+    cmdBuf.pushFragmentUniform(0, ubo);
     rend::bindFragmentSamplers(render_pass, 0,
                                {{
                                    .texture = depthTexture,
@@ -122,7 +122,7 @@ namespace effects {
     for (auto &cs : castables) {
       auto &&[mesh, tr] = cs;
       GpuMat4 mvp = vp * tr;
-      cmdBuf.pushVertexUniformRaw(0, &mvp, sizeof(mvp));
+      cmdBuf.pushVertexUniform(0, mvp);
       rend::bindMesh(render_pass, mesh);
       rend::draw(render_pass, mesh);
     }
