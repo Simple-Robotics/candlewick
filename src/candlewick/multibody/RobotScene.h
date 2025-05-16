@@ -54,13 +54,17 @@ namespace multibody {
       return m_geomModel && m_geomData;
     }
 
+    void compositeTransparencyPass(CommandBuffer &command_buffer);
+
     void renderPBRTriangleGeometry(CommandBuffer &command_buffer,
-                                   const Camera &camera);
+                                   const Camera &camera, bool transparent);
 
     void renderOtherGeometry(CommandBuffer &command_buffer,
                              const Camera &camera);
 
     void initGBuffer();
+
+    void initCompositePipeline();
 
   public:
     enum PipelineType {
@@ -137,6 +141,11 @@ namespace multibody {
     ssao::SsaoPass ssaoPass{NoInit};
     struct GBuffer {
       Texture normalMap{NoInit};
+
+      // WBOIT buffers
+      Texture accumTexture{NoInit};
+      Texture revealTexture{NoInit};
+      SDL_GPUSampler *sampler = nullptr; // composite pass
     } gBuffer;
     ShadowPassInfo shadowPass;
     AABB worldSpaceBounds;
