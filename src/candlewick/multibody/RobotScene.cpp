@@ -460,9 +460,9 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                              }});
   int _useSsao = m_config.enable_ssao;
   command_buffer
-      .pushFragmentUniform(FragmentUniformSlots::LIGHTING, &lightUbo,
-                           sizeof(lightUbo))
-      .pushFragmentUniform(2, &_useSsao, sizeof(_useSsao));
+      .pushFragmentUniformRaw(FragmentUniformSlots::LIGHTING, &lightUbo,
+                              sizeof(lightUbo))
+      .pushFragmentUniformRaw(2, &_useSsao, sizeof(_useSsao));
 
   SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
 
@@ -480,17 +480,17 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
         .mvp = mvp,
         .normalMatrix = math::computeNormalMatrix(modelView),
     };
-    command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, &data,
-                                     sizeof(data));
+    command_buffer.pushVertexUniformRaw(VertexUniformSlots::TRANSFORM, &data,
+                                        sizeof(data));
     if (enable_shadows) {
       Mat4f lightMvp = lightViewProj * tr;
-      command_buffer.pushVertexUniform(1, &lightMvp, sizeof(lightMvp));
+      command_buffer.pushVertexUniformRaw(1, &lightMvp, sizeof(lightMvp));
     }
     rend::bindMesh(render_pass, mesh);
     for (size_t j = 0; j < mesh.numViews(); j++) {
       const auto material = obj.materials[j];
-      command_buffer.pushFragmentUniform(FragmentUniformSlots::MATERIAL,
-                                         &material, sizeof(material));
+      command_buffer.pushFragmentUniformRaw(FragmentUniformSlots::MATERIAL,
+                                            &material, sizeof(material));
       rend::drawView(render_pass, mesh.view(j));
     }
   };
@@ -533,9 +533,10 @@ void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
       const Mat4f mvp = viewProj * tr;
       const auto &color = obj.materials[0].baseColor;
       command_buffer
-          .pushVertexUniform(VertexUniformSlots::TRANSFORM, &mvp, sizeof(mvp))
-          .pushFragmentUniform(FragmentUniformSlots::MATERIAL, &color,
-                               sizeof(color));
+          .pushVertexUniformRaw(VertexUniformSlots::TRANSFORM, &mvp,
+                                sizeof(mvp))
+          .pushFragmentUniformRaw(FragmentUniformSlots::MATERIAL, &color,
+                                  sizeof(color));
       rend::bindMesh(render_pass, mesh);
       rend::draw(render_pass, mesh);
     }
