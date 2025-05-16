@@ -4,8 +4,15 @@
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_log.h>
 #include <utility>
+#include <span>
 
 namespace candlewick {
+
+template <typename T>
+concept GpuCompatibleData =
+    std::is_standard_layout_v<T> && !std::is_array_v<T> &&
+    !std::is_pointer_v<T> &&
+    (alignof(T) == 4 || alignof(T) == 8 || alignof(T) == 16);
 
 class CommandBuffer {
   SDL_GPUCommandBuffer *_cmdBuf;
@@ -57,6 +64,27 @@ public:
       _cmdBuf = nullptr;
       assert(false);
     }
+  }
+
+  template <GpuCompatibleData T>
+  CommandBuffer &pushVertexUniform(Uint32 slot_index, const T &data) {
+    return pushVertexUniformRaw(slot_index, &data, sizeof(T));
+  }
+
+  template <GpuCompatibleData T>
+  CommandBuffer &pushFragmentUniform(Uint32 slot_index, const T &data) {
+    return pushFragmentUniformRaw(slot_index, &data, sizeof(T));
+  }
+
+  template <GpuCompatibleData T>
+  CommandBuffer &pushVertexUniform(Uint32 slot_index, std::span<const T> data) {
+    return pushVertexUniformRaw(slot_index, data.data(), data.size_bytes());
+  }
+
+  template <GpuCompatibleData T>
+  CommandBuffer &pushFragmentUniform(Uint32 slot_index,
+                                     std::span<const T> data) {
+    return pushFragmentUniformRaw(slot_index, data.data(), data.size_bytes());
   }
 
   /// \brief Push uniform data to the vertex shader.
