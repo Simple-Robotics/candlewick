@@ -129,23 +129,7 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
   this->loadModels(geom_model, geom_data);
 }
 
-void RobotScene::loadModels(const pin::GeometryModel &geom_model,
-                            const pin::GeometryData &geom_data) {
-  assert(!(m_initialized || hasInternalPointers()));
-  m_geomModel = &geom_model;
-  m_geomData = &geom_data;
-
-  for (const auto type : {
-           PIPELINE_TRIANGLEMESH, PIPELINE_HEIGHTFIELD,
-           //  PIPELINE_POINTCLOUD
-       }) {
-    if (!m_config.pipeline_configs.contains(type)) {
-      terminate_with_message(std::format("missing a pipeline config type %s",
-                                         magic_enum::enum_name(type)));
-    }
-  }
-
-  // initialize render target for GBuffer
+void RobotScene::initGBuffer() {
   const auto [width, height] = m_renderer.window.size();
   gBuffer.normalMap = Texture{m_renderer.device,
                               {
@@ -161,6 +145,17 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
                                   .props = 0,
                               },
                               "GBuffer normal"};
+}
+
+void RobotScene::loadModels(const pin::GeometryModel &geom_model,
+                            const pin::GeometryData &geom_data) {
+  assert(!(m_initialized || hasInternalPointers()));
+  m_geomModel = &geom_model;
+  m_geomData = &geom_data;
+
+  this->initGBuffer();
+
+  // initialize render target for GBuffer
   const bool enable_shadows = m_config.enable_shadows;
 
   for (pin::GeomIndex geom_id = 0; geom_id < geom_model.ngeoms; geom_id++) {
@@ -280,7 +275,7 @@ enum FragmentSamplerSlots {
 void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                            const Camera &camera) {
 
-  auto *pipeline = getPipeline(PIPELINE_TRIANGLEMESH, false);
+  auto *pipeline = pipelines.triangleMesh.opaque;
   if (!pipeline) {
     // skip of no triangle pipeline to use
     SDL_Log("Skipping triangle render pass...");
@@ -414,6 +409,21 @@ void RobotScene::release() {
   shadowPass.release();
 }
 
+static RobotScene::PipelineConfig
+get_pipeline_config(const RobotScene::Config &cfg,
+                    RobotScene::PipelineType type, bool transparent) {
+  using enum RobotScene::PipelineType;
+  switch (type) {
+  case PIPELINE_TRIANGLEMESH:
+    return transparent ? cfg.triangle_config.transparent
+                       : cfg.triangle_config.opaque;
+  case PIPELINE_HEIGHTFIELD:
+    return cfg.heightfield_config;
+  case PIPELINE_POINTCLOUD:
+    return cfg.pointcloud_config;
+  }
+}
+
 void RobotScene::createPipeline(const MeshLayout &layout,
                                 SDL_GPUTextureFormat render_target_format,
                                 SDL_GPUTextureFormat depth_stencil_format,
@@ -422,7 +432,7 @@ void RobotScene::createPipeline(const MeshLayout &layout,
 
   SDL_Log("Building pipeline for type %s", magic_enum::enum_name(type).data());
 
-  const PipelineConfig &pipe_config = m_config.pipeline_configs.at(type);
+  PipelineConfig pipe_config = get_pipeline_config(m_config, type, transparent);
   auto vertexShader =
       Shader::fromMetadata(device(), pipe_config.vertex_shader_path);
   auto fragmentShader =

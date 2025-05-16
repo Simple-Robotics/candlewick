@@ -60,6 +60,8 @@ namespace multibody {
     void renderOtherGeometry(CommandBuffer &command_buffer,
                              const Camera &camera);
 
+    void initGBuffer();
+
   public:
     enum PipelineType {
       PIPELINE_TRIANGLEMESH,
@@ -97,19 +99,21 @@ namespace multibody {
       SDL_GPUFillMode fill_mode = SDL_GPU_FILLMODE_FILL;
     };
     struct Config {
-      std::unordered_map<PipelineType, PipelineConfig> pipeline_configs = {
-          {PIPELINE_TRIANGLEMESH,
-           {
-               .vertex_shader_path = "PbrBasic.vert",
-               .fragment_shader_path = "PbrBasic.frag",
-           }},
-          {PIPELINE_HEIGHTFIELD,
-           {
-               .vertex_shader_path = "Hud3dElement.vert",
-               .fragment_shader_path = "Hud3dElement.frag",
-           }},
-          // {PIPELINE_POINTCLOUD, {}}
+      struct TrianglePipelineConfig {
+        PipelineConfig opaque{
+            .vertex_shader_path = "PbrBasic.vert",
+            .fragment_shader_path = "PbrBasic.frag",
+        };
+        PipelineConfig transparent{
+            .vertex_shader_path = "PbrBasic.vert",
+            .fragment_shader_path = "PbrBasicTransparent.frag",
+        };
+      } triangle_config;
+      PipelineConfig heightfield_config{
+          .vertex_shader_path = "Hud3dElement.vert",
+          .fragment_shader_path = "Hud3dElement.frag",
       };
+      PipelineConfig pointcloud_config;
       bool enable_msaa = false;
       bool enable_shadows = true;
       bool enable_ssao = true;
