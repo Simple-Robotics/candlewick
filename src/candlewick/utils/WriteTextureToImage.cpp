@@ -3,27 +3,7 @@
 #include "../third-party/stb_image_write.h"
 #include "../utils/PixelFormatConversion.h"
 
-#include <SDL3/SDL_assert.h>
-
 namespace candlewick::media {
-
-/// Return corresponding pixel size of an SDL texture format, in bytes.
-/// A float is usually 4 bytes. SDL GPU texture formats are expressed
-/// using bits per channel. So R8G8B8A8 we have 4 * 8 = 32 bits.
-constexpr Uint32 sdlTextureFormatToPixelSize(SDL_GPUTextureFormat format) {
-  switch (format) {
-  case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
-  case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
-    return 4u;
-  case SDL_GPU_TEXTUREFORMAT_R8G8_UNORM:
-    return 2u;
-  case SDL_GPU_TEXTUREFORMAT_A8_UNORM:
-  case SDL_GPU_TEXTUREFORMAT_R8_UNORM:
-    return 1u;
-  default:
-    return -1u;
-  }
-}
 
 void dumpTextureImgToFile(const Device &device, SDL_GPUTexture *texture,
                           SDL_GPUTextureFormat format, const Uint32 width,
@@ -40,7 +20,7 @@ void dumpTextureImgToFile(const Device &device, SDL_GPUTexture *texture,
   };
 
   // pixel size, in bytes
-  const Uint32 pixel_size = sdlTextureFormatToPixelSize(format);
+  const Uint32 pixel_size = SDL_GPUTextureFormatTexelBlockSize(format);
 
   SDL_GPUTransferBuffer *download_transfer_buffer;
   {
@@ -85,12 +65,12 @@ void videoWriteTextureToFrame(const Device &device,
                               SDL_GPUTexture *texture,
                               SDL_GPUTextureFormat format, const Uint32 width,
                               const Uint32 height) {
-  SDL_assert(recorder.initialized());
+  assert(recorder.initialized());
 
   SDL_GPUCommandBuffer *command_buffer = SDL_AcquireGPUCommandBuffer(device);
   SDL_GPUCopyPass *copy_pass = SDL_BeginGPUCopyPass(command_buffer);
 
-  const Uint32 pixel_size = sdlTextureFormatToPixelSize(format);
+  const Uint32 pixel_size = SDL_GPUTextureFormatTexelBlockSize(format);
   const Uint32 payload_size = width * height * pixel_size;
 
   SDL_GPUTransferBuffer *download_transfer_buffer;
