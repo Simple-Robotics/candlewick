@@ -124,20 +124,7 @@ void videoWriteTextureToFrame(const Device &device,
   Uint8 *raw_data = reinterpret_cast<Uint8 *>(
       SDL_MapGPUTransferBuffer(device, download_transfer_buffer, false));
 
-  AVPixelFormat outputFormat;
-  switch (format) {
-  case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM: {
-    outputFormat = AV_PIX_FMT_BGRA;
-    break;
-  }
-  case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM: {
-    outputFormat = AV_PIX_FMT_RGBA;
-    break;
-  }
-  default:
-    return;
-  }
-  recorder.writeFrame(raw_data, payload_size, outputFormat);
+  recorder.writeFrame(raw_data, payload_size, format);
 }
 #endif
 

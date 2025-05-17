@@ -1,10 +1,12 @@
 #include "VideoRecorder.h"
+#include "../core/errors.h"
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_filesystem.h>
-#include <format>
+#include <magic_enum/magic_enum.hpp>
 
 extern "C" {
+#include <libavutil/pixfmt.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
@@ -14,9 +16,9 @@ namespace candlewick {
 namespace media {
 
   struct VideoRecorderImpl {
-    Uint32 m_width;  //< Width of incoming frames
-    Uint32 m_height; //< Height of incoming frames
-    Uint32 m_frameCounter;
+    Uint32 m_width;        //< Width of incoming frames
+    Uint32 m_height;       //< Height of incoming frames
+    Uint32 m_frameCounter; //< Number of recorded frames
 
     AVFormatContext *formatContext = nullptr;
     const AVCodec *codec = nullptr;
@@ -28,8 +30,12 @@ namespace media {
 
     VideoRecorderImpl(Uint32 width, Uint32 height, const std::string &filename,
                       VideoRecorder::Settings settings);
+
+    VideoRecorderImpl(const VideoRecorderImpl &) = delete;
+
     void writeFrame(const Uint8 *data, size_t payloadSize,
                     AVPixelFormat avPixelFormat);
+
     ~VideoRecorderImpl() noexcept;
   };
 
@@ -185,11 +191,34 @@ namespace media {
       : impl_(std::make_unique<VideoRecorderImpl>(width, height, filename,
                                                   settings)) {}
 
+  VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
+                               const std::string &filename)
+      : VideoRecorder(width, height, filename,
+                      Settings{
+                          .outputWidth = int(width),
+                          .outputHeight = int(height),
+                      }) {}
+
   Uint32 VideoRecorder::frameCounter() const { return impl_->m_frameCounter; }
 
   void VideoRecorder::writeFrame(const Uint8 *data, size_t payloadSize,
-                                 AVPixelFormat avPixelFormat) {
-    impl_->writeFrame(data, payloadSize, avPixelFormat);
+                                 SDL_GPUTextureFormat pixelFormat) {
+    AVPixelFormat outputFormat;
+    switch (pixelFormat) {
+    case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM: {
+      outputFormat = AV_PIX_FMT_BGRA;
+      break;
+    }
+    case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM: {
+      outputFormat = AV_PIX_FMT_RGBA;
+      break;
+    }
+    default:
+      terminate_with_message(
+          std::format("Unsupported SDL GPU texture format %s",
+                      magic_enum::enum_name(pixelFormat)));
+    }
+    impl_->writeFrame(data, payloadSize, outputFormat);
   }
 
   VideoRecorder::~VideoRecorder() = default;
