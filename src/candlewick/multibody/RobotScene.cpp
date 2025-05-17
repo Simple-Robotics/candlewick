@@ -271,7 +271,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
 
     if (pipeline_type == PIPELINE_TRIANGLEMESH) {
       if (!ssaoPass.pipeline) {
-        ssaoPass = ssao::SsaoPass(m_renderer, layout, gBuffer.normalMap);
+        ssaoPass = ssao::SsaoPass(m_renderer, gBuffer.normalMap);
       }
       // configure shadow pass
       if (enable_shadows && !shadows_configured) {

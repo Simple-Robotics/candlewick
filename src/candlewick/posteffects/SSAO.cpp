@@ -87,11 +87,11 @@ namespace ssao {
     return {std::move(tex), SDL_CreateGPUSampler(dev, &sampler_ci), size};
   }
 
-  bool pushSsaoNoiseData(const SsaoPass::SsaoNoise &noise) {
+  static bool pushSsaoNoiseData(const Device &dev,
+                                const SsaoPass::SsaoNoise &noise) {
     auto values = generateNoiseTextureValues(noise.pixel_window_size);
     using element_type = decltype(values)::value_type;
     const Texture &tex = noise.tex;
-    auto &dev = tex.device();
     CommandBuffer command_buffer(dev);
     SDL_GPUCopyPass *copy_pass = SDL_BeginGPUCopyPass(command_buffer);
 
@@ -119,9 +119,41 @@ namespace ssao {
     return command_buffer.submit();
   }
 
-  SsaoPass::SsaoPass(const Renderer &renderer, const MeshLayout &layout,
-                     SDL_GPUTexture *normalMap)
-      : inDepthMap(renderer.depth_texture), inNormalMap(normalMap) {
+  SsaoPass::SsaoPass(SsaoPass &&other) noexcept
+      : _device(other._device)
+      , inDepthMap(other.inDepthMap)
+      , inNormalMap(other.inNormalMap)
+      , texSampler(other.texSampler)
+      , pipeline(other.pipeline)
+      , ssaoMap(std::move(other.ssaoMap))
+      , ssaoNoise(std::move(other.ssaoNoise))
+      , blurPipeline(other.blurPipeline)
+      , blurPass1Tex(std::move(other.blurPass1Tex)) {
+    other._device = nullptr;
+  }
+
+  SsaoPass &SsaoPass::operator=(SsaoPass &&other) noexcept {
+    this->release();
+#define _c(name) name = std::move(other.name)
+    _c(_device);
+    _c(inDepthMap);
+    _c(inNormalMap);
+    _c(texSampler);
+    _c(pipeline);
+    _c(ssaoMap);
+    _c(ssaoNoise);
+    _c(blurPipeline);
+    _c(blurPass1Tex);
+#undef _c
+
+    other._device = nullptr;
+    return *this;
+  }
+
+  SsaoPass::SsaoPass(const Renderer &renderer, SDL_GPUTexture *normalMap)
+      : _device(renderer.device)
+      , inDepthMap(renderer.depth_texture)
+      , inNormalMap(normalMap) {
     const auto &device = renderer.device;
 
     SDL_GPUSamplerCreateInfo samplers_ci{
@@ -176,7 +208,7 @@ namespace ssao {
     Uint32 num_pixels_rows = 4u;
     ssaoNoise = createSsaoNoise(device, num_pixels_rows);
     assert(num_pixels_rows == ssaoNoise.pixel_window_size);
-    pushSsaoNoiseData(ssaoNoise);
+    pushSsaoNoiseData(device, ssaoNoise);
   }
 
   void SsaoPass::render(CommandBuffer &cmdBuf, const Camera &camera) {
@@ -227,23 +259,24 @@ namespace ssao {
     }
   }
 
-  void SsaoPass::release() {
-    auto &device = ssaoMap.device();
-    // release neither input texture because they are **borrowed**.
-
-    if (texSampler)
-      SDL_ReleaseGPUSampler(device, texSampler);
-    if (pipeline)
-      SDL_ReleaseGPUGraphicsPipeline(device, pipeline);
-
+  void SsaoPass::release() noexcept {
+    if (_device) {
+      if (texSampler)
+        SDL_ReleaseGPUSampler(_device, texSampler);
+      texSampler = nullptr;
+      if (pipeline)
+        SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
+      pipeline = nullptr;
+      if (ssaoNoise.sampler)
+        SDL_ReleaseGPUSampler(_device, ssaoNoise.sampler);
+      ssaoNoise.sampler = nullptr;
+      if (blurPipeline)
+        SDL_ReleaseGPUGraphicsPipeline(_device, blurPipeline);
+      blurPipeline = nullptr;
+      _device = nullptr;
+    }
     ssaoMap.destroy();
-
     ssaoNoise.tex.destroy();
-    if (ssaoNoise.sampler)
-      SDL_ReleaseGPUSampler(device, ssaoNoise.sampler);
-
-    if (blurPipeline)
-      SDL_ReleaseGPUGraphicsPipeline(device, blurPipeline);
     blurPass1Tex.destroy();
   }
 
