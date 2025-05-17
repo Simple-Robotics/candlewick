@@ -148,7 +148,7 @@ namespace multibody {
       Texture revealTexture{NoInit};
       SDL_GPUSampler *sampler = nullptr; // composite pass
     } gBuffer;
-    ShadowPassInfo shadowPass;
+    ShadowMapPass shadowPass{NoInit};
     AABB worldSpaceBounds;
 
     /// \brief Non-initializing constructor.

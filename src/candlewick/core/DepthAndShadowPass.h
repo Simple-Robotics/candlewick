@@ -21,6 +21,8 @@
 #pragma once
 
 #include "Core.h"
+#include "Tags.h"
+#include "Texture.h"
 #include "Camera.h"
 #include "math_types.h"
 #include "LightUniforms.h"
@@ -35,10 +37,11 @@ namespace candlewick {
 /// \warning The depth pre-pass is meant for _opaque_ geometries. Hence, the
 /// pipeline created by the create() factory function will have back-face
 /// culling enabled.
-struct DepthPassInfo {
-  enum DepthPassSlots : Uint32 {
-    TRANSFORM_SLOT = 0,
-  };
+class DepthPass {
+  SDL_GPUDevice *_device = nullptr;
+
+public:
+  static constexpr Uint32 TRANSFORM_SLOT = 0;
   struct Config {
     SDL_GPUCullMode cull_mode;
     float depth_bias_constant_factor;
@@ -46,56 +49,95 @@ struct DepthPassInfo {
     bool enable_depth_bias;
     bool enable_depth_clip;
   };
+
   SDL_GPUTexture *depthTexture = nullptr;
   SDL_GPUGraphicsPipeline *pipeline = nullptr;
-  SDL_GPUDevice *_device = nullptr;
 
-  /// \brief Create DepthPass (e.g. for a depth pre-pass) from a Renderer
-  /// and specified MeshLayout.
+  DepthPass(NoInitT) {}
+
+  /// \brief Create DepthPass (e.g. for a depth pre-pass) from a Device,
+  /// specified mesh layout, and raw texture handle along with its format.
   ///
-  /// \param renderer The Renderer object.
+  /// \param device The device object.
   /// \param layout %Mesh layout used for the render pipeline's vertex input
   /// state.
-  /// \param depth_texture If null, we assume that the depth texture to use is
-  /// the shared depth texture stored in \p renderer.
-  /// \sa ShadowPassInfo::create()
-  [[nodiscard]] static DepthPassInfo
-  create(const Renderer &renderer, const MeshLayout &layout,
-         SDL_GPUTexture *depth_texture = nullptr, const Config &config = {});
+  /// \param depth_texture Raw handle to a texture. Cannot be null.
+  /// \param format %Texture format. Has to be passed here because we pass the
+  /// raw handle.
+  /// \param config Configuration.
+  DepthPass(const Device &device, const MeshLayout &layout,
+            SDL_GPUTexture *depth_texture, SDL_GPUTextureFormat format,
+            const Config &config = {});
 
-  /// Release the pass pipeline.
-  /// \warning We do not depth texture here, because it is assumed to be
-  /// borrowed.
-  void release();
+  /// \brief Create DepthPass (e.g. for a depth pre-pass) from a Device,
+  /// specified mesh layout, and the RAIII Texture object.
+  ///
+  /// \param device The device object.
+  /// \param layout %Mesh layout used for the render pipeline's vertex input
+  /// state.
+  /// \param depth_texture %Texture object.
+  /// \param config Configuration.
+  DepthPass(const Device &device, const MeshLayout &layout,
+            const Texture &depth_texture, const Config &config = {});
+
+  DepthPass(const DepthPass &) = delete;
+  DepthPass &operator=(const DepthPass &) = delete;
+  DepthPass(DepthPass &&other) noexcept;
+  DepthPass &operator=(DepthPass &&other) noexcept;
+
+  void render(CommandBuffer &cmdBuf, const Mat4f &viewProj,
+              std::span<const OpaqueCastable> castables);
+
+  /// Release the pass resources.
+  void release() noexcept;
+  ~DepthPass() noexcept { this->release(); }
 };
 
 /// \ingroup depth_pass
 /// \brief Helper struct for shadow mapping pass.
-struct ShadowPassInfo : DepthPassInfo {
+class ShadowMapPass {
+  SDL_GPUDevice *_device = nullptr;
+  DepthPass _depthPass{NoInit};
+
+public:
   struct Config {
     // default is 2k x 2k texture
     Uint32 width = 2048;
     Uint32 height = 2048;
+    DepthPass::Config depthPassConfig{
+        .cull_mode = SDL_GPU_CULLMODE_NONE,
+        .depth_bias_constant_factor = 0.f,
+        .depth_bias_slope_factor = 0.f,
+        .enable_depth_bias = false,
+        .enable_depth_clip = false,
+    };
   };
-  /// Sampler to use for main render passes.
-  SDL_GPUSampler *sampler;
+  Texture shadowMap{NoInit};
+  SDL_GPUSampler *sampler = nullptr;
   Camera cam;
 
-  /// \sa DepthPassInfo::create()
-  [[nodiscard]] static ShadowPassInfo create(const Renderer &renderer,
-                                             const MeshLayout &layout,
-                                             const Config &config);
+  ShadowMapPass(NoInitT) {}
 
-  void release();
+  ShadowMapPass(const Device &device, const MeshLayout &layout,
+                SDL_GPUTextureFormat format, const Config &config);
+
+  ShadowMapPass(const Device &device, const MeshLayout &layout,
+                SDL_GPUTextureFormat format)
+      : ShadowMapPass(device, layout, format, {}) {}
+
+  ShadowMapPass(const ShadowMapPass &) = delete;
+  ShadowMapPass &operator=(const ShadowMapPass &) = delete;
+  ShadowMapPass(ShadowMapPass &&other) noexcept;
+  ShadowMapPass &operator=(ShadowMapPass &&other) noexcept;
+
+  void render(CommandBuffer &cmdBuf, const Mat4f &viewProj,
+              std::span<const OpaqueCastable> castables);
+
+  void release() noexcept;
+  ~ShadowMapPass() noexcept { this->release(); }
 };
 
-using ShadowPassConfig = ShadowPassInfo::Config;
-
-/// \ingroup depth_pass
-/// \brief Render a depth-only pass, built from a set of OpaqueCastable.
-void renderDepthOnlyPass(CommandBuffer &cmdBuf, const DepthPassInfo &passInfo,
-                         const Mat4f &viewProj,
-                         std::span<const OpaqueCastable> castables);
+using ShadowPassConfig = ShadowMapPass::Config;
 
 /// \addtogroup depth_pass
 /// \section depth_testing Depth testing in modern APIs
@@ -107,12 +149,17 @@ void renderDepthOnlyPass(CommandBuffer &cmdBuf, const DepthPassInfo &passInfo,
 ///
 /// \see shadowOrthographicMatrix()
 
+inline void ShadowMapPass::render(CommandBuffer &cmdBuf, const Mat4f &viewProj,
+                                  std::span<const OpaqueCastable> castables) {
+  _depthPass.render(cmdBuf, viewProj, castables);
+}
+
 /// \ingroup depth_pass
 /// \{
 /// \brief Render shadow pass, using provided scene bounds.
 ///
 /// The scene bounds are in world-space.
-void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowPassInfo &passInfo,
+void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               const DirectionalLight &dirLight,
                               std::span<const OpaqueCastable> castables,
                               const AABB &worldSceneBounds);
@@ -124,8 +171,7 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowPassInfo &passInfo,
 /// sphere within the light volume. The frustum can be obtained from the
 /// world-space camera.
 /// \sa frustumFromCameraProjection()
-void renderShadowPassFromFrustum(CommandBuffer &cmdBuf,
-                                 ShadowPassInfo &passInfo,
+void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                                  const DirectionalLight &dirLight,
                                  std::span<const OpaqueCastable> castables,
                                  const FrustumCornersType &worldSpaceCorners);

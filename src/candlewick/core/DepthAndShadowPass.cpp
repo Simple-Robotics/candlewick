@@ -9,13 +9,10 @@
 
 namespace candlewick {
 
-DepthPassInfo DepthPassInfo::create(const Renderer &renderer,
-                                    const MeshLayout &layout,
-                                    SDL_GPUTexture *depth_texture,
-                                    const Config &config) {
-  if (depth_texture == nullptr)
-    depth_texture = renderer.depth_texture;
-  const Device &device = renderer.device;
+DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
+                     SDL_GPUTexture *depth_texture, SDL_GPUTextureFormat format,
+                     const Config &config)
+    : _device(device), depthTexture(depth_texture) {
   auto vertexShader = Shader::fromMetadata(device, "ShadowCast.vert");
   auto fragmentShader = Shader::fromMetadata(device, "ShadowCast.frag");
   SDL_GPUGraphicsPipelineCreateInfo pipeline_desc{
@@ -35,34 +32,88 @@ DepthPassInfo DepthPassInfo::create(const Renderer &renderer,
                            .enable_depth_write = true},
       .target_info{.color_target_descriptions = nullptr,
                    .num_color_targets = 0,
-                   .depth_stencil_format = renderer.depthFormat(),
+                   .depth_stencil_format = format,
                    .has_depth_stencil_target = true},
   };
-  return DepthPassInfo{
-      .depthTexture = depth_texture,
-      .pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc),
-      ._device = device,
-  };
+  pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
+  if (!pipeline)
+    terminate_with_message(
+        std::format("Failed to create graphics pipeline: %s.", SDL_GetError()));
 }
 
-void DepthPassInfo::release() {
-  // do not release depth texture here, because it is assumed to be borrowed.
-  if (_device && pipeline) {
-    SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
+DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
+                     const Texture &texture, const Config &config)
+    : DepthPass(device, layout, texture, texture.format(), config) {}
+
+DepthPass::DepthPass(DepthPass &&other) noexcept
+    : _device(other._device)
+    , depthTexture(other.depthTexture)
+    , pipeline(other.pipeline) {
+  other._device = nullptr;
+  other.depthTexture = nullptr;
+  other.pipeline = nullptr;
+}
+
+DepthPass &DepthPass::operator=(DepthPass &&other) noexcept {
+  if (this != &other) {
+    _device = other._device;
+    depthTexture = other.depthTexture;
+    pipeline = other.pipeline;
+    other._device = nullptr;
+    other.depthTexture = nullptr;
+    other.pipeline = nullptr;
   }
-  pipeline = nullptr;
+  return *this;
 }
 
-ShadowPassInfo ShadowPassInfo::create(const Renderer &renderer,
-                                      const MeshLayout &layout,
-                                      const Config &config) {
-  const Device &device = renderer.device;
+void DepthPass::render(CommandBuffer &command_buffer, const Mat4f &viewProj,
+                       std::span<const OpaqueCastable> castables) {
+  SDL_GPUDepthStencilTargetInfo depth_info{
+      .texture = depthTexture,
+      .clear_depth = 1.0f,
+      .load_op = SDL_GPU_LOADOP_CLEAR,
+      .store_op = SDL_GPU_STOREOP_STORE,
+      .stencil_load_op = SDL_GPU_LOADOP_DONT_CARE,
+      .stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
+  };
+
+  SDL_GPURenderPass *render_pass =
+      SDL_BeginGPURenderPass(command_buffer, nullptr, 0, &depth_info);
+  SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+
+  for (auto &[mesh, tr] : castables) {
+    assert(validateMesh(mesh));
+    rend::bindMesh(render_pass, mesh);
+
+    Mat4f mvp = viewProj * tr;
+    command_buffer.pushVertexUniform(DepthPass::TRANSFORM_SLOT, mvp);
+    rend::draw(render_pass, mesh);
+  }
+
+  SDL_EndGPURenderPass(render_pass);
+}
+
+void DepthPass::release() noexcept {
+  if (_device) {
+    if (pipeline) {
+      SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
+      pipeline = nullptr;
+    }
+    if (depthTexture)
+      depthTexture = nullptr;
+  }
+  _device = nullptr;
+}
+
+ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
+                             SDL_GPUTextureFormat format, const Config &config)
+    : _device(device) {
 
   // TEXTURE
   // 2k x 2k texture
   SDL_GPUTextureCreateInfo texInfo{
       .type = SDL_GPU_TEXTURETYPE_2D,
-      .format = renderer.depthFormat(),
+      .format = format,
       .usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET |
                SDL_GPU_TEXTUREUSAGE_SAMPLER,
       .width = config.width,
@@ -73,27 +124,8 @@ ShadowPassInfo ShadowPassInfo::create(const Renderer &renderer,
       .props = 0,
   };
 
-  SDL_GPUTexture *shadowMap = SDL_CreateGPUTexture(device, &texInfo);
-  SDL_SetGPUTextureName(device, shadowMap, "Shadow map");
-  if (!shadowMap) {
-    terminate_with_message(
-        std::format("Failed to create shadow map texture: %s", SDL_GetError()));
-  }
-
-  DepthPassInfo passInfo =
-      DepthPassInfo::create(renderer, layout, shadowMap,
-                            {
-                                .cull_mode = SDL_GPU_CULLMODE_NONE,
-                                .depth_bias_constant_factor = 0.f,
-                                .depth_bias_slope_factor = 0.f,
-                                .enable_depth_bias = false,
-                                .enable_depth_clip = false,
-                            });
-  if (!passInfo.pipeline) {
-    SDL_ReleaseGPUTexture(device, shadowMap);
-    terminate_with_message(std::format(
-        "Failed to create shadow map pipeline: %s", SDL_GetError()));
-  }
+  shadowMap = Texture(device, texInfo, "Shadow map");
+  _depthPass = DepthPass(device, layout, shadowMap, config.depthPassConfig);
 
   SDL_GPUSamplerCreateInfo sample_desc{
       .min_filter = SDL_GPU_FILTER_LINEAR,
@@ -105,56 +137,42 @@ ShadowPassInfo ShadowPassInfo::create(const Renderer &renderer,
       .compare_op = SDL_GPU_COMPAREOP_LESS,
       .enable_compare = true,
   };
-  return ShadowPassInfo{passInfo, SDL_CreateGPUSampler(device, &sample_desc)};
+  sampler = SDL_CreateGPUSampler(device, &sample_desc);
 }
 
-void ShadowPassInfo::release() {
-  DepthPassInfo::release();
-  if (depthTexture) {
-    SDL_ReleaseGPUTexture(_device, depthTexture);
-  }
-  depthTexture = nullptr;
-  if (sampler) {
-    SDL_ReleaseGPUSampler(_device, sampler);
-  }
-  sampler = nullptr;
+ShadowMapPass::ShadowMapPass(ShadowMapPass &&other) noexcept
+    : _device(other._device)
+    , _depthPass(std::move(other._depthPass))
+    , shadowMap(std::move(other.shadowMap))
+    , sampler(other.sampler) {
+  other._device = nullptr;
+  other.sampler = nullptr;
 }
 
-void renderDepthOnlyPass(CommandBuffer &cmdBuf, const DepthPassInfo &passInfo,
-                         const Mat4f &viewProj,
-                         std::span<const OpaqueCastable> castables) {
-  SDL_GPUDepthStencilTargetInfo depth_info;
-  SDL_zero(depth_info);
-  depth_info.load_op = SDL_GPU_LOADOP_CLEAR;
-  depth_info.store_op = SDL_GPU_STOREOP_STORE;
-  depth_info.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
-  depth_info.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
-  depth_info.clear_depth = 1.0f;
-  // depth texture may be the renderer shared depth texture,
-  // or a specially created texture.
-  depth_info.texture = passInfo.depthTexture;
+ShadowMapPass &ShadowMapPass::operator=(ShadowMapPass &&other) noexcept {
+  _device = other._device;
+  _depthPass = std::move(other._depthPass);
+  shadowMap = std::move(other.shadowMap);
+  sampler = other.sampler;
 
-  SDL_GPURenderPass *render_pass =
-      SDL_BeginGPURenderPass(cmdBuf, nullptr, 0, &depth_info);
-
-  assert(passInfo.pipeline);
-  SDL_BindGPUGraphicsPipeline(render_pass, passInfo.pipeline);
-
-  Mat4f mvp;
-  for (auto &cs : castables) {
-    auto &&[mesh, tr] = cs;
-    assert(validateMesh(mesh));
-    rend::bindMesh(render_pass, mesh);
-    mvp.noalias() = viewProj * tr;
-    cmdBuf.pushVertexUniform(DepthPassInfo::TRANSFORM_SLOT, mvp);
-    rend::draw(render_pass, mesh);
-  }
-
-  SDL_EndGPURenderPass(render_pass);
+  other._device = nullptr;
+  other.sampler = nullptr;
+  return *this;
 }
 
-void renderShadowPassFromFrustum(CommandBuffer &cmdBuf,
-                                 ShadowPassInfo &passInfo,
+void ShadowMapPass::release() noexcept {
+  _depthPass.release();
+  if (_device) {
+    if (sampler) {
+      SDL_ReleaseGPUSampler(_device, sampler);
+    }
+    sampler = nullptr;
+  }
+  shadowMap.destroy();
+  _device = nullptr;
+}
+
+void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                                  const DirectionalLight &dirLight,
                                  std::span<const OpaqueCastable> castables,
                                  const FrustumCornersType &worldSpaceCorners) {
@@ -175,14 +193,16 @@ void renderShadowPassFromFrustum(CommandBuffer &cmdBuf,
       shadowOrthographicMatrix({bounds.width(), bounds.height()},
                                float(bounds.min_.z()), float(bounds.max_.z()));
 
-  Mat4f viewProj = passInfo.cam.viewProj();
-  renderDepthOnlyPass(cmdBuf, passInfo, viewProj, castables);
+  Mat4f viewProj = lightView * lightProj;
+  passInfo.render(cmdBuf, viewProj, castables);
 }
 
-void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowPassInfo &passInfo,
+void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               const DirectionalLight &dirLight,
                               std::span<const OpaqueCastable> castables,
                               const AABB &worldSceneBounds) {
+  using Eigen::Vector3d;
+
   Float3 center = worldSceneBounds.center().cast<float>();
   float radius = 0.5f * float(worldSceneBounds.size());
   radius = std::ceil(radius * 16.f) / 16.f;
@@ -190,7 +210,6 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowPassInfo &passInfo,
   auto &lightView = passInfo.cam.view;
   auto &lightProj = passInfo.cam.projection;
   lightView = lookAt(eye, center, Float3::UnitZ());
-  using Eigen::Vector3d;
 
   AABB bounds{Vector3d::Constant(-radius), Vector3d::Constant(radius)};
   lightProj =
@@ -198,6 +217,6 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowPassInfo &passInfo,
                                float(bounds.min_.z()), float(bounds.max_.z()));
 
   Mat4f viewProj = lightProj * lightView.matrix();
-  renderDepthOnlyPass(cmdBuf, passInfo, viewProj, castables);
+  passInfo.render(cmdBuf, viewProj, castables);
 }
 } // namespace candlewick
