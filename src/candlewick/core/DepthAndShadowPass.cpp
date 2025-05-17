@@ -85,7 +85,7 @@ void DepthPass::render(CommandBuffer &command_buffer, const Mat4f &viewProj,
     assert(validateMesh(mesh));
     rend::bindMesh(render_pass, mesh);
 
-    Mat4f mvp = viewProj * tr;
+    GpuMat4 mvp = viewProj * tr;
     command_buffer.pushVertexUniform(DepthPass::TRANSFORM_SLOT, mvp);
     rend::draw(render_pass, mesh);
   }

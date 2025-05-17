@@ -482,7 +482,7 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
     };
     command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, data);
     if (enable_shadows) {
-      Mat4f lightMvp = lightViewProj * tr;
+      GpuMat4 lightMvp = lightViewProj * tr;
       command_buffer.pushVertexUniform(1, lightMvp);
     }
     rend::bindMesh(render_pass, mesh);
@@ -529,7 +529,7 @@ void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
             entt::exclude<Disable>);
     for (auto &&[entity, tr, obj] : env_view.each()) {
       const Mesh &mesh = obj.mesh;
-      const Mat4f mvp = viewProj * tr;
+      const GpuMat4 mvp = viewProj * tr;
       const auto &color = obj.materials[0].baseColor;
       command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, mvp)
           .pushFragmentUniform(FragmentUniformSlots::MATERIAL, color);
