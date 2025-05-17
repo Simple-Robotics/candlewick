@@ -6,8 +6,13 @@
 
 namespace candlewick {
 
-struct Texture {
-  Texture(NoInitT);
+class Texture {
+  SDL_GPUDevice *_device = nullptr;
+  SDL_GPUTexture *_texture = nullptr;
+  SDL_GPUTextureCreateInfo _description;
+
+public:
+  Texture(NoInitT) {}
   Texture(const Device &device, SDL_GPUTextureCreateInfo texture_desc,
           const char *name = nullptr);
 
@@ -33,17 +38,8 @@ struct Texture {
 
   Uint32 textureSize() const;
 
-  const Device &device() const;
-
   void destroy() noexcept;
   ~Texture() noexcept { this->destroy(); }
-
-private:
-  SDL_GPUTexture *_texture;
-  Device const *_device;
-  SDL_GPUTextureCreateInfo _description;
 };
-
-inline Texture::Texture(NoInitT) : _texture(nullptr), _device(nullptr) {}
 
 } // namespace candlewick

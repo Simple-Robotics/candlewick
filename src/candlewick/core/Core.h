@@ -9,7 +9,7 @@ namespace candlewick {
 struct Camera;
 class CommandBuffer;
 struct Device;
-struct Texture;
+class Texture;
 class Mesh;
 class MeshView;
 class MeshLayout;
