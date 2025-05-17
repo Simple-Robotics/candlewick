@@ -33,7 +33,7 @@ namespace media {
 
     VideoRecorderImpl(const VideoRecorderImpl &) = delete;
 
-    void writeFrame(const Uint8 *data, size_t payloadSize,
+    void writeFrame(const Uint8 *data, Uint32 payloadSize,
                     AVPixelFormat avPixelFormat);
 
     ~VideoRecorderImpl() noexcept;
@@ -45,9 +45,8 @@ namespace media {
       avcodec_free_context(&codecContext);
     if (formatContext->pb)
       avio_closep(&formatContext->pb);
-
-    avformat_free_context(formatContext);
-
+    if (formatContext)
+      avformat_free_context(formatContext);
     if (frame)
       av_frame_free(&frame);
     if (packet)
@@ -66,8 +65,8 @@ namespace media {
     char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      auto msg = std::format("Could not create output context: {:s}", errbuf);
-      throw std::runtime_error(msg);
+      terminate_with_message(
+          std::format("Could not create output context: %s", errbuf));
     }
 
     videoStream = avformat_new_stream(formatContext, codec);
@@ -125,7 +124,7 @@ namespace media {
     }
   }
 
-  void VideoRecorderImpl::writeFrame(const Uint8 *data, size_t payloadSize,
+  void VideoRecorderImpl::writeFrame(const Uint8 *data, Uint32 payloadSize,
                                      AVPixelFormat avPixelFormat) {
     AVFrame *tmpFrame = av_frame_alloc();
     tmpFrame->format = avPixelFormat;
@@ -183,8 +182,8 @@ namespace media {
 
   // WRAPPING CLASS
   VideoRecorder::VideoRecorder(NoInitT) : impl_() {}
-  VideoRecorder::VideoRecorder(VideoRecorder &&) = default;
-  VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) = default;
+  VideoRecorder::VideoRecorder(VideoRecorder &&) noexcept = default;
+  VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) noexcept = default;
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
                                const std::string &filename, Settings settings)
@@ -201,23 +200,24 @@ namespace media {
 
   Uint32 VideoRecorder::frameCounter() const { return impl_->m_frameCounter; }
 
-  void VideoRecorder::writeFrame(const Uint8 *data, size_t payloadSize,
-                                 SDL_GPUTextureFormat pixelFormat) {
-    AVPixelFormat outputFormat;
+  static AVPixelFormat
+  convert_SDLTextureFormatTo_AVPixelFormat(SDL_GPUTextureFormat pixelFormat) {
     switch (pixelFormat) {
-    case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM: {
-      outputFormat = AV_PIX_FMT_BGRA;
-      break;
-    }
-    case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM: {
-      outputFormat = AV_PIX_FMT_RGBA;
-      break;
-    }
+    case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
+      return AV_PIX_FMT_BGRA;
+    case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
+      return AV_PIX_FMT_RGBA;
     default:
       terminate_with_message(
           std::format("Unsupported SDL GPU texture format %s",
                       magic_enum::enum_name(pixelFormat)));
     }
+  }
+
+  void VideoRecorder::writeFrame(const Uint8 *data, Uint32 payloadSize,
+                                 SDL_GPUTextureFormat pixelFormat) {
+    AVPixelFormat outputFormat =
+        convert_SDLTextureFormatTo_AVPixelFormat(pixelFormat);
     impl_->writeFrame(data, payloadSize, outputFormat);
   }
 

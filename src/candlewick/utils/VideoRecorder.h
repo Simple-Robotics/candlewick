@@ -30,8 +30,8 @@ namespace media {
 
     /// \brief Constructor which will not open the file or stream.
     explicit VideoRecorder(NoInitT);
-    VideoRecorder(VideoRecorder &&);
-    VideoRecorder &operator=(VideoRecorder &&);
+    VideoRecorder(VideoRecorder &&) noexcept;
+    VideoRecorder &operator=(VideoRecorder &&) noexcept;
 
     bool initialized() const { return impl_ != nullptr; }
     VideoRecorder(Uint32 width, Uint32 height, const std::string &filename,
@@ -40,7 +40,7 @@ namespace media {
     VideoRecorder(Uint32 width, Uint32 height, const std::string &filename);
 
     Uint32 frameCounter() const;
-    void writeFrame(const Uint8 *data, size_t payloadSize,
+    void writeFrame(const Uint8 *data, Uint32 payloadSize,
                     SDL_GPUTextureFormat pixelFormat);
     ~VideoRecorder();
   };
