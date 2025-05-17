@@ -467,10 +467,11 @@ int main(int argc, char **argv) {
       renderDepthOnlyPass(command_buffer, depthPassInfo, viewProj, castables);
       switch (g_showDebugViz) {
       case FULL_RENDER:
-        robot_scene.render(command_buffer, g_camera);
+        robot_scene.renderOpaque(command_buffer, g_camera);
         debug_scene.render(command_buffer, g_camera);
         if (showFrustum)
           frustumBoundsDebug.render(command_buffer, g_camera);
+        robot_scene.renderTransparent(command_buffer, g_camera);
         break;
       case DEPTH_DEBUG:
         renderDepthDebug(renderer, command_buffer, depthDebugPass,

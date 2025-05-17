@@ -199,8 +199,9 @@ namespace ssao {
         });
     auto SAMPLES_PAYLOAD_BYTES =
         Uint32(KERNEL_SAMPLES.size() * sizeof(GpuVec4));
-    cmdBuf.pushFragmentUniform(0, KERNEL_SAMPLES.data(), SAMPLES_PAYLOAD_BYTES);
-    cmdBuf.pushFragmentUniform(1, &proj, sizeof(proj));
+    cmdBuf
+        .pushFragmentUniformRaw(0, KERNEL_SAMPLES.data(), SAMPLES_PAYLOAD_BYTES)
+        .pushFragmentUniform(1, proj);
     SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
     SDL_DrawGPUPrimitives(render_pass, 6, 1, 0, 0);
     SDL_EndGPURenderPass(render_pass);
@@ -214,7 +215,7 @@ namespace ssao {
       render_pass = SDL_BeginGPURenderPass(cmdBuf, &color_info, 1, nullptr);
       SDL_BindGPUGraphicsPipeline(render_pass, blurPipeline);
 
-      cmdBuf.pushFragmentUniform(0, &blurDir, sizeof(blurDir));
+      cmdBuf.pushFragmentUniform(0, blurDir);
       rend::bindFragmentSamplers(
           render_pass, 0,
           {{

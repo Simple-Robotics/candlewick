@@ -113,8 +113,9 @@ void Visualizer::render() {
                              robotScene.worldSpaceBounds);
 
     auto &camera = controller.camera;
-    robotScene.render(cmdBuf, camera);
+    robotScene.renderOpaque(cmdBuf, camera);
     debugScene.render(cmdBuf, camera);
+    robotScene.renderTransparent(cmdBuf, camera);
     guiSystem.render(cmdBuf);
   }
 

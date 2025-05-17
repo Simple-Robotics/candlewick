@@ -70,7 +70,7 @@ namespace frustum_debug {
         color,
         eyePos,
     };
-    cmdBuf.pushVertexUniform(0, &ubo, sizeof(ubo));
+    cmdBuf.pushVertexUniform(0, ubo);
 
     SDL_DrawGPUPrimitives(render_pass, NUM_VERTICES, 1, 0, 0);
   }

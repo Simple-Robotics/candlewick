@@ -146,7 +146,7 @@ void renderDepthOnlyPass(CommandBuffer &cmdBuf, const DepthPassInfo &passInfo,
     assert(validateMesh(mesh));
     rend::bindMesh(render_pass, mesh);
     mvp.noalias() = viewProj * tr;
-    cmdBuf.pushVertexUniform(DepthPassInfo::TRANSFORM_SLOT, &mvp, sizeof(mvp));
+    cmdBuf.pushVertexUniform(DepthPassInfo::TRANSFORM_SLOT, mvp);
     rend::draw(render_pass, mesh);
   }
 

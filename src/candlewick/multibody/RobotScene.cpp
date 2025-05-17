@@ -301,20 +301,27 @@ void RobotScene::collectOpaqueCastables() {
   });
 }
 
-void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
+void RobotScene::renderOpaque(CommandBuffer &command_buffer,
+                              const Camera &camera) {
   if (m_config.enable_ssao) {
     ssaoPass.render(command_buffer, camera);
   }
 
   renderPBRTriangleGeometry(command_buffer, camera, false);
 
+  renderOtherGeometry(command_buffer, camera);
+}
+
+void RobotScene::renderTransparent(CommandBuffer &command_buffer,
+                                   const Camera &camera) {
   renderPBRTriangleGeometry(command_buffer, camera, true);
 
-  renderOtherGeometry(command_buffer, camera);
+  compositeTransparencyPass(command_buffer);
+}
 
-  // transparent triangle pipeline required
-  if (pipelines.triangleMesh.transparent)
-    compositeTransparencyPass(command_buffer);
+void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
+  renderOpaque(command_buffer, camera);
+  renderTransparent(command_buffer, camera);
 }
 
 /// Function private to this translation unit.
@@ -381,7 +388,8 @@ enum FragmentSamplerSlots {
 };
 
 void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
-  if (!pipelines.wboitComposite)
+  // transparent triangle pipeline required
+  if (!pipelines.triangleMesh.transparent || !pipelines.wboitComposite)
     return;
 
   SDL_GPUColorTargetInfo target;
@@ -451,10 +459,8 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                  .sampler = ssaoPass.texSampler,
                              }});
   int _useSsao = m_config.enable_ssao;
-  command_buffer
-      .pushFragmentUniform(FragmentUniformSlots::LIGHTING, &lightUbo,
-                           sizeof(lightUbo))
-      .pushFragmentUniform(2, &_useSsao, sizeof(_useSsao));
+  command_buffer.pushFragmentUniform(FragmentUniformSlots::LIGHTING, lightUbo)
+      .pushFragmentUniform(2, _useSsao);
 
   SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
 
@@ -472,17 +478,16 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
         .mvp = mvp,
         .normalMatrix = math::computeNormalMatrix(modelView),
     };
-    command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, &data,
-                                     sizeof(data));
+    command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, data);
     if (enable_shadows) {
       Mat4f lightMvp = lightViewProj * tr;
-      command_buffer.pushVertexUniform(1, &lightMvp, sizeof(lightMvp));
+      command_buffer.pushVertexUniform(1, lightMvp);
     }
     rend::bindMesh(render_pass, mesh);
     for (size_t j = 0; j < mesh.numViews(); j++) {
       const auto material = obj.materials[j];
       command_buffer.pushFragmentUniform(FragmentUniformSlots::MATERIAL,
-                                         &material, sizeof(material));
+                                         material);
       rend::drawView(render_pass, mesh.view(j));
     }
   };
@@ -524,10 +529,8 @@ void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
       const Mesh &mesh = obj.mesh;
       const Mat4f mvp = viewProj * tr;
       const auto &color = obj.materials[0].baseColor;
-      command_buffer
-          .pushVertexUniform(VertexUniformSlots::TRANSFORM, &mvp, sizeof(mvp))
-          .pushFragmentUniform(FragmentUniformSlots::MATERIAL, &color,
-                               sizeof(color));
+      command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, mvp)
+          .pushFragmentUniform(FragmentUniformSlots::MATERIAL, color);
       rend::bindMesh(render_pass, mesh);
       rend::draw(render_pass, mesh);
     }
