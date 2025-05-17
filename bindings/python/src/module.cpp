@@ -6,10 +6,11 @@
 
 using namespace candlewick;
 
+void exposeMeshData();
+void exposeRenderer();
 #ifdef CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
 void exposeVisualizer();
 #endif
-void exposeRenderer();
 
 BOOST_PYTHON_MODULE(pycandlewick) {
   bp::import("eigenpy");
@@ -26,6 +27,7 @@ BOOST_PYTHON_MODULE(pycandlewick) {
   // Register SDL_Quit() as a function to call when interpreter exits.
   Py_AtExit(SDL_Quit);
 
+  exposeMeshData();
   exposeRenderer();
 #ifdef CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
   {

@@ -241,6 +241,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
 
   // initialize render target for GBuffer
   const bool enable_shadows = m_config.enable_shadows;
+  bool shadows_configured = false;
 
   for (pin::GeomIndex geom_id = 0; geom_id < geom_model.ngeoms; geom_id++) {
 
@@ -270,12 +271,13 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
 
     if (pipeline_type == PIPELINE_TRIANGLEMESH) {
       if (!ssaoPass.pipeline) {
-        ssaoPass = ssao::SsaoPass(m_renderer, layout, gBuffer.normalMap);
+        ssaoPass = ssao::SsaoPass(m_renderer, gBuffer.normalMap);
       }
       // configure shadow pass
-      if (enable_shadows && !shadowPass.pipeline) {
-        shadowPass =
-            ShadowPassInfo::create(m_renderer, layout, m_config.shadow_config);
+      if (enable_shadows && !shadows_configured) {
+        shadowPass = ShadowMapPass(device(), layout, m_renderer.depthFormat(),
+                                   m_config.shadow_config);
+        shadows_configured = true;
       }
       this->initCompositePipeline(layout);
     }
@@ -449,7 +451,7 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   if (enable_shadows) {
     rend::bindFragmentSamplers(render_pass, SHADOW_MAP_SLOT,
                                {{
-                                   .texture = shadowPass.depthTexture,
+                                   .texture = shadowPass.shadowMap,
                                    .sampler = shadowPass.sampler,
                                }});
   }

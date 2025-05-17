@@ -300,12 +300,12 @@ int main(int argc, char **argv) {
   robot_debug.addFrameTriad(debug_scene, ee_frame_id);
   robot_debug.addFrameVelocityArrow(debug_scene, ee_frame_id);
 
-  auto depthPassInfo =
-      DepthPassInfo::create(renderer, plane_obj.mesh.layout(), NULL,
-                            {SDL_GPU_CULLMODE_NONE, 0.05f, 0.f, true, false});
+  DepthPass depthPass(renderer.device, plane_obj.mesh.layout(),
+                      renderer.depth_texture,
+                      {SDL_GPU_CULLMODE_NONE, 0.05f, 0.f, true, false});
   auto &shadowPassInfo = robot_scene.shadowPass;
   auto shadowDebugPass =
-      DepthDebugPass::create(renderer, shadowPassInfo.depthTexture);
+      DepthDebugPass::create(renderer, shadowPassInfo.shadowMap);
 
   auto depthDebugPass =
       DepthDebugPass::create(renderer, renderer.depth_texture);
@@ -464,7 +464,7 @@ int main(int argc, char **argv) {
       auto &castables = robot_scene.castables();
       renderShadowPassFromAABB(command_buffer, shadowPassInfo, sceneLight,
                                castables, worldSpaceBounds);
-      renderDepthOnlyPass(command_buffer, depthPassInfo, viewProj, castables);
+      depthPass.render(command_buffer, viewProj, castables);
       switch (g_showDebugViz) {
       case FULL_RENDER:
         robot_scene.renderOpaque(command_buffer, g_camera);
@@ -501,7 +501,7 @@ int main(int argc, char **argv) {
 
   SDL_WaitForGPUIdle(renderer.device);
   frustumBoundsDebug.release();
-  depthPassInfo.release();
+  depthPass.release();
   shadowDebugPass.release(renderer.device);
   depthDebugPass.release(renderer.device);
   robot_scene.release();
