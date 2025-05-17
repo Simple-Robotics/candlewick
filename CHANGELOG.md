@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - multibody/RobotScene : reorganize pipelines (accomodate for transparent PBR shader)
 - shaders : refactor basic PBR shader (move some functions to new `pbr_lighting.glsl`) (https://github.com/Simple-Robotics/candlewick/pull/58)
 - interleave debug scene render between robot render system opaque and transparent passes (https://github.com/Simple-Robotics/candlewick/pull/59)
-- revamp depth and shadow map pass classes
+- revamp depth and shadow map pass classes (https://github.com/Simple-Robotics/candlewick/pull/60)
+- core/Texture : do not store pointer to `Device` but raw `SDL_GPUDevice *` handle (https://github.com/Simple-Robotics/candlewick/pull/60)
 
 ## [0.0.6] - 2025-05-14
 
