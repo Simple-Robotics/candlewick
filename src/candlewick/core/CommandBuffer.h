@@ -46,13 +46,19 @@ public:
     return true;
   }
 
-  bool cancel() noexcept {
-    if (!(active() && SDL_CancelGPUCommandBuffer(_cmdBuf)))
-      return false;
+  SDL_GPUFence *submitAndAcquireFence() noexcept {
+    SDL_GPUFence *fence = SDL_SubmitGPUCommandBufferAndAcquireFence(_cmdBuf);
     _cmdBuf = nullptr;
-    return true;
+    return fence;
   }
 
+  /// \brief Cancel the command buffer, returning the bool value from the
+  /// wrapped SDL API.
+  bool cancel() noexcept;
+
+  /// \brief Check if the command buffer is still active.
+  ///
+  /// For this wrapper class, it means the internal pointer is non-null.
   bool active() const noexcept { return _cmdBuf; }
 
   ~CommandBuffer() noexcept {
@@ -60,9 +66,8 @@ public:
       SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                   "CommandBuffer object is being destroyed while still active! "
                   "It will be cancelled.");
-      SDL_CancelGPUCommandBuffer(_cmdBuf);
-      _cmdBuf = nullptr;
-      assert(false);
+      [[maybe_unused]] bool ret = cancel();
+      assert(ret);
     }
   }
 
@@ -98,10 +103,6 @@ public:
                                         Uint32 length) {
     SDL_PushGPUFragmentUniformData(_cmdBuf, slot_index, data, length);
     return *this;
-  }
-
-  SDL_GPUFence *submitAndAcquireFence() {
-    return SDL_SubmitGPUCommandBufferAndAcquireFence(_cmdBuf);
   }
 };
 

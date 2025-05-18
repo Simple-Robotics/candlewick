@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - revamp depth and shadow map pass classes (https://github.com/Simple-Robotics/candlewick/pull/60)
 - core/Texture : do not store pointer to `Device` but raw `SDL_GPUDevice *` handle (https://github.com/Simple-Robotics/candlewick/pull/60)
 
+### Fixed
+
+- core : fix `CommandBuffer::submitAndAcquireFence()` not setting the internal pointer to null
+
 ## [0.0.6] - 2025-05-14
 
 This is the first release to use a changelog.

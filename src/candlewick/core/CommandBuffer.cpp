@@ -21,4 +21,15 @@ CommandBuffer &CommandBuffer::operator=(CommandBuffer &&other) noexcept {
   return *this;
 }
 
+bool CommandBuffer::cancel() noexcept {
+  bool ret = SDL_CancelGPUCommandBuffer(_cmdBuf);
+  _cmdBuf = nullptr;
+  if (!ret) {
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "Failed to cancel command buffer: %s", SDL_GetError());
+    return false;
+  }
+  return true;
+}
+
 } // namespace candlewick
