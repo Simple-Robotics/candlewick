@@ -1,3 +1,6 @@
 ./magic_enum.hpp
-./stb_image_write.h
+./stb/stb_image_write.h
 ./float16_t.hpp
+./ImGuiFileDialog.h
+./ImGuiFileDialog.cpp
+./ImGuiFileDialogConfig.h

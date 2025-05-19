@@ -1,7 +1,7 @@
 #include "WriteTextureToImage.h"
 #include "../core/Device.h"
 #include "../core/CommandBuffer.h"
-#include "../third-party/stb_image_write.h"
+#include "../third-party/stb/stb_image_write.h"
 #include "../utils/PixelFormatConversion.h"
 
 namespace candlewick::media {
