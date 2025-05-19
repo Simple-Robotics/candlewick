@@ -39,6 +39,7 @@ add_library(
   candlewick/core/debug/Frustum.cpp
   candlewick/posteffects/ScreenSpaceShadows.cpp
   candlewick/posteffects/SSAO.cpp
+  candlewick/utils/FileDialogGui.cpp
   candlewick/utils/LoadMesh.cpp
   candlewick/utils/LoadMaterial.cpp
   candlewick/utils/MeshData.cpp
@@ -56,7 +57,7 @@ add_library(
   candlewick/primitives/Internal.cpp
   candlewick/primitives/Plane.cpp
   candlewick/primitives/Sphere.cpp
-  candlewick/third-party/sbti_lib.cpp
+  candlewick/third-party/stbi_lib.cpp
   # imgui sources
   ${IMGUI_SRC}
 )

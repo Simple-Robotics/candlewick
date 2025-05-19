@@ -61,7 +61,7 @@ void RobotDebugSystem::updateFrameVelocities(entt::registry &reg) {
     // the arrow mesh is posed z-up by default.
     // we need to rotate towards where the velocity is pointing,
     // then transform to the frame space.
-    quatf.setFromTwoVectors(Float3::UnitZ(), -v);
+    quatf.setFromTwoVectors(Float3::UnitZ(), v);
     Mat3f R2 = quatf.toRotationMatrix() * scaleMatrix;
     auto R = tr.topLeftCorner<3, 3>();
     R.applyOnTheRight(R2);

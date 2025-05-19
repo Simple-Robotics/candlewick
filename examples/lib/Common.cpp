@@ -1,5 +1,3 @@
-#include "candlewick/core/MeshLayout.h"
-#include "candlewick/core/Shader.h"
 #include "candlewick/core/math_types.h"
 #include "candlewick/primitives/Cube.h"
 #include "candlewick/utils/MeshTransforms.h"

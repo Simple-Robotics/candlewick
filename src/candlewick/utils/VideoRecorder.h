@@ -3,14 +3,12 @@
 #ifndef CANDLEWICK_WITH_FFMPEG_SUPPORT
 #error "Including this file requires candlewick to be built with FFmpeg support"
 #endif
+#include "../core/Tags.h"
+
+#include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_stdinc.h>
 #include <string>
 #include <memory>
-#include "candlewick/core/Tags.h"
-
-extern "C" {
-#include <libavutil/pixfmt.h>
-}
 
 namespace candlewick {
 namespace media {
@@ -18,7 +16,6 @@ namespace media {
   struct VideoRecorderImpl;
 
   class VideoRecorder {
-  private:
     std::unique_ptr<VideoRecorderImpl> impl_;
 
   public:
@@ -32,23 +29,29 @@ namespace media {
 
     /// \brief Constructor which will not open the file or stream.
     explicit VideoRecorder(NoInitT);
-    VideoRecorder(VideoRecorder &&);
-    VideoRecorder &operator=(VideoRecorder &&);
+    VideoRecorder(VideoRecorder &&) noexcept;
+    VideoRecorder &operator=(VideoRecorder &&) noexcept;
 
     bool initialized() const { return impl_ != nullptr; }
+
+    /// \brief Constructor for the video recorder.
+    ///
+    /// \param width Input data width.
+    /// \param height Input data height.
+    /// \param settings Video recording settings (fps, bitrate, output file
+    /// width and height).
+    ///
+    /// \note If the settings' output dimensions are not set, they will
+    /// automatically be set to be the input's dimensions.
     VideoRecorder(Uint32 width, Uint32 height, const std::string &filename,
                   Settings settings);
 
-    VideoRecorder(Uint32 width, Uint32 height, const std::string &filename)
-        : VideoRecorder(width, height, filename,
-                        Settings{
-                            .outputWidth = int(width),
-                            .outputHeight = int(height),
-                        }) {}
+    VideoRecorder(Uint32 width, Uint32 height, const std::string &filename);
 
     Uint32 frameCounter() const;
-    void writeFrame(const Uint8 *data, size_t payloadSize,
-                    AVPixelFormat avPixelFormat);
+    void writeFrame(const Uint8 *data, Uint32 payloadSize,
+                    SDL_GPUTextureFormat pixelFormat);
+    void close() noexcept;
     ~VideoRecorder();
   };
 
