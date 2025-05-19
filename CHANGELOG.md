@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - utils : avoid public inclusion of `libavutil/pixfmt` header for video recorder
+- core : `errors.h`: make terminate_with_message a template (with formatting arguments, etc)
 
 ## [0.0.7] - 2025-05-17
 

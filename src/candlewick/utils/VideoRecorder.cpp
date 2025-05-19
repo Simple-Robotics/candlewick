@@ -65,13 +65,17 @@ namespace media {
     char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message(
-          std::format("Could not create output context: %s", errbuf));
+      terminate_with_message("Could not create output context: %s", errbuf);
     }
 
     videoStream = avformat_new_stream(formatContext, codec);
+    if (!videoStream)
+      terminate_with_message("Could not allocate video stream.");
 
     codecContext = avcodec_alloc_context3(codec);
+    if (!codecContext) {
+      terminate_with_message("Could not allocate video codec context.");
+    }
 
     codecContext->width = settings.outputWidth;
     codecContext->height = settings.outputHeight;
@@ -85,33 +89,35 @@ namespace media {
     ret = avcodec_parameters_from_context(videoStream->codecpar, codecContext);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      throw std::runtime_error(
-          std::format("Couldn't copy codec params: {:s}", errbuf));
+      terminate_with_message("Couldn't copy codec params: %s", errbuf);
     }
 
     ret = avcodec_open2(codecContext, codec, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      throw std::runtime_error(
-          std::format("Couldn't open codec: {:s}", errbuf));
+      terminate_with_message("Couldn't open codec: %s", errbuf);
     }
 
     ret = avio_open(&formatContext->pb, filename.c_str(), AVIO_FLAG_WRITE);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      throw std::runtime_error(
-          std::format("Couldn't open output stream: {:s}", errbuf));
+      terminate_with_message("Couldn't open output stream: %s", errbuf);
     }
 
     ret = avformat_write_header(formatContext, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      throw std::runtime_error(
-          std::format("Couldn't write output header: {:s}", errbuf));
+      terminate_with_message("Couldn't write output header: %s", errbuf);
     }
 
-    frame = av_frame_alloc();
     packet = av_packet_alloc();
+    if (!packet)
+      terminate_with_message("Failed to allocate AVPacket");
+
+    // principal frame
+    frame = av_frame_alloc();
+    if (!frame)
+      terminate_with_message("Failed to allocate video frame.");
     frame->format = codecContext->pix_fmt;
     frame->width = codecContext->width;
     frame->height = codecContext->height;
@@ -119,8 +125,7 @@ namespace media {
     ret = av_frame_get_buffer(frame, 0);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      throw std::runtime_error(
-          std::format("Failed to allocate frame: {:s}", errbuf));
+      terminate_with_message("Failed to allocate frame data: %s", errbuf);
     }
   }
 
@@ -155,7 +160,7 @@ namespace media {
     if (ret < 0) {
       av_frame_free(&tmpFrame);
       sws_freeContext(swsContext);
-      throw std::runtime_error(std::format("Error sending frame {:s}", errbuf));
+      terminate_with_message("Error sending frame %s", av_err2str(ret));
     }
 
     while (ret >= 0) {
@@ -166,7 +171,8 @@ namespace media {
       if (ret < 0) {
         av_frame_free(&tmpFrame);
         sws_freeContext(swsContext);
-        throw std::runtime_error("Error receiving packet from encoder");
+        terminate_with_message("Error receiving packet from encoder: %s",
+                               av_err2str(ret));
       }
 
       av_packet_rescale_ts(packet, codecContext->time_base,
@@ -208,9 +214,8 @@ namespace media {
     case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
       return AV_PIX_FMT_RGBA;
     default:
-      terminate_with_message(
-          std::format("Unsupported SDL GPU texture format %s",
-                      magic_enum::enum_name(pixelFormat)));
+      terminate_with_message("Unsupported SDL GPU texture format %s",
+                             magic_enum::enum_name(pixelFormat));
     }
   }
 

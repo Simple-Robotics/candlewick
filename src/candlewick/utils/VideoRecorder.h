@@ -16,7 +16,6 @@ namespace media {
   struct VideoRecorderImpl;
 
   class VideoRecorder {
-  private:
     std::unique_ptr<VideoRecorderImpl> impl_;
 
   public:

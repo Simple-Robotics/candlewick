@@ -27,10 +27,8 @@ template <typename T>
 [[noreturn]] void
 invalid_enum(const char *msg, T type,
              std::source_location location = std::source_location::current()) {
-  char out[64];
-  SDL_snprintf(out, 64ul, "Invalid enum: %s - %s", msg,
-               magic_enum::enum_name(type).data());
-  terminate_with_message(out, location);
+  terminate_with_message(location, "Invalid enum: %s - %s", msg,
+                         magic_enum::enum_name(type));
 }
 
 namespace multibody {

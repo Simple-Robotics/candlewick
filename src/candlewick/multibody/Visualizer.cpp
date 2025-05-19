@@ -10,8 +10,7 @@ namespace candlewick::multibody {
 
 static Renderer _create_renderer(const Visualizer::Config &config) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-    throw std::runtime_error(
-        std::format("Failed to init video: {}", SDL_GetError()));
+    terminate_with_message("Failed to init video: %s", SDL_GetError());
   }
 
   return Renderer{Device{auto_detect_shader_format_subset()},

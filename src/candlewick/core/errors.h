@@ -47,13 +47,18 @@ namespace detail {
 
 } // namespace detail
 
+template <typename... Ts>
 [[noreturn]]
-inline void terminate_with_message(
-    std::string_view msg,
-    std::source_location location = std::source_location::current()) {
+void terminate_with_message(std::source_location location, std::string_view fmt,
+                            const Ts &...args) {
   throw std::runtime_error(
-      detail::error_message_format(location.function_name(), "{:s}", msg)
-          .c_str());
+      detail::error_message_format(location.function_name(), fmt, args...));
+}
+
+template <typename... Ts>
+[[noreturn]]
+void terminate_with_message(std::string_view fmt, const Ts &...args) {
+  terminate_with_message(std::source_location::current(), fmt, args...);
 }
 
 [[noreturn]]
