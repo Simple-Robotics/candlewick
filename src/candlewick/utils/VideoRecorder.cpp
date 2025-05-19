@@ -235,11 +235,7 @@ namespace media {
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
                                const std::string &filename)
-      : VideoRecorder(width, height, filename,
-                      Settings{
-                          .outputWidth = int(width),
-                          .outputHeight = int(height),
-                      }) {}
+      : VideoRecorder(width, height, filename, Settings{}) {}
 
   Uint32 VideoRecorder::frameCounter() const { return impl_->m_frameCounter; }
 

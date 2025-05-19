@@ -184,13 +184,6 @@ void eventLoop(const Renderer &renderer) {
   }
 }
 
-Renderer createRenderer(Uint32 width, Uint32 height,
-                        SDL_GPUTextureFormat depth_stencil_format) {
-  return Renderer{Device{auto_detect_shader_format_subset(), true},
-                  Window(__FILE__, int(width), int(height), 0),
-                  depth_stencil_format};
-}
-
 int main(int argc, char **argv) {
   CLI::App app{"Ur5 example"};
   bool performRecording{false};
@@ -206,8 +199,11 @@ int main(int argc, char **argv) {
     return 1;
 
   // D16_UNORM works on macOS, D24_UNORM and D32_FLOAT break the depth prepass
-  Renderer renderer =
-      createRenderer(wWidth, wHeight, SDL_GPU_TEXTUREFORMAT_D16_UNORM);
+  Renderer renderer{
+      Device{auto_detect_shader_format_subset(), true},
+      Window(__FILE__, wWidth, wHeight, 0),
+      SDL_GPU_TEXTUREFORMAT_D16_UNORM,
+  };
 
   entt::registry registry{};
 
@@ -414,24 +410,21 @@ int main(int argc, char **argv) {
 
   Uint32 frameNo = 0;
 
-  srand(42);
+  std::srand(42);
   Eigen::VectorXd q0 = pin::neutral(model);
   Eigen::VectorXd q1 = pin::randomConfiguration(model);
 
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   media::VideoRecorder recorder{NoInit};
+  media::TransferBufferPool transfer_buffer_pool{renderer.device};
   if (performRecording)
-    recorder = media::VideoRecorder{wWidth, wHeight, "ur5.mp4"};
+    recorder = media::VideoRecorder{wWidth,
+                                    wHeight,
+                                    "ur5.mp4",
+                                    {
+                                        .fps = 50,
+                                    }};
 #endif
-
-  auto record_callback = [&] {
-#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
-    auto swapchain_format = renderer.getSwapchainTextureFormat();
-    media::videoWriteTextureToFrame(renderer.device, recorder,
-                                    renderer.swapchain, swapchain_format,
-                                    wWidth, wHeight);
-#endif
-  };
 
   AABB &worldSpaceBounds = robot_scene.worldSpaceBounds;
   worldSpaceBounds.update({-1.f, -1.f, 0.f}, {+1.f, +1.f, 1.f});
@@ -440,18 +433,20 @@ int main(int argc, char **argv) {
   frustumBoundsDebug.addFrustum(shadowPassInfo.cam);
 
   Eigen::VectorXd q = q0;
+  Eigen::VectorXd qn = q;
+  Eigen::VectorXd v{model.nv};
   const double dt = 1e-2;
 
   while (!quitRequested) {
     // logic
     eventLoop(renderer);
     double alpha = 0.5 * (1. + std::sin(frameNo * dt));
-    Eigen::VectorXd qn = q;
-    q = pin::interpolate(model, q0, q1, alpha);
-    Eigen::VectorXd v = pin::difference(model, q, qn) / dt;
-    pin::forwardKinematics(model, pin_data, q, v);
+    pin::interpolate(model, q0, q1, alpha, qn);
+    v = pin::difference(model, q, qn) / dt;
+    pin::forwardKinematics(model, pin_data, qn, v);
     pin::updateFramePlacements(model, pin_data);
     pin::updateGeometryPlacements(model, pin_data, geom_model, geom_data);
+    q = qn;
     debug_scene.update();
 
     // acquire command buffer and swapchain
@@ -494,7 +489,13 @@ int main(int argc, char **argv) {
     command_buffer.submit();
 
     if (performRecording) {
-      record_callback();
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+      CommandBuffer command_buffer = renderer.acquireCommandBuffer();
+      auto swapchain_format = renderer.getSwapchainTextureFormat();
+      media::videoWriteTextureToFrame(
+          command_buffer, renderer.device, transfer_buffer_pool, recorder,
+          renderer.swapchain, swapchain_format, wWidth, wHeight);
+#endif
     }
     frameNo++;
   }
@@ -507,6 +508,10 @@ int main(int argc, char **argv) {
   robot_scene.release();
   debug_scene.release();
   gui_system.release();
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+  recorder.close();
+  transfer_buffer_pool.release();
+#endif
   renderer.destroy();
   SDL_Quit();
   return 0;
