@@ -14,6 +14,7 @@
 #include "candlewick/multibody/RobotScene.h"
 #include "candlewick/multibody/RobotDebug.h"
 #include "candlewick/primitives/Primitives.h"
+#include "candlewick/utils/FileDialogGui.h"
 #include "candlewick/utils/WriteTextureToImage.h"
 
 #include <imgui.h>
@@ -184,6 +185,19 @@ void eventLoop(const Renderer &renderer) {
   }
 }
 
+static void screenshot_button_callback(Renderer &renderer,
+                                       media::TransferBufferPool &pool,
+                                       const char *filename) {
+  const auto &device = renderer.device;
+  CommandBuffer command_buffer{device};
+  renderer.waitAndAcquireSwapchain(command_buffer);
+
+  SDL_Log("Saving screenshot at %s", filename);
+  media::writeToFile(command_buffer, device, pool, renderer.swapchain,
+                     renderer.getSwapchainTextureFormat(), wWidth, wHeight,
+                     filename);
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Ur5 example"};
   bool performRecording{false};
@@ -309,6 +323,8 @@ int main(int argc, char **argv) {
 
   FrustumBoundsDebugSystem frustumBoundsDebug{registry, renderer};
 
+  const char *screenshot_filename = nullptr;
+
   GuiSystem gui_system{
       renderer, [&](const Renderer &r) {
         IMGUI_CHECKVERSION();
@@ -385,6 +401,13 @@ int main(int argc, char **argv) {
           ImGui::RadioButton("Grayscale", (int *)&depth_mode, 0);
           ImGui::SameLine();
           ImGui::RadioButton("Heatmap", (int *)&depth_mode, 1);
+        }
+
+        ImGui::SeparatorText("Screenshots");
+        static GuiFileSaveDialog scr_dialog;
+        scr_dialog.addFileDialog(renderer.window);
+        if (ImGui::Button("Take screenshot")) {
+          screenshot_filename = scr_dialog.filename.c_str();
         }
 
         ImGui::SeparatorText("Robot model");
@@ -496,6 +519,11 @@ int main(int argc, char **argv) {
           command_buffer, renderer.device, transfer_buffer_pool, recorder,
           renderer.swapchain, swapchain_format, wWidth, wHeight);
 #endif
+    }
+    if (screenshot_filename) {
+      screenshot_button_callback(renderer, transfer_buffer_pool,
+                                 screenshot_filename);
+      screenshot_filename = nullptr;
     }
     frameNo++;
   }
