@@ -94,7 +94,7 @@ Visualizer::~Visualizer() {
 }
 
 void Visualizer::displayImpl() {
-  this->processEvents();
+  processEvents();
 
   debugScene.update();
   robotScene.updateTransforms();

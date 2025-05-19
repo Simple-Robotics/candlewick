@@ -38,6 +38,9 @@ struct CameraControlParams {
   } mouseButtons;
 };
 
+void guiAddCameraParams(CylindricalCamera &controller,
+                        CameraControlParams &params);
+
 /// \brief A Pinocchio robot visualizer. The display() function will perform the
 /// draw calls.
 ///
@@ -45,6 +48,16 @@ struct CameraControlParams {
 /// (Renderer) in a separate thread along with the GPU device and window, and
 /// run until shouldExit() returns true.
 class Visualizer final : public BaseVisualizer {
+  bool m_cameraControl = true;
+  bool m_shouldExit = false;
+  entt::entity m_plane, m_grid, m_triad;
+
+  void render();
+
+  void displayPrecall() override {}
+
+  void displayImpl() override;
+
 public:
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
 
@@ -105,17 +118,6 @@ public:
     robotScene.clearEnvironment();
     robotScene.clearRobotGeometries();
   }
-
-private:
-  bool m_cameraControl = true;
-  bool m_shouldExit = false;
-  entt::entity m_plane, m_grid, m_triad;
-
-  void render();
-
-  void displayPrecall() override {}
-
-  void displayImpl() override;
 };
 
 } // namespace candlewick::multibody

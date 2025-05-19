@@ -113,7 +113,7 @@ add_library(candlewick::candlewick ALIAS candlewick)
 target_link_libraries(${PROJECT_NAME} INTERFACE candlewick_core)
 
 if(BUILD_PINOCCHIO_VISUALIZER)
-  file(GLOB multibody_sources candlewick/multibody/*.cpp)
+  file(GLOB_RECURSE multibody_sources candlewick/multibody/*.cpp)
 
   add_library(candlewick_multibody SHARED ${multibody_sources})
   target_link_libraries(
