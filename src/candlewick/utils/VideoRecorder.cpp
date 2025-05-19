@@ -15,9 +15,29 @@ extern "C" {
 namespace candlewick {
 namespace media {
 
+  static AVFrame *allocate_frame(AVPixelFormat pix_fmt, int width, int height) {
+    AVFrame *frame;
+    int ret;
+
+    frame = av_frame_alloc();
+    if (!frame)
+      return nullptr;
+
+    frame->format = pix_fmt;
+    frame->width = width;
+    frame->height = height;
+
+    ret = av_frame_get_buffer(frame, 0);
+    if (ret < 0)
+      terminate_with_message("Failed to allocate frame data: %s",
+                             av_err2str(ret));
+
+    return frame;
+  }
+
   struct VideoRecorderImpl {
-    Uint32 m_width;        //< Width of incoming frames
-    Uint32 m_height;       //< Height of incoming frames
+    int m_width;           //< Width of incoming frames
+    int m_height;          //< Height of incoming frames
     Uint32 m_frameCounter; //< Number of recorded frames
 
     AVFormatContext *formatContext = nullptr;
@@ -26,9 +46,10 @@ namespace media {
     AVStream *videoStream = nullptr;
     SwsContext *swsContext = nullptr;
     AVFrame *frame = nullptr;
+    AVFrame *tmpFrame = nullptr;
     AVPacket *packet = nullptr;
 
-    VideoRecorderImpl(Uint32 width, Uint32 height, const std::string &filename,
+    VideoRecorderImpl(int width, int height, const std::string &filename,
                       VideoRecorder::Settings settings);
 
     VideoRecorderImpl(const VideoRecorderImpl &) = delete;
@@ -39,6 +60,20 @@ namespace media {
     void close() noexcept;
 
     ~VideoRecorderImpl() noexcept { this->close(); }
+
+    // delayed initialization, given actual input specs
+    void lazyInit(AVPixelFormat inputFormat) {
+      tmpFrame = allocate_frame(inputFormat, m_width, m_height);
+      if (!tmpFrame)
+        terminate_with_message("Failed to allocate temporary video frame.");
+
+      swsContext =
+          sws_getContext(tmpFrame->width, tmpFrame->height, inputFormat,
+                         frame->width, frame->height, codecContext->pix_fmt,
+                         SWS_BILINEAR, nullptr, nullptr, nullptr);
+      if (!swsContext)
+        terminate_with_message("Failed to create SwsContext.");
+    }
   };
 
   void VideoRecorderImpl::close() noexcept {
@@ -49,21 +84,30 @@ namespace media {
 
     // close out stream
     av_frame_free(&frame);
-    // av_frame_free(&tmpFrame);
+    av_frame_free(&tmpFrame);
     av_packet_free(&packet);
     avcodec_free_context(&codecContext);
 
     avio_closep(&formatContext->pb);
     avformat_free_context(formatContext);
+    sws_freeContext(swsContext);
     formatContext = nullptr;
   }
 
-  VideoRecorderImpl::VideoRecorderImpl(Uint32 width, Uint32 height,
+  VideoRecorderImpl::VideoRecorderImpl(int width, int height,
                                        const std::string &filename,
                                        VideoRecorder::Settings settings)
       : m_width(width), m_height(height) {
-    avformat_network_init();
+
+    if (settings.outputWidth == 0)
+      settings.outputWidth = width;
+    if (settings.outputHeight == 0)
+      settings.outputHeight = height;
+
     codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+    if (!codec) {
+      terminate_with_message("Failed to find encoder for codec H264");
+    }
 
     int ret = avformat_alloc_output_context2(&formatContext, nullptr, nullptr,
                                              filename.c_str());
@@ -84,6 +128,8 @@ namespace media {
 
     codecContext->width = settings.outputWidth;
     codecContext->height = settings.outputHeight;
+    // use YUV420P as it is the most widely supported format
+    // for H.264
     codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
     codecContext->time_base = AVRational{1, settings.fps};
     codecContext->framerate = AVRational{settings.fps, 1};
@@ -120,42 +166,34 @@ namespace media {
       terminate_with_message("Failed to allocate AVPacket");
 
     // principal frame
-    frame = av_frame_alloc();
+    frame = allocate_frame(codecContext->pix_fmt, codecContext->width,
+                           codecContext->height);
     if (!frame)
-      terminate_with_message("Failed to allocate video frame.");
-    frame->format = codecContext->pix_fmt;
-    frame->width = codecContext->width;
-    frame->height = codecContext->height;
-
-    ret = av_frame_get_buffer(frame, 0);
-    if (ret < 0) {
-      av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Failed to allocate frame data: %s", errbuf);
-    }
+      terminate_with_message("Failed to allocate frame.");
   }
 
   void VideoRecorderImpl::writeFrame(const Uint8 *data, Uint32 payloadSize,
                                      AVPixelFormat avPixelFormat) {
-    AVFrame *tmpFrame = av_frame_alloc();
-    tmpFrame->format = avPixelFormat;
-    tmpFrame->width = int(m_width);
-    tmpFrame->height = int(m_height);
-
-    int ret = av_frame_get_buffer(tmpFrame, 0);
-    char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
-    if (ret < 0) {
-      av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      throw std::runtime_error(
-          std::format("Failed to allocate frame: {:s}", errbuf));
+    assert(frame);
+    int ret;
+    if (!tmpFrame) {
+      lazyInit(avPixelFormat);
     }
 
+    ret = av_frame_make_writable(tmpFrame);
+    if (ret < 0)
+      terminate_with_message("Failed to make tmpFrame writable: %s",
+                             av_err2str(ret));
+
+    // copy input payload to tmp frame
     memcpy(tmpFrame->data[0], data, payloadSize);
 
-    swsContext =
-        sws_getContext(tmpFrame->width, tmpFrame->height, avPixelFormat,
-                       frame->width, frame->height, codecContext->pix_fmt,
-                       SWS_BILINEAR, nullptr, nullptr, nullptr);
-
+    // ensure frame writable
+    ret = av_frame_make_writable(frame);
+    if (ret < 0) {
+      terminate_with_message("Failed to make frame writable: %s",
+                             av_err2str(ret));
+    }
     frame->pts = m_frameCounter++;
 
     sws_scale(swsContext, tmpFrame->data, tmpFrame->linesize, 0, m_height,
@@ -163,8 +201,6 @@ namespace media {
 
     ret = avcodec_send_frame(codecContext, frame);
     if (ret < 0) {
-      av_frame_free(&tmpFrame);
-      sws_freeContext(swsContext);
       terminate_with_message("Error sending frame %s", av_err2str(ret));
     }
 
@@ -174,8 +210,6 @@ namespace media {
         break;
       }
       if (ret < 0) {
-        av_frame_free(&tmpFrame);
-        sws_freeContext(swsContext);
         terminate_with_message("Error receiving packet from encoder: %s",
                                av_err2str(ret));
       }
@@ -186,9 +220,6 @@ namespace media {
       av_interleaved_write_frame(formatContext, packet);
       av_packet_unref(packet);
     }
-
-    av_frame_free(&tmpFrame);
-    sws_freeContext(swsContext);
   }
 
   // WRAPPING CLASS
@@ -197,9 +228,10 @@ namespace media {
   VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) noexcept = default;
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
-                               const std::string &filename, Settings settings)
-      : impl_(std::make_unique<VideoRecorderImpl>(width, height, filename,
-                                                  settings)) {}
+                               const std::string &filename, Settings settings) {
+    impl_ = std::make_unique<VideoRecorderImpl>(int(width), int(height),
+                                                filename, settings);
+  }
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
                                const std::string &filename)

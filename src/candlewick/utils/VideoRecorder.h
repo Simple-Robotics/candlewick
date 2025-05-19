@@ -33,6 +33,16 @@ namespace media {
     VideoRecorder &operator=(VideoRecorder &&) noexcept;
 
     bool initialized() const { return impl_ != nullptr; }
+
+    /// \brief Constructor for the video recorder.
+    ///
+    /// \param width Input data width.
+    /// \param height Input data height.
+    /// \param settings Video recording settings (fps, bitrate, output file
+    /// width and height).
+    ///
+    /// \note If the settings' output dimensions are not set, they will
+    /// automatically be set to be the input's dimensions.
     VideoRecorder(Uint32 width, Uint32 height, const std::string &filename,
                   Settings settings);
 
