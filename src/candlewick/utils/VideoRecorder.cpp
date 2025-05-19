@@ -261,7 +261,7 @@ namespace media {
 
   void VideoRecorder::close() noexcept {
     if (impl_)
-      impl_->close();
+      impl_.reset();
   }
 
   VideoRecorder::~VideoRecorder() = default;
