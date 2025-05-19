@@ -3,6 +3,7 @@
 #ifndef CANDLEWICK_WITH_FFMPEG_SUPPORT
 #error "Including this file requires candlewick to be built with FFmpeg support"
 #endif
+#include "../core/Core.h"
 #include "../core/Tags.h"
 
 #include <SDL3/SDL_gpu.h>
@@ -15,8 +16,12 @@ namespace media {
 
   struct VideoRecorderImpl;
 
+  class TransferBufferPool;
+
   class VideoRecorder {
     std::unique_ptr<VideoRecorderImpl> impl_;
+    Uint16 _width;
+    Uint16 _height;
 
   public:
     struct Settings {
@@ -49,10 +54,16 @@ namespace media {
     VideoRecorder(Uint32 width, Uint32 height, const std::string &filename);
 
     Uint32 frameCounter() const;
-    void writeFrame(const Uint8 *data, Uint32 payloadSize,
-                    SDL_GPUTextureFormat pixelFormat);
+
     void close() noexcept;
+
     ~VideoRecorder();
+
+    void writeTextureToVideoFrame(CommandBuffer &command_buffer,
+                                  const Device &device,
+                                  TransferBufferPool &pool,
+                                  SDL_GPUTexture *texture,
+                                  SDL_GPUTextureFormat format);
   };
 
 } // namespace media

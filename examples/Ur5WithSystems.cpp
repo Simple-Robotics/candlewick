@@ -15,6 +15,7 @@
 #include "candlewick/multibody/RobotDebug.h"
 #include "candlewick/primitives/Primitives.h"
 #include "candlewick/utils/FileDialogGui.h"
+#include "candlewick/utils/VideoRecorder.h"
 #include "candlewick/utils/WriteTextureToImage.h"
 
 #include <imgui.h>
@@ -193,9 +194,9 @@ static void screenshot_button_callback(Renderer &renderer,
   renderer.waitAndAcquireSwapchain(command_buffer);
 
   SDL_Log("Saving screenshot at %s", filename);
-  media::writeToFile(command_buffer, device, pool, renderer.swapchain,
-                     renderer.getSwapchainTextureFormat(), wWidth, wHeight,
-                     filename);
+  media::saveTextureToFile(command_buffer, device, pool, renderer.swapchain,
+                           renderer.getSwapchainTextureFormat(), wWidth,
+                           wHeight, filename);
 }
 
 int main(int argc, char **argv) {
@@ -515,9 +516,9 @@ int main(int argc, char **argv) {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
       CommandBuffer command_buffer = renderer.acquireCommandBuffer();
       auto swapchain_format = renderer.getSwapchainTextureFormat();
-      media::videoWriteTextureToFrame(
-          command_buffer, renderer.device, transfer_buffer_pool, recorder,
-          renderer.swapchain, swapchain_format, wWidth, wHeight);
+      recorder.writeTextureToVideoFrame(command_buffer, renderer.device,
+                                        transfer_buffer_pool,
+                                        renderer.swapchain, swapchain_format);
 #endif
     }
     if (screenshot_filename) {

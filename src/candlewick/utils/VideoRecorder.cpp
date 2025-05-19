@@ -1,7 +1,8 @@
 #include "VideoRecorder.h"
+#include "WriteTextureToImage.h"
 #include "../core/errors.h"
+#include "../core/Device.h"
 
-#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_filesystem.h>
 #include <magic_enum/magic_enum.hpp>
 
@@ -228,7 +229,8 @@ namespace media {
   VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) noexcept = default;
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
-                               const std::string &filename, Settings settings) {
+                               const std::string &filename, Settings settings)
+      : _width(width), _height(height) {
     impl_ = std::make_unique<VideoRecorderImpl>(int(width), int(height),
                                                 filename, settings);
   }
@@ -252,19 +254,30 @@ namespace media {
     }
   }
 
-  void VideoRecorder::writeFrame(const Uint8 *data, Uint32 payloadSize,
-                                 SDL_GPUTextureFormat pixelFormat) {
-    AVPixelFormat outputFormat =
-        convert_SDLTextureFormatTo_AVPixelFormat(pixelFormat);
-    impl_->writeFrame(data, payloadSize, outputFormat);
-  }
-
   void VideoRecorder::close() noexcept {
     if (impl_)
       impl_.reset();
   }
 
   VideoRecorder::~VideoRecorder() = default;
+
+  void VideoRecorder::writeTextureToVideoFrame(CommandBuffer &command_buffer,
+                                               const Device &device,
+                                               TransferBufferPool &pool,
+                                               SDL_GPUTexture *texture,
+                                               SDL_GPUTextureFormat format) {
+    assert(recorder.initialized());
+
+    auto res = downloadTexture(command_buffer, device, pool, texture, format,
+                               _width, _height);
+
+    AVPixelFormat outputFormat =
+        convert_SDLTextureFormatTo_AVPixelFormat(format);
+    impl_->writeFrame(reinterpret_cast<Uint8 *>(res.data), res.payloadSize,
+                      outputFormat);
+
+    SDL_UnmapGPUTransferBuffer(device, res.buffer);
+  }
 
 } // namespace media
 } // namespace candlewick

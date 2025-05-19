@@ -108,10 +108,10 @@ void Visualizer::displayImpl() {
     auto [width, height] = window.sizeInPixels();
     SDL_Log("Saving %dx%d screenshot at: '%s'", width, height,
             currentScreenshotFilename);
-    media::writeToFile(command_buffer, device(), m_transferBuffers,
-                       renderer.swapchain, renderer.getSwapchainTextureFormat(),
-                       Uint16(width), Uint16(height),
-                       currentScreenshotFilename);
+    media::saveTextureToFile(
+        command_buffer, device(), m_transferBuffers, renderer.swapchain,
+        renderer.getSwapchainTextureFormat(), Uint16(width), Uint16(height),
+        currentScreenshotFilename);
     currentScreenshotFilename = nullptr;
   }
 }
