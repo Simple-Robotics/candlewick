@@ -9,7 +9,7 @@
 namespace candlewick {
 
 GuiSystem::GuiSystem(const Renderer &renderer, GuiBehavior behav)
-    : m_renderer(&renderer), _callback(behav) {
+    : m_renderer(&renderer), _callbacks{behav} {
   if (!init(renderer)) {
     terminate_with_message("Failed to initialize ImGui for SDLGPU3.");
   }
@@ -47,7 +47,9 @@ void GuiSystem::render(CommandBuffer &cmdBuf) {
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
 
-  this->_callback(*m_renderer);
+  for (auto &cb : _callbacks) {
+    cb(*m_renderer);
+  }
 
   ImGui::Render();
   ImDrawData *draw_data = ImGui::GetDrawData();
@@ -69,6 +71,7 @@ void GuiSystem::release() {
   ImGui_ImplSDL3_Shutdown();
   ImGui_ImplSDLGPU3_Shutdown();
   ImGui::DestroyContext();
+  m_renderer = nullptr;
 }
 
 void showCandlewickAboutWindow(bool *p_open, float wrap_width) {

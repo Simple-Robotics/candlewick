@@ -15,12 +15,15 @@ public:
 
   GuiSystem(const Renderer &renderer, GuiBehavior behav);
 
+  void addCallback(GuiBehavior cb) { _callbacks.push_back(std::move(cb)); }
+
   void render(CommandBuffer &cmdBuf);
+
   void release();
 
   bool initialized() const { return m_initialized; }
 
-  GuiBehavior _callback;
+  std::vector<GuiBehavior> _callbacks;
 
 private:
   bool init(const Renderer &renderer);
