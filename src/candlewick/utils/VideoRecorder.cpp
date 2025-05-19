@@ -36,21 +36,26 @@ namespace media {
     void writeFrame(const Uint8 *data, Uint32 payloadSize,
                     AVPixelFormat avPixelFormat);
 
-    ~VideoRecorderImpl() noexcept;
+    void close() noexcept;
+
+    ~VideoRecorderImpl() noexcept { this->close(); }
   };
 
-  VideoRecorderImpl::~VideoRecorderImpl() noexcept {
+  void VideoRecorderImpl::close() noexcept {
+    if (!formatContext)
+      return;
+
     av_write_trailer(formatContext);
-    if (codecContext)
-      avcodec_free_context(&codecContext);
-    if (formatContext->pb)
-      avio_closep(&formatContext->pb);
-    if (formatContext)
-      avformat_free_context(formatContext);
-    if (frame)
-      av_frame_free(&frame);
-    if (packet)
-      av_packet_free(&packet);
+
+    // close out stream
+    av_frame_free(&frame);
+    // av_frame_free(&tmpFrame);
+    av_packet_free(&packet);
+    avcodec_free_context(&codecContext);
+
+    avio_closep(&formatContext->pb);
+    avformat_free_context(formatContext);
+    formatContext = nullptr;
   }
 
   VideoRecorderImpl::VideoRecorderImpl(Uint32 width, Uint32 height,
@@ -224,6 +229,11 @@ namespace media {
     AVPixelFormat outputFormat =
         convert_SDLTextureFormatTo_AVPixelFormat(pixelFormat);
     impl_->writeFrame(data, payloadSize, outputFormat);
+  }
+
+  void VideoRecorder::close() noexcept {
+    if (impl_)
+      impl_->close();
   }
 
   VideoRecorder::~VideoRecorder() = default;

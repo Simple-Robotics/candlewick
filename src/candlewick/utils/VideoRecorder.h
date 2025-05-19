@@ -41,6 +41,7 @@ namespace media {
     Uint32 frameCounter() const;
     void writeFrame(const Uint8 *data, Uint32 payloadSize,
                     SDL_GPUTextureFormat pixelFormat);
+    void close() noexcept;
     ~VideoRecorder();
   };
 
