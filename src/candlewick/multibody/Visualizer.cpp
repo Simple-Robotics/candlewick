@@ -27,7 +27,8 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , renderer{_create_renderer(config)}
     , guiSystem{renderer, std::move(gui_callback)}
     , robotScene{registry, renderer}
-    , debugScene{registry, renderer} {
+    , debugScene{registry, renderer}
+    , m_transferBuffers{renderer.device} {
 
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
@@ -99,6 +100,20 @@ void Visualizer::displayImpl() {
   debugScene.update();
   robotScene.updateTransforms();
   render();
+
+  if (currentScreenshotFilename) {
+    CommandBuffer command_buffer{device()};
+    renderer.waitAndAcquireSwapchain(command_buffer);
+    auto &window = renderer.window;
+    auto [width, height] = window.sizeInPixels();
+    SDL_Log("Saving %dx%d screenshot at: '%s'", width, height,
+            currentScreenshotFilename);
+    media::writeToFile(command_buffer, device(), m_transferBuffers,
+                       renderer.swapchain, renderer.getSwapchainTextureFormat(),
+                       Uint16(width), Uint16(height),
+                       currentScreenshotFilename);
+    currentScreenshotFilename = nullptr;
+  }
 }
 
 void Visualizer::render() {

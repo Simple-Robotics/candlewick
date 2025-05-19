@@ -29,16 +29,16 @@ void guiAddCameraParams(CylindricalCamera &controller,
   }
 }
 
-void screenshot_taker_gui(SDL_Window *window, const char **filename) {
+static void screenshot_taker_gui(SDL_Window *window, const char *&filename) {
   static GuiFileSaveDialog filedialog;
 
   filedialog.addFileDialog(window);
   if (ImGui::Button("Take screenshot")) {
-    *filename = filedialog.filename.c_str();
+    filename = filedialog.filename.c_str();
   }
 }
 
-void Visualizer::default_gui_exec() {
+void Visualizer::defaultGuiCallback() {
 
   // Verify ABI compatibility between caller code and compiled version of Dear
   // ImGui. This helps detects some build issues. Check demo code in
@@ -99,6 +99,7 @@ void Visualizer::default_gui_exec() {
   }
 
   if (ImGui::CollapsingHeader("Screenshot taker")) {
+    screenshot_taker_gui(renderer.window, currentScreenshotFilename);
   }
 
   ImGui::End();

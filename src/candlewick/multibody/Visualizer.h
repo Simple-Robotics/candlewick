@@ -4,11 +4,11 @@
 #pragma once
 
 #include "RobotScene.h"
-#include "../core/Camera.h"
 #include "../core/CameraControls.h"
 #include "../core/GuiSystem.h"
 #include "../core/DebugScene.h"
 #include "../core/Renderer.h"
+#include "../utils/WriteTextureToImage.h"
 
 #include <pinocchio/visualizers/base-visualizer.hpp>
 #include <SDL3/SDL_init.h>
@@ -51,12 +51,15 @@ class Visualizer final : public BaseVisualizer {
   bool m_cameraControl = true;
   bool m_shouldExit = false;
   entt::entity m_plane, m_grid, m_triad;
+  const char *currentScreenshotFilename = nullptr;
 
   void render();
 
   void displayPrecall() override {}
 
   void displayImpl() override;
+
+  const Device &device() const { return renderer.device; }
 
 public:
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
@@ -85,7 +88,7 @@ public:
 
   /// \brief Default GUI callback for the Visualizer; provide your own callback
   /// to the Visualizer constructor to change this behaviour.
-  void default_gui_exec();
+  void defaultGuiCallback();
 
   void resetCamera();
   void loadViewerModel() override;
@@ -97,7 +100,7 @@ public:
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model)
       : Visualizer(config, model, visual_model,
-                   [this](auto &) { this->default_gui_exec(); }) {}
+                   [this](auto &) { this->defaultGuiCallback(); }) {}
 
   ~Visualizer() override;
 
@@ -118,6 +121,9 @@ public:
     robotScene.clearEnvironment();
     robotScene.clearRobotGeometries();
   }
+
+private:
+  media::TransferBufferPool m_transferBuffers;
 };
 
 } // namespace candlewick::multibody
