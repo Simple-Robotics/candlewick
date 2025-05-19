@@ -17,8 +17,8 @@ static SDL_GPUTransferBuffer *acquireBufferImpl(SDL_GPUDevice *device,
 }
 
 TransferBufferPool::TransferBufferPool(const Device &device) : _device(device) {
-  // pre-allocate 4MB
-  Uint32 size = 1024 * 1024 * 4;
+  // pre-allocate 8MB
+  Uint32 size = 2048 * 1024 * 4;
   _buffer = acquireBufferImpl(_device, size);
   _currentBufSize = size;
 }
@@ -34,12 +34,15 @@ void TransferBufferPool::release() noexcept {
 
 SDL_GPUTransferBuffer *TransferBufferPool::acquireBuffer(Uint32 requiredSize) {
   if (_currentBufSize < requiredSize) {
-    // 20% boost
-    requiredSize = Uint32(1.2 * requiredSize);
-    SDL_Log("TransferBufferPool: re-allocating %u bytes (increase from %u)",
-            requiredSize, _currentBufSize);
-    _buffer = acquireBufferImpl(_device, requiredSize);
-    _currentBufSize = requiredSize;
+    // release old buffer if it exists
+    if (_buffer) {
+      SDL_ReleaseGPUTransferBuffer(_device, _buffer);
+    }
+
+    // grow by 20%
+    _currentBufSize = Uint32(1.2 * requiredSize);
+    SDL_Log("Reallocate transfer buffer of size %u", _currentBufSize);
+    _buffer = acquireBufferImpl(_device, _currentBufSize);
   }
   return _buffer;
 }
