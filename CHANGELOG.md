@@ -7,12 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- utils : add `FileDialogGui.h` (https://github.com/Simple-Robotics/candlewick/pull/61)
+
 ### Changed
 
 - utils : avoid public inclusion of `libavutil/pixfmt` header for video recorder (https://github.com/Simple-Robotics/candlewick/pull/61)
 - core : `errors.h`: make terminate_with_message a template (with formatting arguments, etc) (https://github.com/Simple-Robotics/candlewick/pull/61)
 - utils: add VideoRecorder::close() API (to manually close recorder) (https://github.com/Simple-Robotics/candlewick/pull/61)
 - multibody/RobotDebug.cpp : fix velocity arrow direction (https://github.com/Simple-Robotics/candlewick/pull/61)
+
+### Fixed
+
+- core : fix `CommandBuffer::submitAndAcquireFence()` not setting the internal pointer to null
 
 ## [0.0.7] - 2025-05-17
 
@@ -33,10 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - interleave debug scene render between robot render system opaque and transparent passes (https://github.com/Simple-Robotics/candlewick/pull/59)
 - revamp depth and shadow map pass classes (https://github.com/Simple-Robotics/candlewick/pull/60)
 - core/Texture : do not store pointer to `Device` but raw `SDL_GPUDevice *` handle (https://github.com/Simple-Robotics/candlewick/pull/60)
-
-### Fixed
-
-- core : fix `CommandBuffer::submitAndAcquireFence()` not setting the internal pointer to null
 
 ## [0.0.6] - 2025-05-14
 
