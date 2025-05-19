@@ -279,7 +279,8 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
                                    m_config.shadow_config);
         shadows_configured = true;
       }
-      this->initCompositePipeline(layout);
+      if (!pipelines.wboitComposite)
+        this->initCompositePipeline(layout);
     }
   }
   m_initialized = true;
