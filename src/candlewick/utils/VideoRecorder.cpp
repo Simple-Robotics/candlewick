@@ -224,22 +224,38 @@ namespace media {
   }
 
   // WRAPPING CLASS
-  VideoRecorder::VideoRecorder(NoInitT) : impl_() {}
+  VideoRecorder::VideoRecorder(NoInitT) : _impl() {}
   VideoRecorder::VideoRecorder(VideoRecorder &&) noexcept = default;
   VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) noexcept = default;
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
                                const std::string &filename, Settings settings)
       : _width(width), _height(height) {
-    impl_ = std::make_unique<VideoRecorderImpl>(int(width), int(height),
-                                                filename, settings);
+    this->settings = settings;
+    this->open(width, height, filename);
   }
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
                                const std::string &filename)
       : VideoRecorder(width, height, filename, Settings{}) {}
 
-  Uint32 VideoRecorder::frameCounter() const { return impl_->m_frameCounter; }
+  void VideoRecorder::open(Uint32 width, Uint32 height,
+                           const std::string &filename) {
+    if (_impl)
+      terminate_with_message("Recording stream already open.");
+
+    _width = width;
+    _height = height;
+    _impl = std::make_unique<VideoRecorderImpl>(int(_width), int(_height),
+                                                filename, settings);
+  }
+
+  Uint32 VideoRecorder::frameCounter() const { return _impl->m_frameCounter; }
+
+  void VideoRecorder::close() noexcept {
+    if (_impl)
+      _impl.reset();
+  }
 
   static AVPixelFormat
   convert_SDLTextureFormatTo_AVPixelFormat(SDL_GPUTextureFormat pixelFormat) {
@@ -254,11 +270,6 @@ namespace media {
     }
   }
 
-  void VideoRecorder::close() noexcept {
-    if (impl_)
-      impl_.reset();
-  }
-
   VideoRecorder::~VideoRecorder() = default;
 
   void VideoRecorder::writeTextureToVideoFrame(CommandBuffer &command_buffer,
@@ -269,11 +280,11 @@ namespace media {
     assert(recorder.initialized());
 
     auto res = downloadTexture(command_buffer, device, pool, texture, format,
-                               _width, _height);
+                               Uint16(_width), Uint16(_height));
 
     AVPixelFormat outputFormat =
         convert_SDLTextureFormatTo_AVPixelFormat(format);
-    impl_->writeFrame(reinterpret_cast<Uint8 *>(res.data), res.payloadSize,
+    _impl->writeFrame(reinterpret_cast<Uint8 *>(res.data), res.payloadSize,
                       outputFormat);
 
     SDL_UnmapGPUTransferBuffer(device, res.buffer);

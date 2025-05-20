@@ -19,9 +19,9 @@ namespace media {
   class TransferBufferPool;
 
   class VideoRecorder {
-    std::unique_ptr<VideoRecorderImpl> impl_;
-    Uint16 _width;
-    Uint16 _height;
+    std::unique_ptr<VideoRecorderImpl> _impl;
+    Uint32 _width;
+    Uint32 _height;
 
   public:
     struct Settings {
@@ -30,14 +30,16 @@ namespace media {
       long bit_rate = 2500000u;
       int outputWidth;
       int outputHeight;
-    };
+    } settings;
 
     /// \brief Constructor which will not open the file or stream.
     explicit VideoRecorder(NoInitT);
     VideoRecorder(VideoRecorder &&) noexcept;
     VideoRecorder &operator=(VideoRecorder &&) noexcept;
 
-    bool initialized() const { return impl_ != nullptr; }
+    void open(Uint32 width, Uint32 height, const std::string &filename);
+
+    bool isRecording() const { return _impl != nullptr; }
 
     /// \brief Constructor for the video recorder.
     ///

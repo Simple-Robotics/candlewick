@@ -441,13 +441,10 @@ int main(int argc, char **argv) {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   media::VideoRecorder recorder{NoInit};
   media::TransferBufferPool transfer_buffer_pool{renderer.device};
-  if (performRecording)
-    recorder = media::VideoRecorder{wWidth,
-                                    wHeight,
-                                    "ur5.mp4",
-                                    {
-                                        .fps = 50,
-                                    }};
+  if (performRecording) {
+    recorder.settings.fps = 50;
+    recorder.open(wWidth, wHeight, "ur5.mp4");
+  }
 #endif
 
   AABB &worldSpaceBounds = robot_scene.worldSpaceBounds;
