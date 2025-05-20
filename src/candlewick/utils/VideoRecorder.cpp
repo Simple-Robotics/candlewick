@@ -144,25 +144,25 @@ namespace media {
     ret = avcodec_parameters_from_context(videoStream->codecpar, codecContext);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't copy codec params: %s", errbuf);
+      terminate_with_message("Couldn't copy codec params: {:s}", errbuf);
     }
 
     ret = avcodec_open2(codecContext, codec, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't open codec: %s", errbuf);
+      terminate_with_message("Couldn't open codec: {:s}", errbuf);
     }
 
     ret = avio_open(&formatContext->pb, filename.data(), AVIO_FLAG_WRITE);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't open output stream: %s", errbuf);
+      terminate_with_message("Couldn't open output stream: {:s}", errbuf);
     }
 
     ret = avformat_write_header(formatContext, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't write output header: %s", errbuf);
+      terminate_with_message("Couldn't write output header: {:s}", errbuf);
     }
 
     packet = av_packet_alloc();
@@ -188,7 +188,7 @@ namespace media {
     ret = av_frame_make_writable(tmpFrame);
     if (ret < 0)
       terminate_with_message(
-          "Failed to make tmpFrame writable: %s",
+          "Failed to make tmpFrame writable: {:s}",
           av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 
     // copy input payload to tmp frame
@@ -198,7 +198,7 @@ namespace media {
     ret = av_frame_make_writable(frame);
     if (ret < 0) {
       terminate_with_message(
-          "Failed to make frame writable: %s",
+          "Failed to make frame writable: {:s}",
           av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
     frame->pts = m_frameCounter++;
@@ -209,7 +209,7 @@ namespace media {
     ret = avcodec_send_frame(codecContext, frame);
     if (ret < 0) {
       terminate_with_message(
-          "Error sending frame %s",
+          "Error sending frame {:s}",
           av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
 
@@ -220,7 +220,7 @@ namespace media {
       }
       if (ret < 0) {
         terminate_with_message(
-            "Error receiving packet from encoder: %s",
+            "Error receiving packet from encoder: {:s}",
             av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
       }
 
@@ -274,7 +274,7 @@ namespace media {
     case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
       return AV_PIX_FMT_RGBA;
     default:
-      terminate_with_message("Unsupported SDL GPU texture format %s",
+      terminate_with_message("Unsupported SDL GPU texture format {:s}",
                              magic_enum::enum_name(pixelFormat));
     }
   }

@@ -90,8 +90,7 @@ PbrMaterial loadFromAssimpMaterial(aiMaterial *material) {
   if (retc == material_load_retc::OK)
     return pbrFromPhong(phong);
 
-  std::string msg = "Failed to load material: return code ";
-  msg += magic_enum::enum_name(retc);
-  terminate_with_message(msg);
+  terminate_with_message("Failed to load material: {:s}",
+                         magic_enum::enum_name(retc));
 }
 } // namespace candlewick

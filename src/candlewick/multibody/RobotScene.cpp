@@ -226,7 +226,7 @@ void RobotScene::initCompositePipeline(const MeshLayout &layout) {
 
   pipelines.wboitComposite = SDL_CreateGPUGraphicsPipeline(device(), &desc);
   if (!pipelines.wboitComposite) {
-    terminate_with_message("Failed to create WBOIT pipeline: %s",
+    terminate_with_message("Failed to create WBOIT pipeline: {:s}",
                            SDL_GetError());
   }
 }

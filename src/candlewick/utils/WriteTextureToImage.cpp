@@ -112,7 +112,7 @@ void saveTextureToFile(CommandBuffer &command_buffer, const Device &device,
 
   if (!ret)
     terminate_with_message(
-        "stbi_write_png() failed. Please check filename (%s)", filename);
+        "stbi_write_png() failed. Please check filename ({:s})", filename);
 
   if (rgba_pixels)
     std::free(rgba_pixels);
