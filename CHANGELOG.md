@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - utils : refactor `VideoRecorder` ctor, add `open()` member function (https://github.com/Simple-Robotics/candlewick/pull/62)
 - multibody/Visualizer add screenshot button in visualizer's GUI (https://github.com/Simple-Robotics/candlewick/pull/62)
 - utils : add `generateScreenshotFilenameFromTimestamp()` (https://github.com/Simple-Robotics/candlewick/pull/63)
+- multibody/Visualizer : GUI : add buttons to start video recording
 
 ### Changed
 
