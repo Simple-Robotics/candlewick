@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- utils : add `FileDialogGui.h` (https://github.com/Simple-Robotics/candlewick/pull/61)
-- utils : refactor `VideoRecorder` ctor, add `open()` member function
+- core : add `guiAddFileDialog` (https://github.com/Simple-Robotics/candlewick/pull/61)
+- utils : refactor `VideoRecorder` ctor, add `open()` member function (https://github.com/Simple-Robotics/candlewick/pull/62)
+- multibody/Visualizer add screenshot button in visualizer's GUI (https://github.com/Simple-Robotics/candlewick/pull/62)
 
 ### Changed
 
@@ -18,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core : `errors.h`: make terminate_with_message a template (with formatting arguments, etc) (https://github.com/Simple-Robotics/candlewick/pull/61)
 - utils: add VideoRecorder::close() API (to manually close recorder) (https://github.com/Simple-Robotics/candlewick/pull/61)
 - multibody/RobotDebug.cpp : fix velocity arrow direction (https://github.com/Simple-Robotics/candlewick/pull/61)
-- utils : make `writeTextureToVideoFrame` a member function
+- utils : make `writeTextureToVideoFrame` a member function (https://github.com/Simple-Robotics/candlewick/pull/62)
+- utils : rename `writeToFile` to `saveTextureToFile` (https://github.com/Simple-Robotics/candlewick/pull/62)
 
 ### Fixed
 
