@@ -50,7 +50,7 @@ namespace media {
     AVFrame *tmpFrame = nullptr;
     AVPacket *packet = nullptr;
 
-    VideoRecorderImpl(int width, int height, const std::string &filename,
+    VideoRecorderImpl(int width, int height, std::string_view filename,
                       VideoRecorder::Settings settings);
 
     VideoRecorderImpl(const VideoRecorderImpl &) = delete;
@@ -96,7 +96,7 @@ namespace media {
   }
 
   VideoRecorderImpl::VideoRecorderImpl(int width, int height,
-                                       const std::string &filename,
+                                       std::string_view filename,
                                        VideoRecorder::Settings settings)
       : m_width(width), m_height(height) {
 
@@ -111,7 +111,7 @@ namespace media {
     }
 
     int ret = avformat_alloc_output_context2(&formatContext, nullptr, nullptr,
-                                             filename.c_str());
+                                             filename.data());
     char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
@@ -150,7 +150,7 @@ namespace media {
       terminate_with_message("Couldn't open codec: %s", errbuf);
     }
 
-    ret = avio_open(&formatContext->pb, filename.c_str(), AVIO_FLAG_WRITE);
+    ret = avio_open(&formatContext->pb, filename.data(), AVIO_FLAG_WRITE);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
       terminate_with_message("Couldn't open output stream: %s", errbuf);
@@ -229,18 +229,18 @@ namespace media {
   VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) noexcept = default;
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
-                               const std::string &filename, Settings settings)
+                               std::string_view filename, Settings settings)
       : _width(width), _height(height) {
     this->settings = settings;
     this->open(width, height, filename);
   }
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
-                               const std::string &filename)
+                               std::string_view filename)
       : VideoRecorder(width, height, filename, Settings{}) {}
 
   void VideoRecorder::open(Uint32 width, Uint32 height,
-                           const std::string &filename) {
+                           std::string_view filename) {
     if (_impl)
       terminate_with_message("Recording stream already open.");
 

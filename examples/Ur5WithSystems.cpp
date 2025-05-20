@@ -94,16 +94,16 @@ static void updateOrtho(float zoom) {
 }
 
 static std::shared_ptr<coal::ConvexBase>
-loadConvexMeshFromFile(const std::string &filename) {
+loadConvexMeshFromFile(std::string_view filename) {
   coal::NODE_TYPE bv_type = coal::BV_AABB;
   coal::MeshLoader load{bv_type};
-  coal::BVHModelPtr_t bvh = load.load(filename);
+  coal::BVHModelPtr_t bvh = load.load(std::string{filename});
   bvh->buildConvexHull(true, "Qt");
   return bvh->convex;
 }
 
 static pin::GeometryObject
-loadGeomObjFromFile(const char *name, const std::string &filename,
+loadGeomObjFromFile(const char *name, std::string_view filename,
                     pin::SE3 pl = pin::SE3::Identity()) {
   auto convex = loadConvexMeshFromFile(filename);
   Eigen::Vector3d scale;

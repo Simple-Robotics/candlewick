@@ -37,7 +37,7 @@ namespace media {
     VideoRecorder(VideoRecorder &&) noexcept;
     VideoRecorder &operator=(VideoRecorder &&) noexcept;
 
-    void open(Uint32 width, Uint32 height, const std::string &filename);
+    void open(Uint32 width, Uint32 height, std::string_view filename);
 
     bool isRecording() const { return _impl != nullptr; }
 
@@ -50,10 +50,10 @@ namespace media {
     ///
     /// \note If the settings' output dimensions are not set, they will
     /// automatically be set to be the input's dimensions.
-    VideoRecorder(Uint32 width, Uint32 height, const std::string &filename,
+    VideoRecorder(Uint32 width, Uint32 height, std::string_view filename,
                   Settings settings);
 
-    VideoRecorder(Uint32 width, Uint32 height, const std::string &filename);
+    VideoRecorder(Uint32 width, Uint32 height, std::string_view filename);
 
     Uint32 frameCounter() const;
 
