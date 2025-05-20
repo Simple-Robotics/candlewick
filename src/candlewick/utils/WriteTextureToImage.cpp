@@ -1,6 +1,7 @@
 #include "WriteTextureToImage.h"
 #include "../core/Device.h"
 #include "../core/CommandBuffer.h"
+#include "../core/errors.h"
 #include "../third-party/stb/stb_image_write.h"
 #include "../utils/PixelFormatConversion.h"
 
@@ -90,7 +91,7 @@ DownloadResult downloadTexture(CommandBuffer &command_buffer,
 void saveTextureToFile(CommandBuffer &command_buffer, const Device &device,
                        TransferBufferPool &pool, SDL_GPUTexture *texture,
                        SDL_GPUTextureFormat format, Uint16 width, Uint16 height,
-                       const char *filename) {
+                       std::string_view filename) {
 
   auto res = downloadTexture(command_buffer, device, pool, texture, format,
                              width, height);
@@ -106,8 +107,12 @@ void saveTextureToFile(CommandBuffer &command_buffer, const Device &device,
     pixels_to_write = res.data;
   }
 
-  stbi_write_png(filename, int(res.width), int(res.height), 4, pixels_to_write,
-                 0);
+  bool ret = stbi_write_png(filename.data(), int(res.width), int(res.height), 4,
+                            pixels_to_write, 0);
+
+  if (!ret)
+    terminate_with_message(
+        "stbi_write_png() failed. Please check filename (%s)", filename);
 
   if (rgba_pixels)
     std::free(rgba_pixels);

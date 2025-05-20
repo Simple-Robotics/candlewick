@@ -41,7 +41,7 @@ namespace media {
   void saveTextureToFile(CommandBuffer &command_buffer, const Device &device,
                          TransferBufferPool &pool, SDL_GPUTexture *texture,
                          SDL_GPUTextureFormat format, const Uint16 width,
-                         const Uint16 height, const char *filename);
+                         const Uint16 height, std::string_view filename);
 
 } // namespace media
 } // namespace candlewick
