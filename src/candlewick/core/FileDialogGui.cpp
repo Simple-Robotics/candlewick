@@ -68,7 +68,7 @@ void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
                            initial_path);
   }
   ImGui::SameLine();
-  ImGui::Text("Selected file: %s", out.c_str());
+  ImGui::Text("%s", out.empty() ? "(none)" : out.c_str());
 }
 
 } // namespace candlewick
