@@ -1,6 +1,7 @@
 #include "WriteTextureToImage.h"
 #include "../core/Device.h"
 #include "../core/CommandBuffer.h"
+#include "../core/errors.h"
 #include "../third-party/stb/stb_image_write.h"
 #include "../utils/PixelFormatConversion.h"
 
@@ -17,8 +18,8 @@ static SDL_GPUTransferBuffer *acquireBufferImpl(SDL_GPUDevice *device,
 }
 
 TransferBufferPool::TransferBufferPool(const Device &device) : _device(device) {
-  // pre-allocate 4MB
-  Uint32 size = 1024 * 1024 * 4;
+  // pre-allocate 8MB
+  Uint32 size = 2048 * 1024 * 4;
   _buffer = acquireBufferImpl(_device, size);
   _currentBufSize = size;
 }
@@ -34,12 +35,15 @@ void TransferBufferPool::release() noexcept {
 
 SDL_GPUTransferBuffer *TransferBufferPool::acquireBuffer(Uint32 requiredSize) {
   if (_currentBufSize < requiredSize) {
-    // 20% boost
-    requiredSize = Uint32(1.2 * requiredSize);
-    SDL_Log("TransferBufferPool: re-allocating %u bytes (increase from %u)",
-            requiredSize, _currentBufSize);
-    _buffer = acquireBufferImpl(_device, requiredSize);
-    _currentBufSize = requiredSize;
+    // release old buffer if it exists
+    if (_buffer) {
+      SDL_ReleaseGPUTransferBuffer(_device, _buffer);
+    }
+
+    // grow by 20%
+    _currentBufSize = Uint32(1.2 * requiredSize);
+    SDL_Log("Reallocate transfer buffer of size %u", _currentBufSize);
+    _buffer = acquireBufferImpl(_device, _currentBufSize);
   }
   return _buffer;
 }
@@ -56,78 +60,64 @@ DownloadResult downloadTexture(CommandBuffer &command_buffer,
   assert(requiredSize ==
          SDL_CalculateGPUTextureFormatSize(format, width, height, 1));
 
-  SDL_GPUCopyPass *copy_pass = SDL_BeginGPUCopyPass(command_buffer);
+  SDL_GPUTransferBuffer *buffer = pool.acquireBuffer(requiredSize);
 
+  SDL_GPUCopyPass *copy_pass = SDL_BeginGPUCopyPass(command_buffer);
   SDL_GPUTextureRegion source{
       .texture = texture,
       .layer = 0,
       .w = width,
       .h = height,
   };
-
-  SDL_GPUTransferBuffer *download_transfer_buffer =
-      pool.acquireBuffer(requiredSize);
-
   SDL_GPUTextureTransferInfo destination{
-      .transfer_buffer = download_transfer_buffer,
+      .transfer_buffer = buffer,
       .offset = 0,
   };
-
   SDL_DownloadFromGPUTexture(copy_pass, &source, &destination);
   SDL_EndGPUCopyPass(copy_pass);
-
   command_buffer.submit();
 
-  auto *raw_pixels = reinterpret_cast<Uint32 *>(
-      SDL_MapGPUTransferBuffer(device, download_transfer_buffer, false));
-
   return {
-      .data = raw_pixels,
+      .data = reinterpret_cast<Uint32 *>(
+          SDL_MapGPUTransferBuffer(device, buffer, false)),
       .format = format,
       .width = width,
       .height = height,
-      .buffer = download_transfer_buffer,
+      .buffer = buffer,
       .payloadSize = requiredSize,
   };
 }
 
-void writeToFile(CommandBuffer &command_buffer, const Device &device,
-                 TransferBufferPool &pool, SDL_GPUTexture *texture,
-                 SDL_GPUTextureFormat format, Uint16 width, Uint16 height,
-                 const char *filename) {
+void saveTextureToFile(CommandBuffer &command_buffer, const Device &device,
+                       TransferBufferPool &pool, SDL_GPUTexture *texture,
+                       SDL_GPUTextureFormat format, Uint16 width, Uint16 height,
+                       std::string_view filename) {
 
   auto res = downloadTexture(command_buffer, device, pool, texture, format,
                              width, height);
-  auto *raw_pixels = res.data;
-  auto *rgba_pixels = (Uint32 *)SDL_malloc(res.payloadSize);
+
+  Uint32 *pixels_to_write;
+  Uint32 *rgba_pixels = nullptr;
+
   if (format == SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM) {
-    bgraToRgbaConvert(raw_pixels, rgba_pixels, res.width * res.height);
+    rgba_pixels = (Uint32 *)SDL_malloc(res.payloadSize);
+    bgraToRgbaConvert(res.data, rgba_pixels, res.width * res.height);
+    pixels_to_write = rgba_pixels;
   } else {
-    SDL_memcpy(rgba_pixels, raw_pixels, res.payloadSize);
+    pixels_to_write = res.data;
   }
 
-  stbi_write_png(filename, int(res.width), int(res.height), 4, rgba_pixels, 0);
-  std::free(rgba_pixels);
+  bool ret = stbi_write_png(filename.data(), int(res.width), int(res.height), 4,
+                            pixels_to_write, 0);
+
+  if (!ret)
+    terminate_with_message(
+        "stbi_write_png() failed. Please check filename ({:s})", filename);
+
+  if (rgba_pixels)
+    std::free(rgba_pixels);
 
   SDL_UnmapGPUTransferBuffer(device, res.buffer);
 }
-
-#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
-void videoWriteTextureToFrame(CommandBuffer &command_buffer,
-                              const Device &device, TransferBufferPool &pool,
-                              VideoRecorder &recorder, SDL_GPUTexture *texture,
-                              SDL_GPUTextureFormat format, const Uint16 width,
-                              const Uint16 height) {
-  assert(recorder.initialized());
-
-  auto res = downloadTexture(command_buffer, device, pool, texture, format,
-                             width, height);
-
-  Uint8 *raw_data = reinterpret_cast<Uint8 *>(res.data);
-  recorder.writeFrame(raw_data, res.payloadSize, format);
-
-  SDL_UnmapGPUTransferBuffer(device, res.buffer);
-}
-#endif
 
 } // namespace candlewick::media

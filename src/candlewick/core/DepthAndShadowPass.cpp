@@ -37,7 +37,7 @@ DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
   };
   pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
   if (!pipeline)
-    terminate_with_message("Failed to create graphics pipeline: %s.",
+    terminate_with_message("Failed to create graphics pipeline: {:s}.",
                            SDL_GetError());
 }
 

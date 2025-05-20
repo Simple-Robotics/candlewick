@@ -1,7 +1,8 @@
 #include "VideoRecorder.h"
+#include "WriteTextureToImage.h"
 #include "../core/errors.h"
+#include "../core/Device.h"
 
-#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_filesystem.h>
 #include <magic_enum/magic_enum.hpp>
 
@@ -27,10 +28,13 @@ namespace media {
     frame->width = width;
     frame->height = height;
 
+    char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
+
     ret = av_frame_get_buffer(frame, 0);
     if (ret < 0)
-      terminate_with_message("Failed to allocate frame data: %s",
-                             av_err2str(ret));
+      terminate_with_message(
+          "Failed to allocate frame data: %s",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 
     return frame;
   }
@@ -49,7 +53,7 @@ namespace media {
     AVFrame *tmpFrame = nullptr;
     AVPacket *packet = nullptr;
 
-    VideoRecorderImpl(int width, int height, const std::string &filename,
+    VideoRecorderImpl(int width, int height, std::string_view filename,
                       VideoRecorder::Settings settings);
 
     VideoRecorderImpl(const VideoRecorderImpl &) = delete;
@@ -95,7 +99,7 @@ namespace media {
   }
 
   VideoRecorderImpl::VideoRecorderImpl(int width, int height,
-                                       const std::string &filename,
+                                       std::string_view filename,
                                        VideoRecorder::Settings settings)
       : m_width(width), m_height(height) {
 
@@ -110,7 +114,7 @@ namespace media {
     }
 
     int ret = avformat_alloc_output_context2(&formatContext, nullptr, nullptr,
-                                             filename.c_str());
+                                             filename.data());
     char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
@@ -140,25 +144,25 @@ namespace media {
     ret = avcodec_parameters_from_context(videoStream->codecpar, codecContext);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't copy codec params: %s", errbuf);
+      terminate_with_message("Couldn't copy codec params: {:s}", errbuf);
     }
 
     ret = avcodec_open2(codecContext, codec, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't open codec: %s", errbuf);
+      terminate_with_message("Couldn't open codec: {:s}", errbuf);
     }
 
-    ret = avio_open(&formatContext->pb, filename.c_str(), AVIO_FLAG_WRITE);
+    ret = avio_open(&formatContext->pb, filename.data(), AVIO_FLAG_WRITE);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't open output stream: %s", errbuf);
+      terminate_with_message("Couldn't open output stream: {:s}", errbuf);
     }
 
     ret = avformat_write_header(formatContext, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
-      terminate_with_message("Couldn't write output header: %s", errbuf);
+      terminate_with_message("Couldn't write output header: {:s}", errbuf);
     }
 
     packet = av_packet_alloc();
@@ -180,10 +184,12 @@ namespace media {
       lazyInit(avPixelFormat);
     }
 
+    char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
     ret = av_frame_make_writable(tmpFrame);
     if (ret < 0)
-      terminate_with_message("Failed to make tmpFrame writable: %s",
-                             av_err2str(ret));
+      terminate_with_message(
+          "Failed to make tmpFrame writable: {:s}",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 
     // copy input payload to tmp frame
     memcpy(tmpFrame->data[0], data, payloadSize);
@@ -191,8 +197,9 @@ namespace media {
     // ensure frame writable
     ret = av_frame_make_writable(frame);
     if (ret < 0) {
-      terminate_with_message("Failed to make frame writable: %s",
-                             av_err2str(ret));
+      terminate_with_message(
+          "Failed to make frame writable: {:s}",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
     frame->pts = m_frameCounter++;
 
@@ -201,7 +208,9 @@ namespace media {
 
     ret = avcodec_send_frame(codecContext, frame);
     if (ret < 0) {
-      terminate_with_message("Error sending frame %s", av_err2str(ret));
+      terminate_with_message(
+          "Error sending frame {:s}",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
 
     while (ret >= 0) {
@@ -210,8 +219,9 @@ namespace media {
         break;
       }
       if (ret < 0) {
-        terminate_with_message("Error receiving packet from encoder: %s",
-                               av_err2str(ret));
+        terminate_with_message(
+            "Error receiving packet from encoder: {:s}",
+            av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
       }
 
       av_packet_rescale_ts(packet, codecContext->time_base,
@@ -223,21 +233,38 @@ namespace media {
   }
 
   // WRAPPING CLASS
-  VideoRecorder::VideoRecorder(NoInitT) : impl_() {}
+  VideoRecorder::VideoRecorder(NoInitT) : _impl() {}
   VideoRecorder::VideoRecorder(VideoRecorder &&) noexcept = default;
   VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) noexcept = default;
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
-                               const std::string &filename, Settings settings) {
-    impl_ = std::make_unique<VideoRecorderImpl>(int(width), int(height),
-                                                filename, settings);
+                               std::string_view filename, Settings settings)
+      : _width(width), _height(height) {
+    this->settings = settings;
+    this->open(width, height, filename);
   }
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
-                               const std::string &filename)
+                               std::string_view filename)
       : VideoRecorder(width, height, filename, Settings{}) {}
 
-  Uint32 VideoRecorder::frameCounter() const { return impl_->m_frameCounter; }
+  void VideoRecorder::open(Uint32 width, Uint32 height,
+                           std::string_view filename) {
+    if (_impl)
+      terminate_with_message("Recording stream already open.");
+
+    _width = width;
+    _height = height;
+    _impl = std::make_unique<VideoRecorderImpl>(int(_width), int(_height),
+                                                filename, settings);
+  }
+
+  Uint32 VideoRecorder::frameCounter() const { return _impl->m_frameCounter; }
+
+  void VideoRecorder::close() noexcept {
+    if (_impl)
+      _impl.reset();
+  }
 
   static AVPixelFormat
   convert_SDLTextureFormatTo_AVPixelFormat(SDL_GPUTextureFormat pixelFormat) {
@@ -247,24 +274,30 @@ namespace media {
     case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
       return AV_PIX_FMT_RGBA;
     default:
-      terminate_with_message("Unsupported SDL GPU texture format %s",
+      terminate_with_message("Unsupported SDL GPU texture format {:s}",
                              magic_enum::enum_name(pixelFormat));
     }
   }
 
-  void VideoRecorder::writeFrame(const Uint8 *data, Uint32 payloadSize,
-                                 SDL_GPUTextureFormat pixelFormat) {
-    AVPixelFormat outputFormat =
-        convert_SDLTextureFormatTo_AVPixelFormat(pixelFormat);
-    impl_->writeFrame(data, payloadSize, outputFormat);
-  }
-
-  void VideoRecorder::close() noexcept {
-    if (impl_)
-      impl_.reset();
-  }
-
   VideoRecorder::~VideoRecorder() = default;
+
+  void VideoRecorder::writeTextureToVideoFrame(CommandBuffer &command_buffer,
+                                               const Device &device,
+                                               TransferBufferPool &pool,
+                                               SDL_GPUTexture *texture,
+                                               SDL_GPUTextureFormat format) {
+    assert(recorder.initialized());
+
+    auto res = downloadTexture(command_buffer, device, pool, texture, format,
+                               Uint16(_width), Uint16(_height));
+
+    AVPixelFormat outputFormat =
+        convert_SDLTextureFormatTo_AVPixelFormat(format);
+    _impl->writeFrame(reinterpret_cast<Uint8 *>(res.data), res.payloadSize,
+                      outputFormat);
+
+    SDL_UnmapGPUTransferBuffer(device, res.buffer);
+  }
 
 } // namespace media
 } // namespace candlewick

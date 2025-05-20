@@ -14,7 +14,7 @@
 #include "candlewick/multibody/RobotScene.h"
 #include "candlewick/multibody/RobotDebug.h"
 #include "candlewick/primitives/Primitives.h"
-#include "candlewick/utils/FileDialogGui.h"
+#include "candlewick/utils/VideoRecorder.h"
 #include "candlewick/utils/WriteTextureToImage.h"
 
 #include <imgui.h>
@@ -93,16 +93,16 @@ static void updateOrtho(float zoom) {
 }
 
 static std::shared_ptr<coal::ConvexBase>
-loadConvexMeshFromFile(const std::string &filename) {
+loadConvexMeshFromFile(std::string_view filename) {
   coal::NODE_TYPE bv_type = coal::BV_AABB;
   coal::MeshLoader load{bv_type};
-  coal::BVHModelPtr_t bvh = load.load(filename);
+  coal::BVHModelPtr_t bvh = load.load(std::string{filename});
   bvh->buildConvexHull(true, "Qt");
   return bvh->convex;
 }
 
 static pin::GeometryObject
-loadGeomObjFromFile(const char *name, const std::string &filename,
+loadGeomObjFromFile(const char *name, std::string_view filename,
                     pin::SE3 pl = pin::SE3::Identity()) {
   auto convex = loadConvexMeshFromFile(filename);
   Eigen::Vector3d scale;
@@ -193,9 +193,9 @@ static void screenshot_button_callback(Renderer &renderer,
   renderer.waitAndAcquireSwapchain(command_buffer);
 
   SDL_Log("Saving screenshot at %s", filename);
-  media::writeToFile(command_buffer, device, pool, renderer.swapchain,
-                     renderer.getSwapchainTextureFormat(), wWidth, wHeight,
-                     filename);
+  media::saveTextureToFile(command_buffer, device, pool, renderer.swapchain,
+                           renderer.getSwapchainTextureFormat(), wWidth,
+                           wHeight, filename);
 }
 
 int main(int argc, char **argv) {
@@ -331,10 +331,13 @@ int main(int argc, char **argv) {
 
         static bool demo_window_open = true;
         static bool show_about_window = false;
+        static bool show_imgui_window = false;
         static bool show_plane_vis = true;
 
         if (show_about_window)
           showCandlewickAboutWindow(&show_about_window);
+        if (show_imgui_window)
+          ImGui::ShowAboutWindow(&show_imgui_window);
 
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
@@ -343,6 +346,7 @@ int main(int argc, char **argv) {
         ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
         if (ImGui::BeginMenuBar()) {
+          ImGui::MenuItem("About Dear ImGui", NULL, &show_imgui_window);
           ImGui::MenuItem("About Candlewick", NULL, &show_about_window);
           ImGui::EndMenuBar();
         }
@@ -404,10 +408,10 @@ int main(int argc, char **argv) {
         }
 
         ImGui::SeparatorText("Screenshots");
-        static GuiFileSaveDialog scr_dialog;
-        scr_dialog.addFileDialog(renderer.window);
+        static std::string scr_filename;
+        guiAddFileDialog(renderer.window, DialogFileType::IMAGES, scr_filename);
         if (ImGui::Button("Take screenshot")) {
-          screenshot_filename = scr_dialog.filename.c_str();
+          screenshot_filename = scr_filename.c_str();
         }
 
         ImGui::SeparatorText("Robot model");
@@ -440,13 +444,10 @@ int main(int argc, char **argv) {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   media::VideoRecorder recorder{NoInit};
   media::TransferBufferPool transfer_buffer_pool{renderer.device};
-  if (performRecording)
-    recorder = media::VideoRecorder{wWidth,
-                                    wHeight,
-                                    "ur5.mp4",
-                                    {
-                                        .fps = 50,
-                                    }};
+  if (performRecording) {
+    recorder.settings.fps = 50;
+    recorder.open(wWidth, wHeight, "ur5.mp4");
+  }
 #endif
 
   AABB &worldSpaceBounds = robot_scene.worldSpaceBounds;
@@ -515,9 +516,9 @@ int main(int argc, char **argv) {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
       CommandBuffer command_buffer = renderer.acquireCommandBuffer();
       auto swapchain_format = renderer.getSwapchainTextureFormat();
-      media::videoWriteTextureToFrame(
-          command_buffer, renderer.device, transfer_buffer_pool, recorder,
-          renderer.swapchain, swapchain_format, wWidth, wHeight);
+      recorder.writeTextureToVideoFrame(command_buffer, renderer.device,
+                                        transfer_buffer_pool,
+                                        renderer.swapchain, swapchain_format);
 #endif
     }
     if (screenshot_filename) {

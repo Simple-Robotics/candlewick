@@ -1,9 +1,6 @@
 #pragma once
 
 #include "../core/Core.h"
-#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
-#include "VideoRecorder.h"
-#endif
 #include <SDL3/SDL_gpu.h>
 
 namespace candlewick {
@@ -41,19 +38,10 @@ namespace media {
                                  SDL_GPUTextureFormat format,
                                  const Uint16 width, const Uint16 height);
 
-  void writeToFile(CommandBuffer &command_buffer, const Device &device,
-                   TransferBufferPool &pool, SDL_GPUTexture *texture,
-                   SDL_GPUTextureFormat format, const Uint16 width,
-                   const Uint16 height, const char *filename);
-
-#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
-  void videoWriteTextureToFrame(CommandBuffer &command_buffer,
-                                const Device &device, TransferBufferPool &pool,
-                                VideoRecorder &recorder,
-                                SDL_GPUTexture *texture,
-                                SDL_GPUTextureFormat format, const Uint16 width,
-                                const Uint16 height);
-#endif
+  void saveTextureToFile(CommandBuffer &command_buffer, const Device &device,
+                         TransferBufferPool &pool, SDL_GPUTexture *texture,
+                         SDL_GPUTextureFormat format, const Uint16 width,
+                         const Uint16 height, std::string_view filename);
 
 } // namespace media
 } // namespace candlewick

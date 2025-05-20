@@ -27,7 +27,7 @@ template <typename T>
 [[noreturn]] void
 invalid_enum(const char *msg, T type,
              std::source_location location = std::source_location::current()) {
-  terminate_with_message(location, "Invalid enum: %s - %s", msg,
+  terminate_with_message(location, "Invalid enum: {:s} - {:s}", msg,
                          magic_enum::enum_name(type));
 }
 

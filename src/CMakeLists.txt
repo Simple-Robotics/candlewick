@@ -30,6 +30,7 @@ add_library(
   candlewick/core/Device.cpp
   candlewick/core/math_util.cpp
   candlewick/core/errors.cpp
+  candlewick/core/FileDialogGui.cpp
   candlewick/core/GuiSystem.cpp
   candlewick/core/Mesh.cpp
   candlewick/core/Renderer.cpp
@@ -39,7 +40,6 @@ add_library(
   candlewick/core/debug/Frustum.cpp
   candlewick/posteffects/ScreenSpaceShadows.cpp
   candlewick/posteffects/SSAO.cpp
-  candlewick/utils/FileDialogGui.cpp
   candlewick/utils/LoadMesh.cpp
   candlewick/utils/LoadMaterial.cpp
   candlewick/utils/MeshData.cpp
@@ -113,7 +113,7 @@ add_library(candlewick::candlewick ALIAS candlewick)
 target_link_libraries(${PROJECT_NAME} INTERFACE candlewick_core)
 
 if(BUILD_PINOCCHIO_VISUALIZER)
-  file(GLOB multibody_sources candlewick/multibody/*.cpp)
+  file(GLOB_RECURSE multibody_sources candlewick/multibody/*.cpp)
 
   add_library(candlewick_multibody SHARED ${multibody_sources})
   target_link_libraries(

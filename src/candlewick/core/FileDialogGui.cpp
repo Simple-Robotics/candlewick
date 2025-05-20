@@ -1,4 +1,4 @@
-#include "FileDialogGui.h"
+#include "GuiSystem.h"
 
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_log.h>
@@ -16,6 +16,16 @@ static const SDL_DialogFileFilter screenshot_filters[] = {
     {"All files", "*"},
 };
 
+static const SDL_DialogFileFilter video_filters[] = {
+    {"MP4 files", "mp4;m4v"},
+    {"All files", "*"},
+};
+
+static const std::pair<const SDL_DialogFileFilter *, int> all_filter_pairs[] = {
+    {screenshot_filters, SDL_arraysize(screenshot_filters)},
+    {video_filters, SDL_arraysize(video_filters)},
+};
+
 static void fileCallbackImpl(void *userdata_, const char *const *filelist,
                              int filter) {
   if (!filelist) {
@@ -27,18 +37,15 @@ static void fileCallbackImpl(void *userdata_, const char *const *filelist,
     return;
   }
 
-  auto *data = (GuiFileSaveDialog *)userdata_;
-
-  while (*filelist) {
-    SDL_Log("Full path to selected file: %s", *filelist);
-    data->filename = filelist[0];
-    filelist++;
-  }
+  auto *data = (std::string *)userdata_;
+  SDL_Log("Full path to selected file: %s", filelist[0]);
+  *data = filelist[0];
 
   if (filter < 0) {
     SDL_Log("The current platform does not support fetching "
             "the selected filter, or the user did not select"
-            " any filter.");
+            " any filter (value %d).",
+            filter);
   } else if (size_t(filter) < SDL_arraysize(screenshot_filters)) {
     SDL_Log("The filter selected by the user is '%s' (%s).",
             screenshot_filters[filter].pattern,
@@ -46,15 +53,22 @@ static void fileCallbackImpl(void *userdata_, const char *const *filelist,
   }
 }
 
-void GuiFileSaveDialog::addFileDialog(SDL_Window *window) {
-  const char *initial_path = SDL_GetUserFolder(SDL_FOLDER_PICTURES);
+SDL_Folder dialogFileTypeToDefaultFolder[] = {SDL_FOLDER_PICTURES,
+                                              SDL_FOLDER_VIDEOS};
+
+void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
+                      std::string &out) {
+  const char *initial_path =
+      SDL_GetUserFolder(dialogFileTypeToDefaultFolder[int(dialog_file_type)]);
+
+  auto [filters, nfilters] = all_filter_pairs[int(dialog_file_type)];
 
   if (ImGui::Button("Select file")) {
-    SDL_ShowSaveFileDialog(fileCallbackImpl, this, window, screenshot_filters,
-                           SDL_arraysize(screenshot_filters), initial_path);
+    SDL_ShowSaveFileDialog(fileCallbackImpl, &out, window, filters, nfilters,
+                           initial_path);
   }
   ImGui::SameLine();
-  ImGui::Text("Selected file: %s", filename.c_str());
+  ImGui::Text("Selected file: %s", out.c_str());
 }
 
 } // namespace candlewick

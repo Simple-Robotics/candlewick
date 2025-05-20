@@ -4,11 +4,12 @@
 #pragma once
 
 #include "RobotScene.h"
-#include "../core/Camera.h"
 #include "../core/CameraControls.h"
 #include "../core/GuiSystem.h"
 #include "../core/DebugScene.h"
 #include "../core/Renderer.h"
+#include "../utils/WriteTextureToImage.h"
+#include "../utils/VideoRecorder.h"
 
 #include <pinocchio/visualizers/base-visualizer.hpp>
 #include <SDL3/SDL_init.h>
@@ -38,6 +39,9 @@ struct CameraControlParams {
   } mouseButtons;
 };
 
+void guiAddCameraParams(CylindricalCamera &controller,
+                        CameraControlParams &params);
+
 /// \brief A Pinocchio robot visualizer. The display() function will perform the
 /// draw calls.
 ///
@@ -45,6 +49,19 @@ struct CameraControlParams {
 /// (Renderer) in a separate thread along with the GPU device and window, and
 /// run until shouldExit() returns true.
 class Visualizer final : public BaseVisualizer {
+  bool m_cameraControl = true;
+  bool m_shouldExit = false;
+  entt::entity m_plane, m_grid, m_triad;
+  const char *currentScreenshotFilename = nullptr;
+
+  void render();
+
+  void displayPrecall() override {}
+
+  void displayImpl() override;
+
+  const Device &device() const { return renderer.device; }
+
 public:
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
 
@@ -72,7 +89,7 @@ public:
 
   /// \brief Default GUI callback for the Visualizer; provide your own callback
   /// to the Visualizer constructor to change this behaviour.
-  void default_gui_exec();
+  void defaultGuiCallback();
 
   void resetCamera();
   void loadViewerModel() override;
@@ -84,7 +101,7 @@ public:
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model)
       : Visualizer(config, model, visual_model,
-                   [this](auto &) { this->default_gui_exec(); }) {}
+                   [this](auto &) { this->defaultGuiCallback(); }) {}
 
   ~Visualizer() override;
 
@@ -107,15 +124,8 @@ public:
   }
 
 private:
-  bool m_cameraControl = true;
-  bool m_shouldExit = false;
-  entt::entity m_plane, m_grid, m_triad;
-
-  void render();
-
-  void displayPrecall() override {}
-
-  void displayImpl() override;
+  media::TransferBufferPool m_transferBuffers;
+  media::VideoRecorder m_videoRecorder;
 };
 
 } // namespace candlewick::multibody

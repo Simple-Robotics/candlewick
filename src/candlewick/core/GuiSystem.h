@@ -4,6 +4,8 @@
 #include <functional>
 #include <entt/entity/fwd.hpp>
 
+struct SDL_Window;
+
 namespace candlewick {
 
 class GuiSystem {
@@ -15,12 +17,15 @@ public:
 
   GuiSystem(const Renderer &renderer, GuiBehavior behav);
 
+  void addCallback(GuiBehavior cb) { _callbacks.push_back(std::move(cb)); }
+
   void render(CommandBuffer &cmdBuf);
+
   void release();
 
   bool initialized() const { return m_initialized; }
 
-  GuiBehavior _callback;
+  std::vector<GuiBehavior> _callbacks;
 
 private:
   bool init(const Renderer &renderer);
@@ -40,6 +45,14 @@ void guiAddLightControls(DirectionalLight &light);
 /// entity.
 void guiAddDisableCheckbox(const char *label, entt::registry &reg,
                            entt::entity id, bool &flag);
+
+enum class DialogFileType { IMAGES, VIDEOS };
+
+/// \brief Add a GUI button-text pair to select a file to save something to.
+///
+/// This function can only be called from the main thread.
+void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
+                      std::string &filename);
 /// \}
 
 } // namespace candlewick
