@@ -28,10 +28,13 @@ namespace media {
     frame->width = width;
     frame->height = height;
 
+    char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
+
     ret = av_frame_get_buffer(frame, 0);
     if (ret < 0)
-      terminate_with_message("Failed to allocate frame data: %s",
-                             av_err2str(ret));
+      terminate_with_message(
+          "Failed to allocate frame data: %s",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 
     return frame;
   }
@@ -181,10 +184,12 @@ namespace media {
       lazyInit(avPixelFormat);
     }
 
+    char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
     ret = av_frame_make_writable(tmpFrame);
     if (ret < 0)
-      terminate_with_message("Failed to make tmpFrame writable: %s",
-                             av_err2str(ret));
+      terminate_with_message(
+          "Failed to make tmpFrame writable: %s",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 
     // copy input payload to tmp frame
     memcpy(tmpFrame->data[0], data, payloadSize);
@@ -192,8 +197,9 @@ namespace media {
     // ensure frame writable
     ret = av_frame_make_writable(frame);
     if (ret < 0) {
-      terminate_with_message("Failed to make frame writable: %s",
-                             av_err2str(ret));
+      terminate_with_message(
+          "Failed to make frame writable: %s",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
     frame->pts = m_frameCounter++;
 
@@ -202,7 +208,9 @@ namespace media {
 
     ret = avcodec_send_frame(codecContext, frame);
     if (ret < 0) {
-      terminate_with_message("Error sending frame %s", av_err2str(ret));
+      terminate_with_message(
+          "Error sending frame %s",
+          av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
 
     while (ret >= 0) {
@@ -211,8 +219,9 @@ namespace media {
         break;
       }
       if (ret < 0) {
-        terminate_with_message("Error receiving packet from encoder: %s",
-                               av_err2str(ret));
+        terminate_with_message(
+            "Error receiving packet from encoder: %s",
+            av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
       }
 
       av_packet_rescale_ts(packet, codecContext->time_base,

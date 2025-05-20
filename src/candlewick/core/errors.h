@@ -40,9 +40,8 @@ namespace detail {
   template <typename... Ts>
   std::string error_message_format(std::string_view fname,
                                    std::string_view _fmtstr, Ts &&...args) {
-    return _error_message_impl(
-        fname.data(), _fmtstr,
-        std::make_format_args(std::forward<Ts>(args)...));
+    return _error_message_impl(fname.data(), _fmtstr,
+                               std::make_format_args(args...));
   }
 
 } // namespace detail
@@ -50,15 +49,16 @@ namespace detail {
 template <typename... Ts>
 [[noreturn]]
 void terminate_with_message(std::source_location location, std::string_view fmt,
-                            const Ts &...args) {
-  throw std::runtime_error(
-      detail::error_message_format(location.function_name(), fmt, args...));
+                            Ts &&...args) {
+  throw std::runtime_error(detail::error_message_format(
+      location.function_name(), fmt, std::forward<Ts>(args)...));
 }
 
 template <typename... Ts>
 [[noreturn]]
-void terminate_with_message(std::string_view fmt, const Ts &...args) {
-  terminate_with_message(std::source_location::current(), fmt, args...);
+void terminate_with_message(std::string_view fmt, Ts &&...args) {
+  terminate_with_message(std::source_location::current(), fmt,
+                         std::forward<Ts>(args)...);
 }
 
 [[noreturn]]
