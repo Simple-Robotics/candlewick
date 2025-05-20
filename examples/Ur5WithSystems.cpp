@@ -331,10 +331,13 @@ int main(int argc, char **argv) {
 
         static bool demo_window_open = true;
         static bool show_about_window = false;
+        static bool show_imgui_window = false;
         static bool show_plane_vis = true;
 
         if (show_about_window)
           showCandlewickAboutWindow(&show_about_window);
+        if (show_imgui_window)
+          ImGui::ShowAboutWindow(&show_imgui_window);
 
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
@@ -343,6 +346,7 @@ int main(int argc, char **argv) {
         ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
         if (ImGui::BeginMenuBar()) {
+          ImGui::MenuItem("About Dear ImGui", NULL, &show_imgui_window);
           ImGui::MenuItem("About Candlewick", NULL, &show_about_window);
           ImGui::EndMenuBar();
         }
