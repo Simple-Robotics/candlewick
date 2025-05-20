@@ -33,6 +33,8 @@ static void screenshot_taker_gui(SDL_Window *window, const char *&filename) {
 
   guiAddFileDialog(window, DialogFileType::IMAGES, out);
   if (ImGui::Button("Take screenshot")) {
+    if (out.empty())
+      out = generateScreenshotFilenameFromTimestamp();
     filename = out.c_str();
   }
 }

@@ -6,6 +6,7 @@
 #include <SDL3/SDL_dialog.h>
 
 #include <imgui.h>
+#include <chrono>
 
 namespace candlewick {
 
@@ -69,6 +70,18 @@ void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
   }
   ImGui::SameLine();
   ImGui::Text("%s", out.empty() ? "(none)" : out.c_str());
+}
+
+std::string generateScreenshotFilenameFromTimestamp(const char *prefix,
+                                                    const char *extension) {
+  const std::chrono::time_point now = std::chrono::system_clock::now();
+  auto time = std::chrono::system_clock::to_time_t(now);
+  auto tm = std::localtime(&time);
+  const char *picturesDir = SDL_GetUserFolder(SDL_FOLDER_PICTURES);
+  std::ostringstream oss;
+  oss << picturesDir << prefix << " " << std::put_time(tm, "%F %H-%M-%S %z")
+      << extension;
+  return oss.str();
 }
 
 } // namespace candlewick
