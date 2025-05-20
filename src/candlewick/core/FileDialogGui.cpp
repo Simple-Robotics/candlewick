@@ -39,7 +39,6 @@ static void fileCallbackImpl(void *userdata_, const char *const *filelist,
   }
 
   auto *data = (std::string *)userdata_;
-  SDL_Log("Full path to selected file: %s", filelist[0]);
   *data = filelist[0];
 
   if (filter < 0) {
@@ -72,12 +71,14 @@ void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
   ImGui::Text("%s", out.empty() ? "(none)" : out.c_str());
 }
 
-std::string generateScreenshotFilenameFromTimestamp(const char *prefix,
-                                                    const char *extension) {
+std::string generateMediaFilenameFromTimestamp(const char *prefix,
+                                               const char *extension,
+                                               DialogFileType file_type) {
   const std::chrono::time_point now = std::chrono::system_clock::now();
   auto time = std::chrono::system_clock::to_time_t(now);
   auto tm = std::localtime(&time);
-  const char *picturesDir = SDL_GetUserFolder(SDL_FOLDER_PICTURES);
+  const char *picturesDir =
+      SDL_GetUserFolder(dialogFileTypeToDefaultFolder[int(file_type)]);
   std::ostringstream oss;
   oss << picturesDir << prefix << " " << std::put_time(tm, "%F %H-%M-%S %z")
       << extension;

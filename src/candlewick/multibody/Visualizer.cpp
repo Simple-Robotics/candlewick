@@ -102,18 +102,33 @@ void Visualizer::displayImpl() {
   robotScene.updateTransforms();
   render();
 
-  if (currentScreenshotFilename) {
+  if (m_currentScreenshotFilename) {
     CommandBuffer command_buffer{device()};
-    renderer.waitAndAcquireSwapchain(command_buffer);
-    auto &window = renderer.window;
-    auto [width, height] = window.sizeInPixels();
+    auto [width, height] = renderer.window.sizeInPixels();
     SDL_Log("Saving %dx%d screenshot at: '%s'", width, height,
-            currentScreenshotFilename);
+            m_currentScreenshotFilename);
     media::saveTextureToFile(
         command_buffer, device(), m_transferBuffers, renderer.swapchain,
         renderer.getSwapchainTextureFormat(), Uint16(width), Uint16(height),
-        currentScreenshotFilename);
-    currentScreenshotFilename = nullptr;
+        m_currentScreenshotFilename);
+    m_currentScreenshotFilename = nullptr;
+  }
+
+  if (m_currentVideoFilename) {
+
+    // option 1: stream is closed.
+    if (!m_videoRecorder.isRecording()) {
+      auto [width, height] = renderer.window.sizeInPixels();
+      m_videoRecorder.settings.bit_rate = 4'000'000u;
+      m_videoRecorder.open(width, height, m_currentVideoFilename);
+    }
+
+    if (m_videoRecorder.isRecording()) {
+      CommandBuffer command_buffer{device()};
+      m_videoRecorder.writeTextureToVideoFrame(
+          command_buffer, device(), m_transferBuffers, renderer.swapchain,
+          renderer.getSwapchainTextureFormat());
+    }
   }
 }
 

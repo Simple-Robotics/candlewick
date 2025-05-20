@@ -412,7 +412,7 @@ int main(int argc, char **argv) {
         guiAddFileDialog(renderer.window, DialogFileType::IMAGES, scr_filename);
         if (ImGui::Button("Take screenshot")) {
           if (scr_filename.empty())
-            scr_filename = generateScreenshotFilenameFromTimestamp();
+            scr_filename = generateMediaFilenameFromTimestamp();
           screenshot_filename = scr_filename.c_str();
         }
 

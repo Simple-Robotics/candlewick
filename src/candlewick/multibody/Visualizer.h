@@ -52,7 +52,8 @@ class Visualizer final : public BaseVisualizer {
   bool m_cameraControl = true;
   bool m_shouldExit = false;
   entt::entity m_plane, m_grid, m_triad;
-  const char *currentScreenshotFilename = nullptr;
+  const char *m_currentScreenshotFilename = nullptr;
+  const char *m_currentVideoFilename = nullptr;
 
   void render();
 

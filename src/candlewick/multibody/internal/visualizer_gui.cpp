@@ -29,15 +29,18 @@ void guiAddCameraParams(CylindricalCamera &controller,
 }
 
 static void screenshot_taker_gui(SDL_Window *window, const char *&filename) {
-  static std::string out;
+  static std::string out, fallback;
 
   ImGui::BeginChild("screenshot_taker", {0, 0},
                     ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
   guiAddFileDialog(window, DialogFileType::IMAGES, out);
   if (ImGui::Button("Take screenshot")) {
-    if (out.empty())
-      out = generateScreenshotFilenameFromTimestamp();
-    filename = out.c_str();
+    if (out.empty()) {
+      fallback = generateMediaFilenameFromTimestamp();
+      filename = fallback.c_str();
+    } else {
+      filename = out.c_str();
+    }
   }
   ImGui::EndChild();
 }
@@ -104,9 +107,38 @@ void Visualizer::defaultGuiCallback() {
     guiAddPinocchioModelInfo(registry, m_model, visualModel());
   }
 
-  if (ImGui::CollapsingHeader("Screenshot taker")) {
-    screenshot_taker_gui(renderer.window, currentScreenshotFilename);
-  }
+  if (ImGui::CollapsingHeader("Screenshot and video recording")) {
+    screenshot_taker_gui(renderer.window, m_currentScreenshotFilename);
+
+    ImGui::BeginChild("video_record", {0, 0},
+                      ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
+    static std::string video_filename;
+
+    guiAddFileDialog(renderer.window, DialogFileType::VIDEOS, video_filename);
+
+    if (!m_videoRecorder.isRecording()) {
+      if (ImGui::Button("Start recording")) {
+        if (video_filename.empty()) {
+          ImGui::OpenPopup("record_no_filename");
+        } else {
+          m_currentVideoFilename = video_filename.c_str();
+        }
+      }
+      if (ImGui::BeginPopup("record_no_filename")) {
+        ImGui::TextColored({0.95f, 0.27f, 0., 1.f},
+                           "You must specify a filename.");
+        ImGui::EndPopup();
+      }
+    } else {
+      if (ImGui::Button("End recording")) {
+        m_currentVideoFilename = nullptr;
+        video_filename.clear();
+        SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
+        m_videoRecorder.close();
+      }
+    }
+    ImGui::EndChild();
+  };
 
   ImGui::End();
 }

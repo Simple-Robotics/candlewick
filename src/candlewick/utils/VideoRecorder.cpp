@@ -81,6 +81,7 @@ namespace media {
   };
 
   void VideoRecorderImpl::close() noexcept {
+    m_frameCounter = 0;
     if (!formatContext)
       return;
 
@@ -253,6 +254,7 @@ namespace media {
     if (_impl)
       terminate_with_message("Recording stream already open.");
 
+    SDL_Log("[VideoRecorder] Opening stream at %s", filename.data());
     _width = width;
     _height = height;
     _impl = std::make_unique<VideoRecorderImpl>(int(_width), int(_height),
