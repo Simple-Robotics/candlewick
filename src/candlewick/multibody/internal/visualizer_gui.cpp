@@ -73,22 +73,24 @@ void Visualizer::defaultGuiCallback() {
   guiAddLightControls(light);
   guiAddCameraParams(controller, cameraParams);
 
-  auto add_env_checkbox = [this](const char *title, entt::entity ent) {
+  auto addDebugCheckbox = [this](const char *title,
+                                 entt::entity ent) -> auto & {
     char label[32];
     SDL_snprintf(label, sizeof(label), "hud.%s", title);
     auto &dmc = registry.get<DebugMeshComponent>(ent);
     ImGui::Checkbox(label, &dmc.enable);
+    return dmc;
   };
   if (ImGui::CollapsingHeader("Settings (HUD and env)",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
-    add_env_checkbox("grid", m_grid);
-    ImGui::SameLine();
     {
-      auto &dmc = registry.get<DebugMeshComponent>(m_grid);
+      auto &dmc = addDebugCheckbox("grid", m_grid);
+      ImGui::SameLine();
       ImGui::ColorEdit4("hud.grid.color", dmc.colors[0].data(),
                         ImGuiColorEditFlags_AlphaPreview);
     }
-    add_env_checkbox("triad", m_triad);
+    addDebugCheckbox("triad", m_triad);
+    ImGui::SameLine();
     guiAddDisableCheckbox("Render plane", registry, m_plane,
                           envStatus.show_plane);
   }
