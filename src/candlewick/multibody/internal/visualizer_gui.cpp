@@ -31,12 +31,15 @@ void guiAddCameraParams(CylindricalCamera &controller,
 static void screenshot_taker_gui(SDL_Window *window, const char *&filename) {
   static std::string out;
 
+  ImGui::BeginChild("screenshot_taker", {0, 0},
+                    ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
   guiAddFileDialog(window, DialogFileType::IMAGES, out);
   if (ImGui::Button("Take screenshot")) {
     if (out.empty())
       out = generateScreenshotFilenameFromTimestamp();
     filename = out.c_str();
   }
+  ImGui::EndChild();
 }
 
 void Visualizer::defaultGuiCallback() {

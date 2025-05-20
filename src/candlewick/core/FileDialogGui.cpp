@@ -64,7 +64,7 @@ void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
 
   auto [filters, nfilters] = all_filter_pairs[int(dialog_file_type)];
 
-  if (ImGui::Button("Select file")) {
+  if (ImGui::Button("Select...")) {
     SDL_ShowSaveFileDialog(fileCallbackImpl, &out, window, filters, nfilters,
                            initial_path);
   }
