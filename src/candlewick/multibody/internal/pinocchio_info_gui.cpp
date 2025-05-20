@@ -18,9 +18,11 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
                               int table_height_lines) {
   ImGuiTableFlags flags = 0;
   flags |= ImGuiTableFlags_SizingStretchProp;
-  if (ImGui::BeginTable("pin_info_table", 4, flags)) {
+  flags |= ImGuiTableFlags_RowBg;
+  if (ImGui::BeginTable("pin_info_table", 5, flags)) {
     ImGui::TableSetupColumn("Name");
-    ImGui::TableSetupColumn("No. of joints / frames");
+    ImGui::TableSetupColumn("No. of joints");
+    ImGui::TableSetupColumn("No. of frames");
     ImGui::TableSetupColumn("nq / nv");
     ImGui::TableHeadersRow();
 
@@ -28,14 +30,15 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
     ImGui::TableSetColumnIndex(0);
     ImGui::Text("%s", model.name.c_str());
     ImGui::TableNextColumn();
-    ImGui::Text("%d / %d", model.njoints, model.nframes);
+    ImGui::Text("%d", model.njoints);
+    ImGui::TableNextColumn();
+    ImGui::Text("%d", model.nframes);
     ImGui::TableNextColumn();
     ImGui::Text("%d / %d", model.nq, model.nv);
 
     ImGui::EndTable();
   }
 
-  flags |= ImGuiTableFlags_RowBg;
   flags |= ImGuiTableFlags_ScrollY;
   const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
   ImVec2 outer_size{0.0f, TEXT_BASE_HEIGHT * float(table_height_lines)};
@@ -131,7 +134,7 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
       ImGui::TableNextColumn();
       char chk_label[32];
       bool enabled = !disabled.contains(ent);
-      SDL_snprintf(chk_label, 32, "enabled###%zu", id.geom_index);
+      SDL_snprintf(chk_label, 32, "###enabled%zu", id.geom_index);
       guiAddDisableCheckbox(chk_label, reg, ent, enabled);
     }
     ImGui::EndTable();
