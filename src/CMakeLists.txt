@@ -30,6 +30,7 @@ add_library(
   candlewick/core/Device.cpp
   candlewick/core/math_util.cpp
   candlewick/core/errors.cpp
+  candlewick/core/FileDialogGui.cpp
   candlewick/core/GuiSystem.cpp
   candlewick/core/Mesh.cpp
   candlewick/core/Renderer.cpp
@@ -39,7 +40,6 @@ add_library(
   candlewick/core/debug/Frustum.cpp
   candlewick/posteffects/ScreenSpaceShadows.cpp
   candlewick/posteffects/SSAO.cpp
-  candlewick/utils/FileDialogGui.cpp
   candlewick/utils/LoadMesh.cpp
   candlewick/utils/LoadMaterial.cpp
   candlewick/utils/MeshData.cpp

@@ -9,6 +9,7 @@
 #include "../core/DebugScene.h"
 #include "../core/Renderer.h"
 #include "../utils/WriteTextureToImage.h"
+#include "../utils/VideoRecorder.h"
 
 #include <pinocchio/visualizers/base-visualizer.hpp>
 #include <SDL3/SDL_init.h>
@@ -124,6 +125,7 @@ public:
 
 private:
   media::TransferBufferPool m_transferBuffers;
+  media::VideoRecorder m_videoRecorder;
 };
 
 } // namespace candlewick::multibody

@@ -14,7 +14,6 @@
 #include "candlewick/multibody/RobotScene.h"
 #include "candlewick/multibody/RobotDebug.h"
 #include "candlewick/primitives/Primitives.h"
-#include "candlewick/utils/FileDialogGui.h"
 #include "candlewick/utils/VideoRecorder.h"
 #include "candlewick/utils/WriteTextureToImage.h"
 
@@ -405,10 +404,10 @@ int main(int argc, char **argv) {
         }
 
         ImGui::SeparatorText("Screenshots");
-        static GuiFileSaveDialog scr_dialog;
-        scr_dialog.addFileDialog(renderer.window);
+        static std::string scr_filename;
+        guiAddFileDialog(renderer.window, DialogFileType::IMAGES, scr_filename);
         if (ImGui::Button("Take screenshot")) {
-          screenshot_filename = scr_dialog.filename.c_str();
+          screenshot_filename = scr_filename.c_str();
         }
 
         ImGui::SeparatorText("Robot model");

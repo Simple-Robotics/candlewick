@@ -28,7 +28,8 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , guiSystem{renderer, std::move(gui_callback)}
     , robotScene{registry, renderer}
     , debugScene{registry, renderer}
-    , m_transferBuffers{renderer.device} {
+    , m_transferBuffers{renderer.device}
+    , m_videoRecorder{NoInit} {
 
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;

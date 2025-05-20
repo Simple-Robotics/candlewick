@@ -1,6 +1,5 @@
 #include "candlewick/multibody/Visualizer.h"
 #include "candlewick/core/CameraControls.h"
-#include "candlewick/utils/FileDialogGui.h"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_log.h>
@@ -30,11 +29,11 @@ void guiAddCameraParams(CylindricalCamera &controller,
 }
 
 static void screenshot_taker_gui(SDL_Window *window, const char *&filename) {
-  static GuiFileSaveDialog filedialog;
+  static std::string out;
 
-  filedialog.addFileDialog(window);
+  guiAddFileDialog(window, DialogFileType::IMAGES, out);
   if (ImGui::Button("Take screenshot")) {
-    filename = filedialog.filename.c_str();
+    filename = out.c_str();
   }
 }
 
