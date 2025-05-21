@@ -118,7 +118,7 @@ namespace media {
           "stbi_write_png() failed. Please check filename ({:s})", filename);
 
     if (rgba_pixels)
-      std::free(rgba_pixels);
+      SDL_free(rgba_pixels);
 
     SDL_UnmapGPUTransferBuffer(device, res.buffer);
   }
