@@ -7,6 +7,7 @@
 
 #include <imgui.h>
 #include <chrono>
+#include <iomanip>
 
 namespace candlewick {
 
