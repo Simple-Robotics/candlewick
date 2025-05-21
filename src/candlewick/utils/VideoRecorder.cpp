@@ -140,7 +140,7 @@ namespace media {
     codecContext->framerate = AVRational{settings.fps, 1};
     codecContext->gop_size = 10;
     codecContext->max_b_frames = 1;
-    codecContext->bit_rate = settings.bit_rate;
+    codecContext->bit_rate = settings.bitRate;
 
     ret = avcodec_parameters_from_context(videoStream->codecpar, codecContext);
     if (ret < 0) {

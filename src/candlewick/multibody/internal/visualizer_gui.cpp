@@ -111,6 +111,11 @@ void Visualizer::defaultGuiCallback() {
                       ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
     guiAddFileDialog(renderer.window, DialogFileType::VIDEOS,
                      m_currentVideoFilename);
+    auto &settings = m_videoRecorder.settings;
+    ImGui::BeginDisabled(m_videoRecorder.isRecording());
+    ImGui::SliderInt("bitrate", &settings.bitRate, 2'000'000, 6'000'000);
+    ImGui::SliderInt("framerate", &settings.fps, 10, 60);
+    ImGui::EndDisabled();
 
     if (!m_videoRecorder.isRecording()) {
       if (ImGui::Button("Start recording")) {
@@ -118,7 +123,6 @@ void Visualizer::defaultGuiCallback() {
           ImGui::OpenPopup("record_no_filename");
         } else {
           auto [width, height] = renderer.window.sizeInPixels();
-          m_videoRecorder.settings.bit_rate = 4'000'000u;
           m_videoRecorder.open(Uint16(width), Uint16(height),
                                m_currentVideoFilename);
         }
