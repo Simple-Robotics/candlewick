@@ -288,7 +288,6 @@ namespace media {
                                                TransferBufferPool &pool,
                                                SDL_GPUTexture *texture,
                                                SDL_GPUTextureFormat format) {
-    assert(recorder.initialized());
 
     auto res = downloadTexture(command_buffer, device, pool, texture, format,
                                Uint16(_width), Uint16(_height));
