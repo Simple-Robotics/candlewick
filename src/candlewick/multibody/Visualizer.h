@@ -116,7 +116,7 @@ public:
 
   void processEvents();
 
-  bool shouldExit() const noexcept { return m_shouldExit; }
+  [[nodiscard]] bool shouldExit() const noexcept { return m_shouldExit; }
 
   void takeScreenshot(std::string_view filename);
 
