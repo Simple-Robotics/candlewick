@@ -239,7 +239,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Material& _440 [[buf
     float param_6 = NdotL;
     float shadowValue = calcShadowmap(param_6, in.fragLightPos, shadowMap, shadowMapSmplr);
     Lo *= shadowValue;
-    float3 ambient = (float3(0.02999999932944774627685546875) * _440.material.baseColor.xyz) * _440.material.ao;
+    float3 ambient = (float3(0.100000001490116119384765625) * _440.material.baseColor.xyz) * _440.material.ao;
     if (params.useSsao == 1u)
     {
         float2 ssaoTexSize = float2(int2(ssaoTex.get_width(), ssaoTex.get_height()));

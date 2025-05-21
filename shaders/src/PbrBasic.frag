@@ -83,7 +83,7 @@ void main() {
 #endif
 
     // Ambient term (very simple)
-    vec3 ambient = vec3(0.03) * material.baseColor.rgb * material.ao;
+    vec3 ambient = vec3(0.1) * material.baseColor.rgb * material.ao;
 
 #ifdef HAS_SSAO
         if(params.useSsao == 1) {
