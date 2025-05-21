@@ -2,7 +2,7 @@
 #include "../core/Device.h"
 #include "../core/CommandBuffer.h"
 #include "../core/errors.h"
-#include "../third-party/stb/stb_image_write.h"
+#include "../third-party/fpng.h"
 #include "../utils/PixelFormatConversion.h"
 
 namespace candlewick {
@@ -95,6 +95,7 @@ namespace media {
                          TransferBufferPool &pool, SDL_GPUTexture *texture,
                          SDL_GPUTextureFormat format, Uint16 width,
                          Uint16 height, std::string_view filename) {
+    fpng::fpng_init();
 
     auto res = downloadTexture(command_buffer, device, pool, texture, format,
                                width, height);
@@ -109,8 +110,8 @@ namespace media {
       break;
     }
 
-    bool ret = stbi_write_png(filename.data(), int(res.width), int(res.height),
-                              4, pixels_to_write, 0);
+    bool ret = fpng::fpng_encode_image_to_file(filename.data(), pixels_to_write,
+                                               width, height, 4);
 
     if (!ret)
       terminate_with_message(

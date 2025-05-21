@@ -57,7 +57,7 @@ add_library(
   candlewick/primitives/Internal.cpp
   candlewick/primitives/Plane.cpp
   candlewick/primitives/Sphere.cpp
-  candlewick/third-party/stbi_lib.cpp
+  candlewick/third-party/fpng.cpp
   # imgui sources
   ${IMGUI_SRC}
 )
@@ -77,6 +77,7 @@ target_compile_definitions(
   PUBLIC
     $<BUILD_INTERFACE:CANDLEWICK_SHADER_BIN_DIR="${CANDLEWICK_SHADER_SRC_DIR}/compiled">
     $<INSTALL_INTERFACE:CANDLEWICK_SHADER_BIN_DIR="${CANDLEWICK_SHADER_INSTALL_DIR}/compiled">
+  PRIVATE FPNG_NO_SSE=1
 )
 target_include_directories(
   candlewick_core
