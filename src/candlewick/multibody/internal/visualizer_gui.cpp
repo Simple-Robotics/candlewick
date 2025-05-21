@@ -31,7 +31,7 @@ void guiAddCameraParams(CylindricalCamera &controller,
 }
 
 static void screenshot_taker_gui(SDL_Window *window, std::string &filename) {
-  std::string out;
+  static std::string out;
   out.reserve(64ul);
 
   ImGui::BeginChild("screenshot_taker", {0, 0},
