@@ -102,54 +102,47 @@ void Visualizer::displayImpl() {
   robotScene.updateTransforms();
   render();
 
-  if (m_currentScreenshotFilename) {
-    CommandBuffer command_buffer{device()};
-    auto [width, height] = renderer.window.sizeInPixels();
-    SDL_Log("Saving %dx%d screenshot at: '%s'", width, height,
-            m_currentScreenshotFilename);
-    media::saveTextureToFile(
-        command_buffer, device(), m_transferBuffers, renderer.swapchain,
-        renderer.getSwapchainTextureFormat(), Uint16(width), Uint16(height),
-        m_currentScreenshotFilename);
-    m_currentScreenshotFilename = nullptr;
+  if (!m_currentScreenshotFilename.empty()) {
+    takeScreenshot(m_currentScreenshotFilename);
+    m_currentScreenshotFilename.clear();
   }
 
-  if (m_currentVideoFilename) {
-
-    // option 1: stream is closed.
-    if (!m_videoRecorder.isRecording()) {
-      auto [width, height] = renderer.window.sizeInPixels();
-      m_videoRecorder.settings.bit_rate = 4'000'000u;
-      m_videoRecorder.open(width, height, m_currentVideoFilename);
-    }
-
-    if (m_videoRecorder.isRecording()) {
-      CommandBuffer command_buffer{device()};
-      m_videoRecorder.writeTextureToVideoFrame(
-          command_buffer, device(), m_transferBuffers, renderer.swapchain,
-          renderer.getSwapchainTextureFormat());
-    }
+  if (!m_currentVideoFilename.empty() && m_videoRecorder.isRecording()) {
+    CommandBuffer command_buffer{device()};
+    m_videoRecorder.writeTextureToVideoFrame(
+        command_buffer, device(), m_transferBuffers, renderer.swapchain,
+        renderer.getSwapchainTextureFormat());
   }
 }
 
 void Visualizer::render() {
 
-  CommandBuffer cmdBuf = renderer.acquireCommandBuffer();
-  if (renderer.waitAndAcquireSwapchain(cmdBuf)) {
+  CommandBuffer command_buffer = renderer.acquireCommandBuffer();
+  if (renderer.waitAndAcquireSwapchain(command_buffer)) {
     robotScene.collectOpaqueCastables();
     std::span castables = robotScene.castables();
-    renderShadowPassFromAABB(cmdBuf, robotScene.shadowPass,
+    renderShadowPassFromAABB(command_buffer, robotScene.shadowPass,
                              robotScene.directionalLight, castables,
                              robotScene.worldSpaceBounds);
 
     auto &camera = controller.camera;
-    robotScene.renderOpaque(cmdBuf, camera);
-    debugScene.render(cmdBuf, camera);
-    robotScene.renderTransparent(cmdBuf, camera);
-    guiSystem.render(cmdBuf);
+    robotScene.renderOpaque(command_buffer, camera);
+    debugScene.render(command_buffer, camera);
+    robotScene.renderTransparent(command_buffer, camera);
+    guiSystem.render(command_buffer);
   }
 
-  cmdBuf.submit();
+  command_buffer.submit();
+}
+
+void Visualizer::takeScreenshot(std::string_view filename) {
+  CommandBuffer command_buffer{device()};
+  auto [width, height] = renderer.window.sizeInPixels();
+  SDL_Log("Saving %dx%d screenshot at: '%s'", width, height, filename.data());
+  media::saveTextureToFile(command_buffer, device(), m_transferBuffers,
+                           renderer.swapchain,
+                           renderer.getSwapchainTextureFormat(), Uint16(width),
+                           Uint16(height), filename);
 }
 
 } // namespace candlewick::multibody

@@ -52,8 +52,8 @@ class Visualizer final : public BaseVisualizer {
   bool m_cameraControl = true;
   bool m_shouldExit = false;
   entt::entity m_plane, m_grid, m_triad;
-  const char *m_currentScreenshotFilename = nullptr;
-  const char *m_currentVideoFilename = nullptr;
+  std::string m_currentScreenshotFilename{};
+  std::string m_currentVideoFilename{};
 
   void render();
 
@@ -117,6 +117,8 @@ public:
   void processEvents();
 
   bool shouldExit() const noexcept { return m_shouldExit; }
+
+  void takeScreenshot(std::string_view filename);
 
   /// \brief Clear objects
   void clean() override {

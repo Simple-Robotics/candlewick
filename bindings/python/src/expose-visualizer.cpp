@@ -27,6 +27,12 @@ void exposeVisualizer() {
           ("self"_a, "config", "model", "geomModel")))
       .def(pinocchio::python::VisualizerPythonVisitor<Visualizer>{})
       .def_readonly("renderer", &Visualizer::renderer)
+      .def(
+          "takeScreenshot",
+          +[](Visualizer &viz, const std::string &filename) {
+            viz.takeScreenshot(filename);
+          },
+          "filename"_a, "Save a screenshot to the specified file.")
 // fix for Pinocchio 3.5.0
 #if PINOCCHIO_VERSION_AT_MOST(3, 5, 0)
       .DEF_PROP_PROXY(model)
