@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- core : fix `CommandBuffer::submitAndAcquireFence()` not setting the internal pointer to null
+- core : fix `CommandBuffer::submitAndAcquireFence()` not setting the internal pointer to null (https://github.com/Simple-Robotics/candlewick/pull/61)
 - Fix all calls to `terminate_with_message()` (format string with `%`) (https://github.com/Simple-Robotics/candlewick/pull/62)
 
 ## [0.0.7] - 2025-05-17
