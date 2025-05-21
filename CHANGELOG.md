@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-05-21
+
 ### Added
 
 - core : add `guiAddFileDialog` (https://github.com/Simple-Robotics/candlewick/pull/61)
@@ -86,7 +88,8 @@ This is the first release to use a changelog.
 - Visual bug (uninitialized data) when disabling SSAO
 
 
-[Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.7...HEAD
+[Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.7...v0.1.0
 [0.0.7]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.6...v0.0.6
 [0.0.6]: https://github.com/Simple-Robotics/candlewick/compare/v0.0.5...v0.0.6
