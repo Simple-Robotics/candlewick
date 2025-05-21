@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - multibody/RobotDebug.cpp : fix velocity arrow direction (https://github.com/Simple-Robotics/candlewick/pull/61)
 - utils : make `writeTextureToVideoFrame` a member function (https://github.com/Simple-Robotics/candlewick/pull/62)
 - utils : rename `writeToFile` to `saveTextureToFile` (https://github.com/Simple-Robotics/candlewick/pull/62)
+- utils/PixelFormatConversion.h : make bgra conversion function in-place (https://github.com/Simple-Robotics/candlewick/pull/63)
 
 ### Fixed
 
