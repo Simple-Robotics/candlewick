@@ -120,6 +120,10 @@ public:
 
   void takeScreenshot(std::string_view filename);
 
+  void startRecording(std::string_view filename);
+
+  void stopRecording();
+
   /// \brief Clear objects
   void clean() override {
     robotScene.clearEnvironment();
