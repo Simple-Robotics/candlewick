@@ -28,13 +28,17 @@ void guiAddCameraParams(CylindricalCamera &controller,
   }
 }
 
-static void screenshot_taker_gui(SDL_Window *window, const char *&filename) {
-  static std::string out;
+static void screenshot_taker_gui(SDL_Window *window, std::string &filename) {
+  std::string out;
+  out.reserve(64ul);
 
+  ImGui::BeginChild("screenshot_taker", {0, 0},
+                    ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
   guiAddFileDialog(window, DialogFileType::IMAGES, out);
-  if (ImGui::Button("Take screenshot")) {
-    filename = out.c_str();
-  }
+  if (ImGui::Button("Take screenshot"))
+    filename = out.empty() ? generateMediaFilenameFromTimestamp() : out;
+
+  ImGui::EndChild();
 }
 
 void Visualizer::defaultGuiCallback() {
@@ -49,7 +53,6 @@ void Visualizer::defaultGuiCallback() {
   if (envStatus.show_our_about)
     ::candlewick::showCandlewickAboutWindow(&envStatus.show_our_about);
 
-  auto &light = robotScene.directionalLight;
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
   window_flags |= ImGuiWindowFlags_MenuBar;
@@ -69,7 +72,7 @@ void Visualizer::defaultGuiCallback() {
 
   ImGui::SeparatorText("Lights and camera controls");
 
-  guiAddLightControls(light);
+  guiAddLightControls(robotScene.directionalLight);
   guiAddCameraParams(controller, cameraParams);
 
   auto addDebugCheckbox = [this](const char *title,
@@ -99,9 +102,39 @@ void Visualizer::defaultGuiCallback() {
     guiAddPinocchioModelInfo(registry, m_model, visualModel());
   }
 
-  if (ImGui::CollapsingHeader("Screenshot taker")) {
-    screenshot_taker_gui(renderer.window, currentScreenshotFilename);
-  }
+  if (ImGui::CollapsingHeader("Screenshot and video recording")) {
+    screenshot_taker_gui(renderer.window, m_currentScreenshotFilename);
+
+    ImGui::BeginChild("video_record", {0, 0},
+                      ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
+    guiAddFileDialog(renderer.window, DialogFileType::VIDEOS,
+                     m_currentVideoFilename);
+
+    if (!m_videoRecorder.isRecording()) {
+      if (ImGui::Button("Start recording")) {
+        if (m_currentVideoFilename.empty()) {
+          ImGui::OpenPopup("record_no_filename");
+        } else {
+          auto [width, height] = renderer.window.sizeInPixels();
+          m_videoRecorder.settings.bit_rate = 4'000'000u;
+          m_videoRecorder.open(Uint16(width), Uint16(height),
+                               m_currentVideoFilename);
+        }
+      }
+      if (ImGui::BeginPopup("record_no_filename")) {
+        ImGui::TextColored({0.95f, 0.27f, 0., 1.f},
+                           "You must specify a filename.");
+        ImGui::EndPopup();
+      }
+    } else {
+      if (ImGui::Button("End recording")) {
+        m_currentVideoFilename.clear();
+        SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
+        m_videoRecorder.close();
+      }
+    }
+    ImGui::EndChild();
+  };
 
   ImGui::End();
 }

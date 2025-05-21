@@ -27,7 +27,7 @@ namespace media {
     struct Settings {
       int fps = 30;
       // default: 2.5 Mb/s
-      long bit_rate = 2500000u;
+      long bit_rate = 2'500'000u;
       int outputWidth;
       int outputHeight;
     } settings;

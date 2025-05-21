@@ -23,6 +23,7 @@ Candlewick comes with a set of graphical, interaction, and utility features.
 ### Interactivitity
 
 * Integration with ImGui
+* Take screenshots of the main window
 * **(optional)** Record videos from the main window using FFmpeg
 
 ### Pinocchio visualizer

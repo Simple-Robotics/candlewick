@@ -55,4 +55,8 @@ void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
                       std::string &filename);
 /// \}
 
+std::string generateMediaFilenameFromTimestamp(
+    const char *prefix = "cdw_screenshot", const char *extension = ".png",
+    DialogFileType file_type = DialogFileType::IMAGES);
+
 } // namespace candlewick

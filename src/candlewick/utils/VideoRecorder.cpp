@@ -81,6 +81,7 @@ namespace media {
   };
 
   void VideoRecorderImpl::close() noexcept {
+    m_frameCounter = 0;
     if (!formatContext)
       return;
 
@@ -253,6 +254,7 @@ namespace media {
     if (_impl)
       terminate_with_message("Recording stream already open.");
 
+    SDL_Log("[VideoRecorder] Opening stream at %s", filename.data());
     _width = width;
     _height = height;
     _impl = std::make_unique<VideoRecorderImpl>(int(_width), int(_height),
@@ -286,7 +288,6 @@ namespace media {
                                                TransferBufferPool &pool,
                                                SDL_GPUTexture *texture,
                                                SDL_GPUTextureFormat format) {
-    assert(recorder.initialized());
 
     auto res = downloadTexture(command_buffer, device, pool, texture, format,
                                Uint16(_width), Uint16(_height));
