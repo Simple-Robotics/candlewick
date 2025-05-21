@@ -88,6 +88,9 @@ void Visualizer::setCameraPose(const Eigen::Ref<const Matrix4> &pose) {
 }
 
 Visualizer::~Visualizer() {
+  if (m_videoRecorder.isRecording())
+    this->stopRecording();
+
   robotScene.release();
   debugScene.release();
   guiSystem.release();
