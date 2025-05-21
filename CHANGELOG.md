@@ -14,12 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - multibody/Visualizer add screenshot button in visualizer's GUI (https://github.com/Simple-Robotics/candlewick/pull/62)
 - utils : add `generateScreenshotFilenameFromTimestamp()` (https://github.com/Simple-Robotics/candlewick/pull/63)
 - multibody/Visualizer : GUI : add buttons to start video recording, add `takeScreenshot()` method (https://github.com/Simple-Robotics/candlewick/pull/63)
+- utils: add VideoRecorder::close() API (to manually close recorder) (https://github.com/Simple-Robotics/candlewick/pull/61)
+- multibody/Visualizer : add `startRecording(std::string_view)` and `stopRecording()` methods, expose to Python (https://github.com/Simple-Robotics/candlewick/pull/65)
 
 ### Changed
 
 - utils : avoid public inclusion of `libavutil/pixfmt` header for video recorder (https://github.com/Simple-Robotics/candlewick/pull/61)
 - core : `errors.h`: make terminate_with_message a template (with formatting arguments, etc) (https://github.com/Simple-Robotics/candlewick/pull/61)
-- utils: add VideoRecorder::close() API (to manually close recorder) (https://github.com/Simple-Robotics/candlewick/pull/61)
 - multibody/RobotDebug.cpp : fix velocity arrow direction (https://github.com/Simple-Robotics/candlewick/pull/61)
 - utils : make `writeTextureToVideoFrame` a member function (https://github.com/Simple-Robotics/candlewick/pull/62)
 - utils : rename `writeToFile` to `saveTextureToFile` (https://github.com/Simple-Robotics/candlewick/pull/62)

@@ -36,8 +36,13 @@ print(
     viz.renderer.device.driverName(),
 )
 
+viz.startRecording("go2_record.mp4")
+
 for i in tqdm.tqdm(range(1000)):
     if viz.shouldExit:
         break
     viz.display(q0)
     time.sleep(dt)
+
+viz.stopRecording()
+print("Goodbye...")

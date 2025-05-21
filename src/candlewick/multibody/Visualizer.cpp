@@ -88,6 +88,9 @@ void Visualizer::setCameraPose(const Eigen::Ref<const Matrix4> &pose) {
 }
 
 Visualizer::~Visualizer() {
+  if (m_videoRecorder.isRecording())
+    this->stopRecording();
+
   robotScene.release();
   debugScene.release();
   guiSystem.release();
@@ -107,7 +110,7 @@ void Visualizer::displayImpl() {
     m_currentScreenshotFilename.clear();
   }
 
-  if (!m_currentVideoFilename.empty() && m_videoRecorder.isRecording()) {
+  if (m_videoRecorder.isRecording()) {
     CommandBuffer command_buffer{device()};
     m_videoRecorder.writeTextureToVideoFrame(
         command_buffer, device(), m_transferBuffers, renderer.swapchain,
@@ -143,6 +146,21 @@ void Visualizer::takeScreenshot(std::string_view filename) {
                            renderer.swapchain,
                            renderer.getSwapchainTextureFormat(), Uint16(width),
                            Uint16(height), filename);
+}
+
+void Visualizer::startRecording(std::string_view filename) {
+  if (m_videoRecorder.isRecording())
+    terminate_with_message("Recording stream was already opened.");
+
+  auto [width, height] = renderer.window.sizeInPixels();
+  m_videoRecorder.open(Uint16(width), Uint16(height), filename);
+  m_currentVideoFilename = filename;
+}
+
+void Visualizer::stopRecording() {
+  m_currentVideoFilename.clear();
+  SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
+  m_videoRecorder.close();
 }
 
 } // namespace candlewick::multibody

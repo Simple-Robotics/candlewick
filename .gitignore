@@ -4,6 +4,7 @@ build*/
 frag.spv
 vert.spv
 compile_commands.json
+*.mp4
 
 # pixi environments
 .pixi

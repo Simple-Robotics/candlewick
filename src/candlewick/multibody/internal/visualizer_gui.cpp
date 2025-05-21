@@ -122,9 +122,7 @@ void Visualizer::defaultGuiCallback() {
         if (m_currentVideoFilename.empty()) {
           ImGui::OpenPopup("record_no_filename");
         } else {
-          auto [width, height] = renderer.window.sizeInPixels();
-          m_videoRecorder.open(Uint16(width), Uint16(height),
-                               m_currentVideoFilename);
+          this->startRecording(m_currentVideoFilename);
         }
       }
       if (ImGui::BeginPopup("record_no_filename")) {
@@ -134,9 +132,7 @@ void Visualizer::defaultGuiCallback() {
       }
     } else {
       if (ImGui::Button("End recording")) {
-        m_currentVideoFilename.clear();
-        SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
-        m_videoRecorder.close();
+        this->stopRecording();
       }
     }
     ImGui::EndChild();
