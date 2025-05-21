@@ -99,15 +99,14 @@ namespace media {
     auto res = downloadTexture(command_buffer, device, pool, texture, format,
                                width, height);
 
-    Uint32 *pixels_to_write;
-    Uint32 *rgba_pixels = nullptr;
+    Uint32 *pixels_to_write = res.data;
 
-    if (format == SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM) {
-      rgba_pixels = (Uint32 *)SDL_malloc(res.payloadSize);
-      bgraToRgbaConvert(res.data, rgba_pixels, res.width * res.height);
-      pixels_to_write = rgba_pixels;
-    } else {
-      pixels_to_write = res.data;
+    switch (format) {
+    case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
+      bgraToRgbaConvert(pixels_to_write, res.width * res.height);
+      break;
+    default:
+      break;
     }
 
     bool ret = stbi_write_png(filename.data(), int(res.width), int(res.height),
@@ -116,9 +115,6 @@ namespace media {
     if (!ret)
       terminate_with_message(
           "stbi_write_png() failed. Please check filename ({:s})", filename);
-
-    if (rgba_pixels)
-      SDL_free(rgba_pixels);
 
     SDL_UnmapGPUTransferBuffer(device, res.buffer);
   }

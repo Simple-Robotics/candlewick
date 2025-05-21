@@ -4,8 +4,10 @@
 
 namespace candlewick {
 
-/// \brief Convert from 8-bit BGRA to 8-bit RGBA.
-void bgraToRgbaConvert(const Uint32 *bgraPixels, Uint32 *rgbaPixels,
-                       Uint32 pixelCount);
+/// \brief In-place conversion from 8-bit BGRA to 8-bit RGBA.
+///
+/// \param bgraPixels Pointer to input BGRA image.
+/// \param pixelCount Number of pixels in the BGRA image.
+void bgraToRgbaConvert(Uint32 *bgraPixels, Uint32 pixelCount);
 
 } // namespace candlewick
