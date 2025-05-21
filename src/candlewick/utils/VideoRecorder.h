@@ -8,7 +8,6 @@
 
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_stdinc.h>
-#include <string>
 #include <memory>
 
 namespace candlewick {
@@ -28,8 +27,8 @@ namespace media {
       int fps = 30;
       // default: 2.5 Mb/s
       long bit_rate = 2'500'000u;
-      int outputWidth;
-      int outputHeight;
+      int outputWidth = 0;
+      int outputHeight = 0;
     } settings;
 
     /// \brief Constructor which will not open the file or stream.
@@ -37,8 +36,14 @@ namespace media {
     VideoRecorder(VideoRecorder &&) noexcept;
     VideoRecorder &operator=(VideoRecorder &&) noexcept;
 
+    /// \brief Open the recording stream.
+    ///
+    /// \param width Input data width.
+    /// \param height Input data height.
+    /// \param filename Filename to open the outut stream at.
     void open(Uint32 width, Uint32 height, std::string_view filename);
 
+    /// \brief Returns whether the recording stream is open.
     bool isRecording() const { return _impl != nullptr; }
 
     /// \brief Constructor for the video recorder.
@@ -50,6 +55,7 @@ namespace media {
     ///
     /// \note If the settings' output dimensions are not set, they will
     /// automatically be set to be the input's dimensions.
+    /// \sa open()
     VideoRecorder(Uint32 width, Uint32 height, std::string_view filename,
                   Settings settings);
 

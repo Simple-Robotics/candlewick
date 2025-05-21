@@ -1,6 +1,8 @@
 #include "candlewick/multibody/Visualizer.h"
 #include "candlewick/core/CameraControls.h"
 
+#include <string>
+
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_log.h>
 #include <imgui.h>
