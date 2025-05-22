@@ -2,6 +2,7 @@
 /// Tools, render systems, etc... for the Candlewick GUI.
 #include "Core.h"
 #include <functional>
+#include <span>
 #include <entt/entity/fwd.hpp>
 
 struct SDL_Window;
@@ -40,6 +41,9 @@ struct DirectionalLight;
 
 /// \brief Adds a set of ImGui elements to control a DirectionalLight.
 void guiAddLightControls(DirectionalLight &light);
+
+/// \brief Add controls for multiple lights.
+void guiAddLightControls(std::span<DirectionalLight> lights);
 
 /// \brief Adds an ImGui::Checkbox which toggles the Disable component on the
 /// entity.
