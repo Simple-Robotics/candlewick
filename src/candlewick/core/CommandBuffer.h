@@ -92,6 +92,16 @@ public:
     return pushFragmentUniformRaw(slot_index, data.data(), data.size_bytes());
   }
 
+  template <GpuCompatibleData T, size_t N>
+  CommandBuffer &pushVertexUniform(Uint32 slot_index, const T (&data)[N]) {
+    return pushVertexUniform(slot_index, std::span<const T, N>(data));
+  }
+
+  template <GpuCompatibleData T, size_t N>
+  CommandBuffer &pushFragmentUniform(Uint32 slot_index, const T (&data)[N]) {
+    return pushFragmentUniform(slot_index, std::span<const T, N>(data));
+  }
+
   /// \brief Push uniform data to the vertex shader.
   CommandBuffer &pushVertexUniformRaw(Uint32 slot_index, const void *data,
                                       Uint32 length) {
