@@ -17,7 +17,7 @@ using namespace candlewick::multibody;
 
 void exposeVisualizer() {
   eigenpy::OptionalConverter<ConstVectorRef, std::optional>::registration();
-  bp::class_<Visualizer::Config>("VisualizerConfig", bp::init<>())
+  bp::class_<Visualizer::Config>("VisualizerConfig", bp::init<>("self"_a))
       .def_readwrite("width", &Visualizer::Config::width)
       .def_readwrite("height", &Visualizer::Config::height);
 
@@ -37,7 +37,8 @@ void exposeVisualizer() {
           "startRecording",
           +[](Visualizer &viz, const std::string &filename) {
             viz.startRecording(filename);
-          })
+          },
+          ("self"_a, "filename"_a))
       .def("stopRecording", &Visualizer::stopRecording, "self"_a)
 // fix for Pinocchio 3.5.0
 #if PINOCCHIO_VERSION_AT_MOST(3, 5, 0)
