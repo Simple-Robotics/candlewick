@@ -43,6 +43,8 @@ namespace multibody {
                              const pin::GeometryModel &geom_model,
                              const pin::GeometryData &geom_data);
 
+  static constexpr size_t kNumLights = 2;
+
   /// \brief A render system for Pinocchio robot geometries using Pinocchio.
   ///
   /// This internally stores references to pinocchio::GeometryModel and
@@ -136,7 +138,7 @@ namespace multibody {
       SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
     } pipelines;
 
-    DirectionalLight directionalLight;
+    std::array<DirectionalLight, kNumLights> directionalLight;
     ssao::SsaoPass ssaoPass{NoInit};
     struct GBuffer {
       Texture normalMap{NoInit};

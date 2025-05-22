@@ -15,9 +15,10 @@ struct PbrMaterial
 
 struct LightBlock
 {
-    float3 direction;
-    packed_float3 color;
-    float intensity;
+    float3 direction[2];
+    float3 color[2];
+    float4 intensity[2];
+    int numLights;
 };
 
 struct PbrMaterial_1
@@ -213,33 +214,41 @@ float3 uncharted2ToneMapping(thread const float3& color)
     return curr * white_scale;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant Material& _440 [[buffer(0)]], constant LightBlock& light [[buffer(1)]], constant EffectParams& params [[buffer(2)]], depth2d<float> shadowMap [[texture(0)]], texture2d<float> ssaoTex [[texture(1)]], sampler shadowMapSmplr [[sampler(0)]], sampler ssaoTexSmplr [[sampler(1)]], bool gl_FrontFacing [[front_facing]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant Material& _459 [[buffer(0)]], constant LightBlock& light [[buffer(1)]], constant EffectParams& params [[buffer(2)]], depth2d<float> shadowMap [[texture(0)]], texture2d<float> ssaoTex [[texture(1)]], sampler shadowMapSmplr [[sampler(0)]], sampler ssaoTexSmplr [[sampler(1)]], bool gl_FrontFacing [[front_facing]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
-    float3 lightDir = fast::normalize(-light.direction);
     float3 normal = fast::normalize(in.fragViewNormal);
     float3 V = fast::normalize(-in.fragViewPos);
     if (!gl_FrontFacing)
     {
         normal = -normal;
     }
-    float3 param = normal;
-    float3 param_1 = V;
-    float3 param_2 = lightDir;
-    PbrMaterial _451;
-    _451.baseColor = _440.material.baseColor;
-    _451.metalness = _440.material.metalness;
-    _451.roughness = _440.material.roughness;
-    _451.ao = _440.material.ao;
-    PbrMaterial param_3 = _451;
-    float3 param_4 = float3(light.color);
-    float param_5 = light.intensity;
-    float3 Lo = calculatePbrLighting(param, param_1, param_2, param_3, param_4, param_5);
-    float NdotL = fast::max(dot(normal, lightDir), 0.0);
-    float param_6 = NdotL;
-    float shadowValue = calcShadowmap(param_6, in.fragLightPos, shadowMap, shadowMapSmplr);
-    Lo *= shadowValue;
-    float3 ambient = (float3(0.100000001490116119384765625) * _440.material.baseColor.xyz) * _440.material.ao;
+    float3 Lo = float3(0.0);
+    for (int i = 0; i < light.numLights; i++)
+    {
+        float3 lightDir = fast::normalize(-light.direction[i]);
+        float3 param = normal;
+        float3 param_1 = V;
+        float3 param_2 = lightDir;
+        PbrMaterial _472;
+        _472.baseColor = _459.material.baseColor;
+        _472.metalness = _459.material.metalness;
+        _472.roughness = _459.material.roughness;
+        _472.ao = _459.material.ao;
+        PbrMaterial param_3 = _472;
+        float3 param_4 = light.color[i];
+        float param_5 = light.intensity[i].x;
+        float3 _lo = calculatePbrLighting(param, param_1, param_2, param_3, param_4, param_5);
+        if (i == 0)
+        {
+            float NdotL = fast::max(dot(normal, lightDir), 0.0);
+            float param_6 = NdotL;
+            float shadowValue = calcShadowmap(param_6, in.fragLightPos, shadowMap, shadowMapSmplr);
+            _lo *= shadowValue;
+        }
+        Lo += _lo;
+    }
+    float3 ambient = (float3(0.100000001490116119384765625) * _459.material.baseColor.xyz) * _459.material.ao;
     if (params.useSsao == 1u)
     {
         float2 ssaoTexSize = float2(int2(ssaoTex.get_width(), ssaoTex.get_height()));
@@ -250,7 +259,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Material& _440 [[buf
     float3 param_7 = color;
     color = uncharted2ToneMapping(param_7);
     color = powr(color, float3(0.4545454680919647216796875));
-    out.fragColor = float4(color, _440.material.baseColor.w);
+    out.fragColor = float4(color, _459.material.baseColor.w);
     out.outNormal = in.fragViewNormal.xy;
     return out;
 }

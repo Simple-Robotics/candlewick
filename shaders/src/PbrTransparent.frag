@@ -2,6 +2,7 @@
 #define HAS_WBOIT
 #define HAS_SHADOW_MAPS
 #define HAS_SSAO
+#define NUM_LIGHTS 2
 
 #include "tone_mapping.glsl"
 #include "pbr_lighting.glsl"
@@ -20,9 +21,10 @@ layout (set=3, binding=0) uniform Material {
 };
 
 layout(set=3, binding=1) uniform LightBlock {
-    vec3 direction;
-    vec3 color;
-    float intensity;
+    vec3 direction[NUM_LIGHTS];
+    vec3 color[NUM_LIGHTS];
+    float intensity[NUM_LIGHTS];
+    int numLights;
 } light;
 
 layout(set=3, binding=2) uniform EffectParams {
@@ -38,18 +40,21 @@ layout(set=3, binding=2) uniform EffectParams {
 
 
 void main() {
-    vec3 lightDir = normalize(-light.direction);
     vec3 normal = normalize(fragViewNormal);
     vec3 V = normalize(-fragViewPos);
 
-    vec3 Lo = calculatePbrLighting(
-        normal,
-        V,
-        lightDir,
-        material,
-        light.color,
-        light.intensity
-    );
+    vec3 Lo = vec3(0.);
+    for (uint i = 0; i < light.numLights; i++) {
+        vec3 lightDir = normalize(-light.direction[i]);
+        Lo += calculatePbrLighting(
+            normal,
+            V,
+            lightDir,
+            material,
+            light.color[i],
+            light.intensity[i]
+        );
+    }
 
     vec3 ambient = vec3(0.03) * material.baseColor.rgb * material.ao;
     vec3 color = ambient + Lo;

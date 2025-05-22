@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
 
   RobotScene robot_scene{registry, renderer, geom_model, geom_data,
                          robot_scene_config};
-  auto &sceneLight = robot_scene.directionalLight;
+  auto &sceneLight = robot_scene.directionalLight[0];
   sceneLight = {
       .direction = {-1.f, 0.f, -1.},
       .color = {1.0, 1.0, 1.0},
@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
         multibody::guiAddPinocchioModelInfo(registry, model, geom_model);
 
         ImGui::SeparatorText("Lights");
-        guiAddLightControls(sceneLight);
+        guiAddLightControls(robot_scene.directionalLight);
 
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),

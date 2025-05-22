@@ -2,6 +2,7 @@
 #define HAS_SHADOW_MAPS
 #define HAS_G_BUFFER
 #define HAS_SSAO
+#define NUM_LIGHTS 2
 
 #include "utils.glsl"
 #include "tone_mapping.glsl"
@@ -19,9 +20,10 @@ layout (set=3, binding=0) uniform Material {
 };
 
 layout(set=3, binding=1) uniform LightBlock {
-    vec3 direction;
-    vec3 color;
-    float intensity;
+    vec3 direction[NUM_LIGHTS];
+    vec3 color[NUM_LIGHTS];
+    float intensity[NUM_LIGHTS];
+    int numLights;
 } light;
 
 layout(set=3, binding=2) uniform EffectParams {
@@ -58,7 +60,6 @@ float calcShadowmap(float NdotL) {
 #endif
 
 void main() {
-    vec3 lightDir = normalize(-light.direction);
     vec3 normal = normalize(fragViewNormal);
     vec3 V = normalize(-fragViewPos);
 
@@ -67,20 +68,26 @@ void main() {
         normal = -normal;
     }
 
-    vec3 Lo = calculatePbrLighting(
-        normal,
-        V,
-        lightDir,
-        material,
-        light.color,
-        light.intensity
-    );
-
+    vec3 Lo = vec3(0);
+    for(int i = 0; i < light.numLights; i++) {
+        vec3 lightDir = normalize(-light.direction[i]);
+        vec3 _lo = calculatePbrLighting(
+            normal,
+            V,
+            lightDir,
+            material,
+            light.color[i],
+            light.intensity[i]
+        );
 #ifdef HAS_SHADOW_MAPS
-        float NdotL = max(dot(normal, lightDir), 0.0);
-        float shadowValue = calcShadowmap(NdotL);
-        Lo = shadowValue * Lo;
+        if(i == 0) {
+            float NdotL = max(dot(normal, lightDir), 0.0);
+            float shadowValue = calcShadowmap(NdotL);
+            _lo *= shadowValue;
+        }
 #endif
+        Lo += _lo;
+    }
 
     // Ambient term (very simple)
     vec3 ambient = vec3(0.1) * material.baseColor.rgb * material.ao;

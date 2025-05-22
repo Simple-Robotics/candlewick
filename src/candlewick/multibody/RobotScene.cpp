@@ -17,11 +17,13 @@
 
 namespace candlewick::multibody {
 
-struct alignas(16) light_ubo_t {
-  GpuVec3 viewSpaceDir;
-  alignas(16) GpuVec3 color;
-  float intensity;
+struct alignas(16) LightArrayUbo {
+  GpuVec4 viewSpaceDir[kNumLights];
+  GpuVec4 color[kNumLights];
+  GpuVec4 intensity[kNumLights];
+  Uint32 numLights;
 };
+static_assert(std::is_standard_layout_v<LightArrayUbo>);
 
 void updateRobotTransforms(entt::registry &registry,
                            const pin::GeometryModel &geom_model,
@@ -118,6 +120,10 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer)
     , m_geomData(nullptr)
     , m_initialized(false) {
   assert(!hasInternalPointers());
+  SDL_zero(directionalLight);
+  directionalLight[1].direction = {-1.f, 1.f, -1.f};
+  directionalLight[1].color.setOnes();
+  directionalLight[1].intensity = 4.f;
 }
 
 RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
@@ -429,11 +435,15 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
     return;
   }
 
-  const light_ubo_t lightUbo{
-      camera.transformVector(directionalLight.direction),
-      directionalLight.color,
-      directionalLight.intensity,
-  };
+  // calculate light ubos
+  LightArrayUbo lightUbo;
+  lightUbo.numLights = kNumLights;
+  for (size_t i = 0; i < lightUbo.numLights; i++) {
+    auto &dl = directionalLight[i];
+    lightUbo.viewSpaceDir[i].head<3>() = camera.transformVector(dl.direction);
+    lightUbo.color[i].head<3>() = dl.color;
+    lightUbo.intensity[i].x() = dl.intensity;
+  }
 
   const bool enable_shadows = m_config.enable_shadows;
   const Mat4f lightViewProj = shadowPass.cam.viewProj();
