@@ -2,10 +2,10 @@
 #define HAS_WBOIT
 #define HAS_SHADOW_MAPS
 #define HAS_SSAO
-#define NUM_LIGHTS 2
 
 #include "tone_mapping.glsl"
 #include "pbr_lighting.glsl"
+#include "config.glsl"
 
 layout(location=0) in vec3 fragViewPos;
 layout(location=1) in vec3 fragViewNormal;
