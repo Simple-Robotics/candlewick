@@ -99,6 +99,9 @@ static constexpr size_t kNumLights = 2;
 /// \brief Helper struct for shadow mapping pass.
 class ShadowMapPass {
   SDL_GPUDevice *_device = nullptr;
+  Uint32 _numLights = 0;
+
+  enum { LIGHT_MATRIX_SLOT, MODEL_MATRIX_SLOT };
 
 public:
   struct Config {
@@ -112,6 +115,7 @@ public:
         .enable_depth_bias = false,
         .enable_depth_clip = false,
     };
+    Uint32 numLights = kNumLights;
   };
   Texture shadowMap{NoInit};
   SDL_GPUGraphicsPipeline *pipeline = nullptr;
@@ -137,6 +141,8 @@ public:
 
   void release() noexcept;
   ~ShadowMapPass() noexcept { this->release(); }
+
+  auto numLights() const noexcept { return _numLights; }
 };
 
 using ShadowPassConfig = ShadowMapPass::Config;

@@ -115,7 +115,7 @@ void DepthPass::release() noexcept {
 
 ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
                              SDL_GPUTextureFormat format, const Config &config)
-    : _device(device) {
+    : _device(device), _numLights(config.numLights) {
 
   // TEXTURE
   // 2k x 2k texture
@@ -126,7 +126,7 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
                SDL_GPU_TEXTUREUSAGE_SAMPLER,
       .width = config.width,
       .height = config.height,
-      .layer_count_or_depth = 1,
+      .layer_count_or_depth = config.numLights,
       .num_levels = 1,
       .sample_count = SDL_GPU_SAMPLECOUNT_1,
       .props = 0,
@@ -151,7 +151,7 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
 
 ShadowMapPass::ShadowMapPass(ShadowMapPass &&other) noexcept
     : _device(other._device)
-    , _depthPass(std::move(other._depthPass))
+    , _numLights(other._numLights)
     , shadowMap(std::move(other.shadowMap))
     , pipeline(other.pipeline)
     , sampler(other.sampler)
@@ -163,7 +163,7 @@ ShadowMapPass::ShadowMapPass(ShadowMapPass &&other) noexcept
 
 ShadowMapPass &ShadowMapPass::operator=(ShadowMapPass &&other) noexcept {
   _device = other._device;
-  _depthPass = std::move(other._depthPass);
+  _numLights = other._numLights;
   shadowMap = std::move(other.shadowMap);
   sampler = other.sampler;
   pipeline = other.pipeline;
