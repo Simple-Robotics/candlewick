@@ -93,6 +93,8 @@ public:
   ~DepthPass() noexcept { this->release(); }
 };
 
+static constexpr size_t kNumLights = 2;
+
 /// \ingroup depth_pass
 /// \brief Helper struct for shadow mapping pass.
 class ShadowMapPass {

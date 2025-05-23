@@ -43,8 +43,6 @@ namespace multibody {
                              const pin::GeometryModel &geom_model,
                              const pin::GeometryData &geom_data);
 
-  static constexpr size_t kNumLights = 2;
-
   /// \brief A render system for Pinocchio robot geometries using Pinocchio.
   ///
   /// This internally stores references to pinocchio::GeometryModel and
