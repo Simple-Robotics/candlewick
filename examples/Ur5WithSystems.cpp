@@ -456,7 +456,9 @@ int main(int argc, char **argv) {
   worldSpaceBounds.update({-1.f, -1.f, 0.f}, {+1.f, +1.f, 1.f});
 
   frustumBoundsDebug.addBounds(worldSpaceBounds);
-  frustumBoundsDebug.addFrustum(shadowPassInfo.cam);
+  for (size_t i = 0; i < shadowPassInfo.numLights(); i++) {
+    frustumBoundsDebug.addFrustum(shadowPassInfo.cam[i]);
+  }
 
   Eigen::VectorXd q = q0;
   Eigen::VectorXd qn = q;
@@ -483,8 +485,9 @@ int main(int argc, char **argv) {
       robot_scene.updateTransforms();
       robot_scene.collectOpaqueCastables();
       auto &castables = robot_scene.castables();
-      renderShadowPassFromAABB(command_buffer, shadowPassInfo, sceneLight,
-                               castables, worldSpaceBounds);
+      renderShadowPassFromAABB(command_buffer, shadowPassInfo,
+                               robot_scene.directionalLight, castables,
+                               worldSpaceBounds);
       depthPass.render(command_buffer, viewProj, castables);
       switch (g_showDebugViz) {
       case FULL_RENDER:
@@ -501,8 +504,8 @@ int main(int argc, char **argv) {
       case LIGHT_DEBUG:
         renderDepthDebug(renderer, command_buffer, shadowDebugPass,
                          {depth_mode,
-                          orthoProjNear(shadowPassInfo.cam.projection),
-                          orthoProjFar(shadowPassInfo.cam.projection),
+                          orthoProjNear(shadowPassInfo.cam[0].projection),
+                          orthoProjFar(shadowPassInfo.cam[0].projection),
                           CameraProjection::ORTHOGRAPHIC});
         break;
       }

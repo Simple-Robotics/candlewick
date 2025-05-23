@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core/GuiSystem : add overload for adding multiple lights
 - core/CommandBuffer.h : add overload for C-style arrays to uniform-pushing methods
 - core/Shader : store shader stage
+- core/DepthAndShadowPass.h : handle multiple shadow maps using a texture atlas
 
 ## [0.1.0] - 2025-05-21
 

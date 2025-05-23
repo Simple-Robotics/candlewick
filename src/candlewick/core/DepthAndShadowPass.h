@@ -96,12 +96,13 @@ public:
 static constexpr size_t kNumLights = 2;
 
 /// \ingroup depth_pass
-/// \brief Helper struct for shadow mapping pass.
+/// \brief Class for defining the shadow atlas and rendering it out.
+///
+/// The user has to take care of setting the "cameras" corresponding to the
+/// actual lights.
 class ShadowMapPass {
   SDL_GPUDevice *_device = nullptr;
   Uint32 _numLights = 0;
-
-  enum { LIGHT_MATRIX_SLOT, MODEL_MATRIX_SLOT };
 
 public:
   struct Config {
@@ -117,10 +118,20 @@ public:
     };
     Uint32 numLights = kNumLights;
   };
+  /// %Texture atlas region, implicitly converts to an SDLGPU viewport.
+  struct AtlasRegion {
+    Uint32 x;
+    Uint32 y;
+    Uint32 w;
+    Uint32 h;
+  };
+  /// actually a texture atlas
   Texture shadowMap{NoInit};
   SDL_GPUGraphicsPipeline *pipeline = nullptr;
   SDL_GPUSampler *sampler = nullptr;
-  Camera cam;
+  std::array<Camera, kNumLights> cam;
+  /// regions of the atlas
+  std::array<AtlasRegion, kNumLights> regions;
 
   ShadowMapPass(NoInitT) {}
 
@@ -136,8 +147,11 @@ public:
   ShadowMapPass(ShadowMapPass &&other) noexcept;
   ShadowMapPass &operator=(ShadowMapPass &&other) noexcept;
 
-  void render(CommandBuffer &cmdBuf, const Mat4f &viewProj,
-              std::span<const OpaqueCastable> castables);
+  void render(CommandBuffer &cmdBuf, std::span<const OpaqueCastable> castables);
+
+  std::array<Uint32, 2> atlasDims() const {
+    return {shadowMap.width(), shadowMap.height()};
+  }
 
   void release() noexcept;
   ~ShadowMapPass() noexcept { this->release(); }
@@ -157,18 +171,13 @@ using ShadowPassConfig = ShadowMapPass::Config;
 ///
 /// \see shadowOrthographicMatrix()
 
-inline void ShadowMapPass::render(CommandBuffer &cmdBuf, const Mat4f &viewProj,
-                                  std::span<const OpaqueCastable> castables) {
-  _depthPass.render(cmdBuf, viewProj, castables);
-}
-
 /// \ingroup depth_pass
 /// \{
 /// \brief Render shadow pass, using provided scene bounds.
 ///
 /// The scene bounds are in world-space.
 void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
-                              const DirectionalLight &dirLight,
+                              std::span<const DirectionalLight> dirLight,
                               std::span<const OpaqueCastable> castables,
                               const AABB &worldSceneBounds);
 
@@ -180,7 +189,7 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
 /// world-space camera.
 /// \sa frustumFromCameraProjection()
 void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
-                                 const DirectionalLight &dirLight,
+                                 std::span<const DirectionalLight> dirLight,
                                  std::span<const OpaqueCastable> castables,
                                  const FrustumCornersType &worldSpaceCorners);
 

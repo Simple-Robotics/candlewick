@@ -33,6 +33,7 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
 
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
+  rconfig.shadow_config.numLights = kNumLights;
   robotScene.setConfig(rconfig);
   robotScene.loadModels(visualModel(), visualData());
 
@@ -132,7 +133,7 @@ void Visualizer::render() {
     robotScene.collectOpaqueCastables();
     std::span castables = robotScene.castables();
     renderShadowPassFromAABB(command_buffer, robotScene.shadowPass,
-                             robotScene.directionalLight[0], castables,
+                             robotScene.directionalLight, castables,
                              robotScene.worldSpaceBounds);
 
     auto &camera = controller.camera;
