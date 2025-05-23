@@ -4,7 +4,6 @@
 #include "Collision.h"
 #include "Camera.h"
 
-#include <format>
 #include <SDL3/SDL_log.h>
 
 namespace candlewick {
