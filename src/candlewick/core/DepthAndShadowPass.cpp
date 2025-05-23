@@ -253,7 +253,6 @@ void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                                  const FrustumCornersType &worldSpaceCorners) {
   using Eigen::Vector3d;
 
-  Mat4f viewProjs[kNumLights];
   auto [center, radius] = frustumBoundingSphereCenterRadius(worldSpaceCorners);
   radius = std::ceil(radius * 16.f) / 16.f;
 
@@ -267,8 +266,6 @@ void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
     lightProj = shadowOrthographicMatrix({bounds.width(), bounds.height()},
                                          float(bounds.min_.z()),
                                          float(bounds.max_.z()));
-
-    viewProjs[i] = lightProj * lightView.matrix();
   }
   passInfo.render(cmdBuf, castables);
 }
@@ -279,7 +276,6 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               const AABB &worldSceneBounds) {
   using Eigen::Vector3d;
 
-  Mat4f viewProjs[kNumLights];
   Float3 center = worldSceneBounds.center().cast<float>();
   float radius = 0.5f * float(worldSceneBounds.size());
   radius = std::ceil(radius * 16.f) / 16.f;
@@ -294,8 +290,6 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
     lightProj = shadowOrthographicMatrix({bounds.width(), bounds.height()},
                                          float(bounds.min_.z()),
                                          float(bounds.max_.z()));
-
-    viewProjs[i] = lightProj * lightView.matrix();
   }
   passInfo.render(cmdBuf, castables);
 }
