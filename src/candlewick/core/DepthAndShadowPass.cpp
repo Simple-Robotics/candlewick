@@ -152,7 +152,8 @@ ShadowMapPass::ShadowMapPass(ShadowMapPass &&other) noexcept
     : _device(other._device)
     , _depthPass(std::move(other._depthPass))
     , shadowMap(std::move(other.shadowMap))
-    , sampler(other.sampler) {
+    , sampler(other.sampler)
+    , cam(std::move(other.cam)) {
   other._device = nullptr;
   other.sampler = nullptr;
 }
@@ -162,6 +163,7 @@ ShadowMapPass &ShadowMapPass::operator=(ShadowMapPass &&other) noexcept {
   _depthPass = std::move(other._depthPass);
   shadowMap = std::move(other.shadowMap);
   sampler = other.sampler;
+  cam = std::move(other.cam);
 
   other._device = nullptr;
   other.sampler = nullptr;
