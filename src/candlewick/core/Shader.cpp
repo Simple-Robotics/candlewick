@@ -57,7 +57,7 @@ ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
 
 Shader::Shader(const Device &device, const char *filename, const Config &config)
     : _shader(nullptr), _device(device) {
-  SDL_GPUShaderStage stage = detect_shader_stage(filename);
+  _stage = detect_shader_stage(filename);
 
   SDL_GPUShaderFormat supported_formats = device.shaderFormats();
   SDL_GPUShaderFormat target_format = SDL_GPU_SHADERFORMAT_INVALID;
@@ -84,7 +84,7 @@ Shader::Shader(const Device &device, const char *filename, const Config &config)
       .code = shader_code.data,
       .entrypoint = entry_point,
       .format = target_format,
-      .stage = stage,
+      .stage = _stage,
       .num_samplers = config.samplers,
       .num_storage_textures = config.storage_textures,
       .num_storage_buffers = config.storage_buffers,
