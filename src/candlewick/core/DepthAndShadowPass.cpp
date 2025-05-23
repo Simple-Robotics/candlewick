@@ -9,10 +9,10 @@
 
 namespace candlewick {
 
-DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
-                     SDL_GPUTexture *depth_texture, SDL_GPUTextureFormat format,
-                     const Config &config)
-    : _device(device), depthTexture(depth_texture) {
+static SDL_GPUGraphicsPipeline *
+create_depth_pass_pipeline(const Device &device, const MeshLayout &layout,
+                           SDL_GPUTextureFormat format,
+                           const DepthPass::Config config) {
   auto vertexShader = Shader::fromMetadata(device, "ShadowCast.vert");
   auto fragmentShader = Shader::fromMetadata(device, "ShadowCast.frag");
   SDL_GPUGraphicsPipelineCreateInfo pipeline_desc{
@@ -35,7 +35,14 @@ DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
                    .depth_stencil_format = format,
                    .has_depth_stencil_target = true},
   };
-  pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
+  return SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
+}
+
+DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
+                     SDL_GPUTexture *depth_texture, SDL_GPUTextureFormat format,
+                     const Config &config)
+    : _device(device), depthTexture(depth_texture) {
+  pipeline = create_depth_pass_pipeline(device, layout, format, config);
   if (!pipeline)
     terminate_with_message("Failed to create graphics pipeline: {:s}.",
                            SDL_GetError());
