@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- core/GuiSystem : add overload for adding multiple lights
+- core/GuiSystem : add overload for adding multiple GUI elements for `DirectionalLight`s
 - core/CommandBuffer.h : add overload for C-style arrays to uniform-pushing methods
 - core/Shader : store shader stage
 - core/DepthAndShadowPass.h : handle multiple shadow maps using a texture atlas
+- multibody : handle two-light setup w/ shadow mapping
 
 ## [0.1.0] - 2025-05-21
 

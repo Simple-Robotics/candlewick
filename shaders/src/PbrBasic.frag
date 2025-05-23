@@ -10,7 +10,7 @@
 
 layout(location=0) in vec3 fragViewPos;
 layout(location=1) in vec3 fragViewNormal;
-layout(location=2) in vec3 fragLightPos;
+layout(location=2) in vec3 fragLightPos[NUM_LIGHTS];
 
 // set=3 is required, see SDL3's documentation for SDL_CreateGPUShader
 // https://wiki.libsdl.org/SDL3/SDL_CreateGPUShader
@@ -30,6 +30,11 @@ layout(set=3, binding=2) uniform EffectParams {
     uint useSsao;
 } params;
 
+layout(set = 3, binding = 3) uniform ShadowAtlasInfo {
+    ivec4 lightRegions[NUM_LIGHTS];
+    uvec2 atlasSize;
+};
+
 #ifdef HAS_SHADOW_MAPS
     layout (set=2, binding=0) uniform sampler2DShadow shadowMap;
 #endif
@@ -44,18 +49,24 @@ layout(location=0) out vec4 fragColor;
 #endif
 
 #ifdef HAS_SHADOW_MAPS
-float calcShadowmap(float NdotL) {
+float calcShadowmap(int lightIndex, float NdotL) {
     // float bias = max(0.05 * (1.0 - NdotL), 0.005);
     float bias = 0.005;
-    vec3 texCoords = fragLightPos;
-    texCoords.x = 0.5 + texCoords.x * 0.5;
-    texCoords.y = 0.5 - texCoords.y * 0.5;
-    texCoords.z -= bias;
-    float shadowValue = 1.0;
-    if (isCoordsInRange(texCoords)) {
-        shadowValue = texture(shadowMap, texCoords);
+    vec3 lightSpacePos = fragLightPos[lightIndex];
+    vec2 uv;
+    uv.x = 0.5 + lightSpacePos.x * 0.5;
+    uv.y = 0.5 - lightSpacePos.y * 0.5;
+    float depthRef = lightSpacePos.z - bias;
+    if (!isCoordsInRange(vec3(uv, depthRef))) {
+        return 1.0;
     }
-    return shadowValue;
+
+    ivec4 region = lightRegions[lightIndex];
+    uv = region.xy + uv * region.zw;
+    uv = uv / atlasSize;
+
+    vec3 texCoords = vec3(uv, depthRef);
+    return texture(shadowMap, texCoords);
 }
 #endif
 
@@ -80,11 +91,9 @@ void main() {
             light.intensity[i]
         );
 #ifdef HAS_SHADOW_MAPS
-        if(i == 0) {
-            float NdotL = max(dot(normal, lightDir), 0.0);
-            float shadowValue = calcShadowmap(NdotL);
-            _lo *= shadowValue;
-        }
+        float NdotL = max(dot(normal, lightDir), 0.0);
+        float shadowValue = calcShadowmap(i, NdotL);
+        _lo *= shadowValue;
 #endif
         Lo += _lo;
     }

@@ -25,6 +25,17 @@ struct alignas(16) LightArrayUbo {
 };
 static_assert(std::is_standard_layout_v<LightArrayUbo>);
 
+struct alignas(16) LightSpaceMatricesUbo {
+  GpuMat4 mvps[kNumLights];
+  Uint32 numLights;
+};
+
+struct alignas(16) ShadowAtlasInfoUbo {
+  using Vec4u = Eigen::Matrix<Uint32, 4, 1, Eigen::DontAlign>;
+  std::array<Vec4u, kNumLights> regions;
+  std::array<Uint32, 2> atlasSize;
+};
+
 void updateRobotTransforms(entt::registry &registry,
                            const pin::GeometryModel &geom_model,
                            const pin::GeometryData &geom_data) {
@@ -430,9 +441,10 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
     return;
   }
 
+  const Uint32 numLights = shadowPass.numLights();
   // calculate light ubos
   LightArrayUbo lightUbo;
-  lightUbo.numLights = kNumLights;
+  lightUbo.numLights = numLights;
   for (size_t i = 0; i < lightUbo.numLights; i++) {
     auto &dl = directionalLight[i];
     lightUbo.viewSpaceDir[i].head<3>() = camera.transformVector(dl.direction);
@@ -441,7 +453,16 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   }
 
   const bool enable_shadows = m_config.enable_shadows;
-  const Mat4f lightViewProj = shadowPass.cam.viewProj();
+  ShadowAtlasInfoUbo shadowAtlasUbo{
+      .regions{},
+      .atlasSize{shadowPass.atlasDims()},
+  };
+  Mat4f lightViewProj[kNumLights];
+  for (size_t i = 0; i < numLights; i++) {
+    lightViewProj[i].noalias() = shadowPass.cam[i].viewProj();
+    const auto &reg = shadowPass.regions[i];
+    shadowAtlasUbo.regions[i] = {reg.x, reg.y, reg.w, reg.h};
+  }
   const Mat4f viewProj = camera.viewProj();
 
   // this is the first render pass, hence:
@@ -469,7 +490,8 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   int _useSsao = m_config.enable_ssao;
   command_buffer //
       .pushFragmentUniform(FragmentUniformSlots::LIGHTING, lightUbo)
-      .pushFragmentUniform(FragmentUniformSlots::SSAO_FLAG, _useSsao);
+      .pushFragmentUniform(FragmentUniformSlots::SSAO_FLAG, _useSsao)
+      .pushFragmentUniform(FragmentUniformSlots::ATLAS_INFO, shadowAtlasUbo);
 
   SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
 
@@ -489,8 +511,14 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
     };
     command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, data);
     if (enable_shadows) {
-      GpuMat4 lightMvp = lightViewProj * tr;
-      command_buffer.pushVertexUniform(1, lightMvp);
+      LightSpaceMatricesUbo shadowUbo;
+      shadowUbo.numLights = numLights;
+      for (size_t i = 0; i < numLights; i++) {
+        GpuMat4 lightMvp = lightViewProj[i] * tr;
+        shadowUbo.mvps[i] = lightMvp;
+      }
+      command_buffer.pushVertexUniform(VertexUniformSlots::LIGHT_MATRICES,
+                                       shadowUbo);
     }
     rend::bindMesh(render_pass, mesh);
     for (size_t j = 0; j < mesh.numViews(); j++) {

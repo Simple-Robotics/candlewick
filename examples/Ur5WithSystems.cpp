@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
 
   // D16_UNORM works on macOS, D24_UNORM and D32_FLOAT break the depth prepass
   Renderer renderer{
-      Device{auto_detect_shader_format_subset(), true},
+      Device{auto_detect_shader_format_subset(), false},
       Window(__FILE__, wWidth, wHeight, 0),
       SDL_GPU_TEXTUREFORMAT_D16_UNORM,
   };
