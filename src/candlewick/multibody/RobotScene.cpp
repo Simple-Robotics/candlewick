@@ -494,9 +494,8 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
     }
     rend::bindMesh(render_pass, mesh);
     for (size_t j = 0; j < mesh.numViews(); j++) {
-      const auto material = obj.materials[j];
       command_buffer.pushFragmentUniform(FragmentUniformSlots::MATERIAL,
-                                         material);
+                                         obj.materials[j]);
       rend::drawView(render_pass, mesh.view(j));
     }
   };
