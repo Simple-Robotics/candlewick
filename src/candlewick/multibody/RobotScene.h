@@ -76,6 +76,7 @@ namespace multibody {
         magic_enum::enum_count<PipelineType>();
     enum VertexUniformSlots : Uint32 { TRANSFORM = 0 };
     enum FragmentUniformSlots : Uint32 { MATERIAL = 0, LIGHTING = 1 };
+    enum FragmentSamplerSlots { SHADOW_MAP_SLOT, SSAO_SLOT };
 
     /// Map hpp-fcl/coal collision geometry to desired pipeline type.
     static PipelineType pinGeomToPipeline(const coal::CollisionGeometry &geom);

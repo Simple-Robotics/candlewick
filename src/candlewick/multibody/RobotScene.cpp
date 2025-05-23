@@ -391,11 +391,6 @@ getTransparentRenderPass(const Renderer &renderer,
   return SDL_BeginGPURenderPass(command_buffer, targets, 2, &depth_target);
 }
 
-enum FragmentSamplerSlots {
-  SHADOW_MAP_SLOT,
-  SSAO_SLOT,
-};
-
 void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
   // transparent triangle pipeline required
   if (!pipelines.triangleMesh.transparent || !pipelines.wboitComposite)
