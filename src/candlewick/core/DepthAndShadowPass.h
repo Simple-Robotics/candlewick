@@ -97,7 +97,6 @@ public:
 /// \brief Helper struct for shadow mapping pass.
 class ShadowMapPass {
   SDL_GPUDevice *_device = nullptr;
-  DepthPass _depthPass{NoInit};
 
 public:
   struct Config {
@@ -113,6 +112,7 @@ public:
     };
   };
   Texture shadowMap{NoInit};
+  SDL_GPUGraphicsPipeline *pipeline = nullptr;
   SDL_GPUSampler *sampler = nullptr;
   Camera cam;
 

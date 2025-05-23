@@ -133,7 +133,8 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
   };
 
   shadowMap = Texture(device, texInfo, "Shadow map");
-  _depthPass = DepthPass(device, layout, shadowMap, config.depthPassConfig);
+  pipeline = create_depth_pass_pipeline(
+      device, layout, format, "ShadowArrayCast.vert", config.depthPassConfig);
 
   SDL_GPUSamplerCreateInfo sample_desc{
       .min_filter = SDL_GPU_FILTER_LINEAR,
@@ -152,9 +153,11 @@ ShadowMapPass::ShadowMapPass(ShadowMapPass &&other) noexcept
     : _device(other._device)
     , _depthPass(std::move(other._depthPass))
     , shadowMap(std::move(other.shadowMap))
+    , pipeline(other.pipeline)
     , sampler(other.sampler)
     , cam(std::move(other.cam)) {
   other._device = nullptr;
+  other.pipeline = nullptr;
   other.sampler = nullptr;
 }
 
@@ -163,20 +166,25 @@ ShadowMapPass &ShadowMapPass::operator=(ShadowMapPass &&other) noexcept {
   _depthPass = std::move(other._depthPass);
   shadowMap = std::move(other.shadowMap);
   sampler = other.sampler;
+  pipeline = other.pipeline;
   cam = std::move(other.cam);
 
   other._device = nullptr;
+  other.pipeline = nullptr;
   other.sampler = nullptr;
   return *this;
 }
 
 void ShadowMapPass::release() noexcept {
-  _depthPass.release();
   if (_device) {
     if (sampler) {
       SDL_ReleaseGPUSampler(_device, sampler);
     }
     sampler = nullptr;
+    if (pipeline) {
+      SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
+    }
+    pipeline = nullptr;
   }
   shadowMap.destroy();
   _device = nullptr;
