@@ -8,11 +8,12 @@
 
 namespace candlewick {
 
-static SDL_GPUGraphicsPipeline *
-create_depth_pass_pipeline(const Device &device, const MeshLayout &layout,
-                           SDL_GPUTextureFormat format,
-                           const DepthPass::Config config) {
-  auto vertexShader = Shader::fromMetadata(device, "ShadowCast.vert");
+static SDL_GPUGraphicsPipeline *create_depth_pass_pipeline(
+    const Device &device, const MeshLayout &layout, SDL_GPUTextureFormat format,
+    const char *vertexShaderFile, const DepthPass::Config config) {
+  auto vertexShader = Shader::fromMetadata(device, vertexShaderFile);
+  if (vertexShader.stage() != SDL_GPU_SHADERSTAGE_VERTEX)
+    terminate_with_message("Provided filename is not a vertex shader.");
   auto fragmentShader = Shader::fromMetadata(device, "ShadowCast.frag");
   SDL_GPUGraphicsPipelineCreateInfo pipeline_desc{
       .vertex_shader = vertexShader,
@@ -41,7 +42,8 @@ DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
                      SDL_GPUTexture *depth_texture, SDL_GPUTextureFormat format,
                      const Config &config)
     : _device(device), depthTexture(depth_texture) {
-  pipeline = create_depth_pass_pipeline(device, layout, format, config);
+  pipeline = create_depth_pass_pipeline(device, layout, format,
+                                        "ShadowCast.vert", config);
   if (!pipeline)
     terminate_with_message("Failed to create graphics pipeline: {:s}.",
                            SDL_GetError());
