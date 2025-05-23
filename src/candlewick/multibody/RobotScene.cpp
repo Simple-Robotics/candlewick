@@ -467,8 +467,9 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                  .sampler = ssaoPass.texSampler,
                              }});
   int _useSsao = m_config.enable_ssao;
-  command_buffer.pushFragmentUniform(FragmentUniformSlots::LIGHTING, lightUbo)
-      .pushFragmentUniform(2, _useSsao);
+  command_buffer //
+      .pushFragmentUniform(FragmentUniformSlots::LIGHTING, lightUbo)
+      .pushFragmentUniform(FragmentUniformSlots::SSAO_FLAG, _useSsao);
 
   SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
 
