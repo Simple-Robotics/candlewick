@@ -6,6 +6,25 @@
 #include "../primitives/Plane.h"
 #include "RobotDebug.h"
 
+namespace candlewick {
+const char *sdlMouseButtonToString(Uint8 button) {
+  switch (button) {
+  case SDL_BUTTON_LEFT:
+    return "LMB";
+  case SDL_BUTTON_MIDDLE:
+    return "MMB";
+  case SDL_BUTTON_RIGHT:
+    return "RMB";
+  case SDL_BUTTON_X1:
+    return "X1";
+  case SDL_BUTTON_X2:
+    return "X2";
+  default:
+    terminate_with_message("Unsupported button value (%d)", button);
+  }
+}
+} // namespace candlewick
+
 namespace candlewick::multibody {
 
 static Renderer _create_renderer(const Visualizer::Config &config) {
@@ -64,6 +83,12 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
   }
 
   this->resetCamera();
+
+  SDL_Log(" Controls:");
+  SDL_Log(" ——————————————————————");
+  SDL_Log(" Toggle GUI:      [%s]", "H");
+  SDL_Log(" Pan camera:      [%s]",
+          sdlMouseButtonToString(cameraParams.mouseButtons.panButton));
 }
 
 void Visualizer::resetCamera() {
@@ -140,7 +165,8 @@ void Visualizer::render() {
     robotScene.renderOpaque(command_buffer, camera);
     debugScene.render(command_buffer, camera);
     robotScene.renderTransparent(command_buffer, camera);
-    guiSystem.render(command_buffer);
+    if (m_showGui)
+      guiSystem.render(command_buffer);
   }
 
   command_buffer.submit();

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core/Shader : store shader stage
 - core/DepthAndShadowPass.h : handle multiple shadow maps using a texture atlas
 - multibody : handle two-light setup w/ shadow mapping
+- multibody/Visualizer : use `H` key to toggle GUI
 
 ## [0.1.0] - 2025-05-21
 

@@ -35,7 +35,7 @@ struct CameraControlParams {
 
   // Mouse button modifiers
   struct MouseConfig {
-    SDL_MouseButtonFlags panButton = SDL_BUTTON_MMASK;
+    Uint8 panButton = SDL_BUTTON_MIDDLE;
   } mouseButtons;
 };
 
@@ -50,6 +50,7 @@ void guiAddCameraParams(CylindricalCamera &controller,
 /// run until shouldExit() returns true.
 class Visualizer final : public BaseVisualizer {
   bool m_cameraControl = true;
+  bool m_showGui = true;
   bool m_shouldExit = false;
   entt::entity m_plane, m_grid, m_triad;
   std::string m_currentScreenshotFilename{};
