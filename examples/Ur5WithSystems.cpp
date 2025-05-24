@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
 
   // D16_UNORM works on macOS, D24_UNORM and D32_FLOAT break the depth prepass
   Renderer renderer{
-      Device{auto_detect_shader_format_subset(), true},
+      Device{auto_detect_shader_format_subset(), false},
       Window(__FILE__, wWidth, wHeight, 0),
       SDL_GPU_TEXTUREFORMAT_D16_UNORM,
   };
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
 
   RobotScene robot_scene{registry, renderer, geom_model, geom_data,
                          robot_scene_config};
-  auto &sceneLight = robot_scene.directionalLight;
+  auto &sceneLight = robot_scene.directionalLight[0];
   sceneLight = {
       .direction = {-1.f, 0.f, -1.},
       .color = {1.0, 1.0, 1.0},
@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
         multibody::guiAddPinocchioModelInfo(registry, model, geom_model);
 
         ImGui::SeparatorText("Lights");
-        guiAddLightControls(sceneLight);
+        guiAddLightControls(robot_scene.directionalLight);
 
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),
@@ -456,7 +456,9 @@ int main(int argc, char **argv) {
   worldSpaceBounds.update({-1.f, -1.f, 0.f}, {+1.f, +1.f, 1.f});
 
   frustumBoundsDebug.addBounds(worldSpaceBounds);
-  frustumBoundsDebug.addFrustum(shadowPassInfo.cam);
+  for (size_t i = 0; i < shadowPassInfo.numLights(); i++) {
+    frustumBoundsDebug.addFrustum(shadowPassInfo.cam[i]);
+  }
 
   Eigen::VectorXd q = q0;
   Eigen::VectorXd qn = q;
@@ -483,8 +485,9 @@ int main(int argc, char **argv) {
       robot_scene.updateTransforms();
       robot_scene.collectOpaqueCastables();
       auto &castables = robot_scene.castables();
-      renderShadowPassFromAABB(command_buffer, shadowPassInfo, sceneLight,
-                               castables, worldSpaceBounds);
+      renderShadowPassFromAABB(command_buffer, shadowPassInfo,
+                               robot_scene.directionalLight, castables,
+                               worldSpaceBounds);
       depthPass.render(command_buffer, viewProj, castables);
       switch (g_showDebugViz) {
       case FULL_RENDER:
@@ -501,8 +504,8 @@ int main(int argc, char **argv) {
       case LIGHT_DEBUG:
         renderDepthDebug(renderer, command_buffer, shadowDebugPass,
                          {depth_mode,
-                          orthoProjNear(shadowPassInfo.cam.projection),
-                          orthoProjFar(shadowPassInfo.cam.projection),
+                          orthoProjNear(shadowPassInfo.cam[0].projection),
+                          orthoProjFar(shadowPassInfo.cam[0].projection),
                           CameraProjection::ORTHOGRAPHIC});
         break;
       }

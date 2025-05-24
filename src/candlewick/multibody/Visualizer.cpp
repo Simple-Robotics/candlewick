@@ -33,6 +33,7 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
 
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
+  rconfig.shadow_config.numLights = kNumLights;
   robotScene.setConfig(rconfig);
   robotScene.loadModels(visualModel(), visualData());
 
@@ -41,9 +42,16 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
   std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
 
   robotScene.directionalLight = {
-      .direction = {0., -1., -1.},
-      .color = {1.0, 1.0, 1.0},
-      .intensity = 8.0,
+      DirectionalLight{
+          .direction = {0., -1., -1.},
+          .color = {1.0, 1.0, 1.0},
+          .intensity = 8.0,
+      },
+      DirectionalLight{
+          .direction = {0.5, 1., -1.},
+          .color = {1.0, 1.0, 1.0},
+          .intensity = 8.0,
+      },
   };
 
   robotScene.worldSpaceBounds.update({-1., -1., 0.}, {+1., +1., 1.});

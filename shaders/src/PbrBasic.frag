@@ -6,10 +6,11 @@
 #include "utils.glsl"
 #include "tone_mapping.glsl"
 #include "pbr_lighting.glsl"
+#include "config.glsl"
 
 layout(location=0) in vec3 fragViewPos;
 layout(location=1) in vec3 fragViewNormal;
-layout(location=2) in vec3 fragLightPos;
+layout(location=2) in vec3 fragLightPos[NUM_LIGHTS];
 
 // set=3 is required, see SDL3's documentation for SDL_CreateGPUShader
 // https://wiki.libsdl.org/SDL3/SDL_CreateGPUShader
@@ -19,14 +20,20 @@ layout (set=3, binding=0) uniform Material {
 };
 
 layout(set=3, binding=1) uniform LightBlock {
-    vec3 direction;
-    vec3 color;
-    float intensity;
+    vec3 direction[NUM_LIGHTS];
+    vec3 color[NUM_LIGHTS];
+    float intensity[NUM_LIGHTS];
+    int numLights;
 } light;
 
 layout(set=3, binding=2) uniform EffectParams {
     uint useSsao;
 } params;
+
+layout(set = 3, binding = 3) uniform ShadowAtlasInfo {
+    ivec4 lightRegions[NUM_LIGHTS];
+    uvec2 atlasSize;
+};
 
 #ifdef HAS_SHADOW_MAPS
     layout (set=2, binding=0) uniform sampler2DShadow shadowMap;
@@ -42,23 +49,28 @@ layout(location=0) out vec4 fragColor;
 #endif
 
 #ifdef HAS_SHADOW_MAPS
-float calcShadowmap(float NdotL) {
+float calcShadowmap(int lightIndex, float NdotL) {
     // float bias = max(0.05 * (1.0 - NdotL), 0.005);
     float bias = 0.005;
-    vec3 texCoords = fragLightPos;
-    texCoords.x = 0.5 + texCoords.x * 0.5;
-    texCoords.y = 0.5 - texCoords.y * 0.5;
-    texCoords.z -= bias;
-    float shadowValue = 1.0;
-    if (isCoordsInRange(texCoords)) {
-        shadowValue = texture(shadowMap, texCoords);
+    vec3 lightSpacePos = fragLightPos[lightIndex];
+    vec2 uv;
+    uv.x = 0.5 + lightSpacePos.x * 0.5;
+    uv.y = 0.5 - lightSpacePos.y * 0.5;
+    float depthRef = lightSpacePos.z - bias;
+    if (!isCoordsInRange(vec3(uv, depthRef))) {
+        return 1.0;
     }
-    return shadowValue;
+
+    ivec4 region = lightRegions[lightIndex];
+    uv = region.xy + uv * region.zw;
+    uv = uv / atlasSize;
+
+    vec3 texCoords = vec3(uv, depthRef);
+    return texture(shadowMap, texCoords);
 }
 #endif
 
 void main() {
-    vec3 lightDir = normalize(-light.direction);
     vec3 normal = normalize(fragViewNormal);
     vec3 V = normalize(-fragViewPos);
 
@@ -67,20 +79,24 @@ void main() {
         normal = -normal;
     }
 
-    vec3 Lo = calculatePbrLighting(
-        normal,
-        V,
-        lightDir,
-        material,
-        light.color,
-        light.intensity
-    );
-
+    vec3 Lo = vec3(0);
+    for(int i = 0; i < light.numLights; i++) {
+        vec3 lightDir = normalize(-light.direction[i]);
+        vec3 _lo = calculatePbrLighting(
+            normal,
+            V,
+            lightDir,
+            material,
+            light.color[i],
+            light.intensity[i]
+        );
 #ifdef HAS_SHADOW_MAPS
         float NdotL = max(dot(normal, lightDir), 0.0);
-        float shadowValue = calcShadowmap(NdotL);
-        Lo = shadowValue * Lo;
+        float shadowValue = calcShadowmap(i, NdotL);
+        _lo *= shadowValue;
 #endif
+        Lo += _lo;
+    }
 
     // Ambient term (very simple)
     vec3 ambient = vec3(0.1) * material.baseColor.rgb * material.ao;

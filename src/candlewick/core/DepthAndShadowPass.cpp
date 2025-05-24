@@ -4,15 +4,14 @@
 #include "Collision.h"
 #include "Camera.h"
 
-#include <format>
 #include <SDL3/SDL_log.h>
 
 namespace candlewick {
 
-DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
-                     SDL_GPUTexture *depth_texture, SDL_GPUTextureFormat format,
-                     const Config &config)
-    : _device(device), depthTexture(depth_texture) {
+static SDL_GPUGraphicsPipeline *
+create_depth_pass_pipeline(const Device &device, const MeshLayout &layout,
+                           SDL_GPUTextureFormat format,
+                           const DepthPass::Config config) {
   auto vertexShader = Shader::fromMetadata(device, "ShadowCast.vert");
   auto fragmentShader = Shader::fromMetadata(device, "ShadowCast.frag");
   SDL_GPUGraphicsPipelineCreateInfo pipeline_desc{
@@ -35,7 +34,14 @@ DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
                    .depth_stencil_format = format,
                    .has_depth_stencil_target = true},
   };
-  pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
+  return SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
+}
+
+DepthPass::DepthPass(const Device &device, const MeshLayout &layout,
+                     SDL_GPUTexture *depth_texture, SDL_GPUTextureFormat format,
+                     const Config &config)
+    : _device(device), depthTexture(depth_texture) {
+  pipeline = create_depth_pass_pipeline(device, layout, format, config);
   if (!pipeline)
     terminate_with_message("Failed to create graphics pipeline: {:s}.",
                            SDL_GetError());
@@ -93,6 +99,11 @@ void DepthPass::render(CommandBuffer &command_buffer, const Mat4f &viewProj,
   SDL_EndGPURenderPass(render_pass);
 }
 
+static SDL_GPUViewport
+gpuViewportFromAtlasRegion(const ShadowMapPass::AtlasRegion &reg) {
+  return {float(reg.x), float(reg.y), float(reg.w), float(reg.h), 0.f, 1.f};
+};
+
 void DepthPass::release() noexcept {
   if (_device) {
     if (pipeline) {
@@ -107,8 +118,10 @@ void DepthPass::release() noexcept {
 
 ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
                              SDL_GPUTextureFormat format, const Config &config)
-    : _device(device) {
+    : _device(device), _numLights(config.numLights) {
 
+  const Uint32 atlasWidth = config.numLights * config.width;
+  const Uint32 atlasHeight = config.height;
   // TEXTURE
   // 2k x 2k texture
   SDL_GPUTextureCreateInfo texInfo{
@@ -116,16 +129,33 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
       .format = format,
       .usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET |
                SDL_GPU_TEXTUREUSAGE_SAMPLER,
-      .width = config.width,
-      .height = config.height,
+      .width = atlasWidth,
+      .height = atlasHeight,
       .layer_count_or_depth = 1,
       .num_levels = 1,
       .sample_count = SDL_GPU_SAMPLECOUNT_1,
       .props = 0,
   };
+  SDL_Log("Building shadow atlas.\n"
+          "  > Dims: (%d, %d)\n"
+          "  > %d regions:",
+          atlasWidth, atlasHeight, config.numLights);
 
-  shadowMap = Texture(device, texInfo, "Shadow map");
-  _depthPass = DepthPass(device, layout, shadowMap, config.depthPassConfig);
+  // compute atlas regions
+  for (Uint32 i = 0; i < config.numLights; i++) {
+    regions[i] = AtlasRegion(i * config.width, 0, config.width, config.height);
+    const auto &reg = regions[i];
+    regions[i] = reg;
+    SDL_Log("    - %d: [%d, %d] x [%d, %d]", i, reg.x, reg.x + reg.w, reg.y,
+            reg.y + reg.h);
+  }
+
+  shadowMap = Texture(device, texInfo, "Shadow atlas");
+  pipeline = create_depth_pass_pipeline(device, layout, format,
+                                        config.depthPassConfig);
+  if (!pipeline)
+    terminate_with_message("Failed to create shadow cast pipeline: {:s}.",
+                           SDL_GetError());
 
   SDL_GPUSamplerCreateInfo sample_desc{
       .min_filter = SDL_GPU_FILTER_LINEAR,
@@ -142,63 +172,106 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
 
 ShadowMapPass::ShadowMapPass(ShadowMapPass &&other) noexcept
     : _device(other._device)
-    , _depthPass(std::move(other._depthPass))
+    , _numLights(other._numLights)
     , shadowMap(std::move(other.shadowMap))
-    , sampler(other.sampler) {
+    , pipeline(other.pipeline)
+    , sampler(other.sampler)
+    , cam(std::move(other.cam))
+    , regions(std::move(other.regions)) {
   other._device = nullptr;
+  other.pipeline = nullptr;
   other.sampler = nullptr;
 }
 
 ShadowMapPass &ShadowMapPass::operator=(ShadowMapPass &&other) noexcept {
   _device = other._device;
-  _depthPass = std::move(other._depthPass);
+  _numLights = other._numLights;
   shadowMap = std::move(other.shadowMap);
   sampler = other.sampler;
+  pipeline = other.pipeline;
+  cam = std::move(other.cam);
+  regions = std::move(other.regions);
 
   other._device = nullptr;
+  other.pipeline = nullptr;
   other.sampler = nullptr;
   return *this;
 }
 
 void ShadowMapPass::release() noexcept {
-  _depthPass.release();
   if (_device) {
     if (sampler) {
       SDL_ReleaseGPUSampler(_device, sampler);
     }
     sampler = nullptr;
+    if (pipeline) {
+      SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
+    }
+    pipeline = nullptr;
   }
   shadowMap.destroy();
   _device = nullptr;
 }
 
+void ShadowMapPass::render(CommandBuffer &command_buffer,
+                           std::span<const OpaqueCastable> castables) {
+  SDL_GPUDepthStencilTargetInfo depth_info{
+      .texture = shadowMap,
+      .clear_depth = 1.0f,
+      .load_op = SDL_GPU_LOADOP_CLEAR,
+      .store_op = SDL_GPU_STOREOP_STORE,
+      .stencil_load_op = SDL_GPU_LOADOP_DONT_CARE,
+      .stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
+  };
+
+  SDL_GPURenderPass *render_pass =
+      SDL_BeginGPURenderPass(command_buffer, nullptr, 0, &depth_info);
+  SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+
+  for (size_t i = 0; i < numLights(); i++) {
+    SDL_GPUViewport vp = gpuViewportFromAtlasRegion(regions[i]);
+    SDL_SetGPUViewport(render_pass, &vp);
+
+    const Mat4f viewProj = cam[i].viewProj();
+
+    for (auto &[mesh, tr] : castables) {
+      assert(validateMesh(mesh));
+      rend::bindMesh(render_pass, mesh);
+
+      GpuMat4 mvp = viewProj * tr;
+      command_buffer.pushVertexUniform(0, mvp);
+      rend::draw(render_pass, mesh);
+    }
+  }
+
+  SDL_EndGPURenderPass(render_pass);
+}
+
 void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
-                                 const DirectionalLight &dirLight,
+                                 std::span<const DirectionalLight> dirLight,
                                  std::span<const OpaqueCastable> castables,
                                  const FrustumCornersType &worldSpaceCorners) {
-
-  auto [frustumCenter, radius] =
-      frustumBoundingSphereCenterRadius(worldSpaceCorners);
-  radius = std::ceil(radius * 16.f) / 16.f;
-
-  auto &lightView = passInfo.cam.view;
-  auto &lightProj = passInfo.cam.projection;
-
-  const Float3 eye = frustumCenter - radius * dirLight.direction.normalized();
   using Eigen::Vector3d;
 
-  AABB bounds{Vector3d::Constant(-radius), Vector3d::Constant(radius)};
-  lightView = lookAt(eye, frustumCenter);
-  lightProj =
-      shadowOrthographicMatrix({bounds.width(), bounds.height()},
-                               float(bounds.min_.z()), float(bounds.max_.z()));
+  auto [center, radius] = frustumBoundingSphereCenterRadius(worldSpaceCorners);
+  radius = std::ceil(radius * 16.f) / 16.f;
 
-  Mat4f viewProj = lightView * lightProj;
-  passInfo.render(cmdBuf, viewProj, castables);
+  for (size_t i = 0; i < passInfo.numLights(); i++) {
+    const Float3 eye = center - radius * dirLight[i].direction.normalized();
+    auto &lightView = passInfo.cam[i].view;
+    auto &lightProj = passInfo.cam[i].projection;
+    lightView = lookAt(eye, center, Float3::UnitZ());
+
+    AABB bounds{Vector3d::Constant(-radius), Vector3d::Constant(radius)};
+    lightProj = shadowOrthographicMatrix({bounds.width(), bounds.height()},
+                                         float(bounds.min_.z()),
+                                         float(bounds.max_.z()));
+  }
+  passInfo.render(cmdBuf, castables);
 }
 
 void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
-                              const DirectionalLight &dirLight,
+                              std::span<const DirectionalLight> dirLight,
                               std::span<const OpaqueCastable> castables,
                               const AABB &worldSceneBounds) {
   using Eigen::Vector3d;
@@ -206,17 +279,18 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
   Float3 center = worldSceneBounds.center().cast<float>();
   float radius = 0.5f * float(worldSceneBounds.size());
   radius = std::ceil(radius * 16.f) / 16.f;
-  Float3 eye = center - radius * dirLight.direction.normalized();
-  auto &lightView = passInfo.cam.view;
-  auto &lightProj = passInfo.cam.projection;
-  lightView = lookAt(eye, center, Float3::UnitZ());
 
-  AABB bounds{Vector3d::Constant(-radius), Vector3d::Constant(radius)};
-  lightProj =
-      shadowOrthographicMatrix({bounds.width(), bounds.height()},
-                               float(bounds.min_.z()), float(bounds.max_.z()));
+  for (size_t i = 0; i < passInfo.numLights(); i++) {
+    const Float3 eye = center - radius * dirLight[i].direction.normalized();
+    auto &lightView = passInfo.cam[i].view;
+    auto &lightProj = passInfo.cam[i].projection;
+    lightView = lookAt(eye, center, Float3::UnitZ());
 
-  Mat4f viewProj = lightProj * lightView.matrix();
-  passInfo.render(cmdBuf, viewProj, castables);
+    AABB bounds{Vector3d::Constant(-radius), Vector3d::Constant(radius)};
+    lightProj = shadowOrthographicMatrix({bounds.width(), bounds.height()},
+                                         float(bounds.min_.z()),
+                                         float(bounds.max_.z()));
+  }
+  passInfo.render(cmdBuf, castables);
 }
 } // namespace candlewick

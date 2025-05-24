@@ -15,9 +15,10 @@ struct PbrMaterial
 
 struct LightBlock
 {
-    float3 direction;
-    packed_float3 color;
-    float intensity;
+    float3 direction[2];
+    float3 color[2];
+    float4 intensity[2];
+    int numLights;
 };
 
 struct PbrMaterial_1
@@ -143,30 +144,34 @@ float3 uncharted2ToneMapping(thread const float3& color)
     return curr * white_scale;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant Material& _347 [[buffer(0)]], constant LightBlock& light [[buffer(1)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant Material& _370 [[buffer(0)]], constant LightBlock& light [[buffer(1)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
-    float3 lightDir = fast::normalize(-light.direction);
     float3 normal = fast::normalize(in.fragViewNormal);
     float3 V = fast::normalize(-in.fragViewPos);
-    float3 param = normal;
-    float3 param_1 = V;
-    float3 param_2 = lightDir;
-    PbrMaterial _358;
-    _358.baseColor = _347.material.baseColor;
-    _358.metalness = _347.material.metalness;
-    _358.roughness = _347.material.roughness;
-    _358.ao = _347.material.ao;
-    PbrMaterial param_3 = _358;
-    float3 param_4 = float3(light.color);
-    float param_5 = light.intensity;
-    float3 Lo = calculatePbrLighting(param, param_1, param_2, param_3, param_4, param_5);
-    float3 ambient = (float3(0.02999999932944774627685546875) * _347.material.baseColor.xyz) * _347.material.ao;
+    float3 Lo = float3(0.0);
+    for (uint i = 0u; i < uint(light.numLights); i++)
+    {
+        float3 lightDir = fast::normalize(-light.direction[i]);
+        float3 param = normal;
+        float3 param_1 = V;
+        float3 param_2 = lightDir;
+        PbrMaterial _383;
+        _383.baseColor = _370.material.baseColor;
+        _383.metalness = _370.material.metalness;
+        _383.roughness = _370.material.roughness;
+        _383.ao = _370.material.ao;
+        PbrMaterial param_3 = _383;
+        float3 param_4 = light.color[i];
+        float param_5 = light.intensity[i].x;
+        Lo += calculatePbrLighting(param, param_1, param_2, param_3, param_4, param_5);
+    }
+    float3 ambient = (float3(0.02999999932944774627685546875) * _370.material.baseColor.xyz) * _370.material.ao;
     float3 color = ambient + Lo;
     float3 param_6 = color;
     color = uncharted2ToneMapping(param_6);
     color = powr(color, float3(0.4545454680919647216796875));
-    float alpha = _347.material.baseColor.w;
+    float alpha = _370.material.baseColor.w;
     float z = gl_FragCoord.z;
     float w1 = (alpha * 10.0) + 0.00999999977648258209228515625;
     float weight = fast::clamp(w1 * (1.0 - (z * 0.300000011920928955078125)), 0.00999999977648258209228515625, 1000.0);

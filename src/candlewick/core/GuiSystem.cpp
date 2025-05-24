@@ -107,6 +107,21 @@ void guiAddLightControls(DirectionalLight &light) {
   ImGui::ColorEdit3("color", light.color.data());
 }
 
+void guiAddLightControls(std::span<DirectionalLight> lights) {
+  Uint16 i = 0;
+  char label[32];
+  for (auto &light : lights) {
+    SDL_snprintf(label, 32, "light###%d", i);
+    ImGui::PushID(label);
+    ImGui::Bullet();
+    ImGui::Indent();
+    guiAddLightControls(light);
+    ImGui::Unindent();
+    ImGui::PopID();
+    i++;
+  }
+}
+
 void guiAddDisableCheckbox(const char *label, entt::registry &reg,
                            entt::entity id, bool &flag) {
   if (ImGui::Checkbox(label, &flag)) {

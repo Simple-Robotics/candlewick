@@ -1,12 +1,14 @@
 #version 450
 
+#include "config.glsl"
+
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 
 // world-space position-normal
 layout(location=0) out vec3 fragViewPos;
 layout(location=1) out vec3 fragViewNormal;
-layout(location=2) out vec3 fragLightPos;
+layout(location=2) out vec3 fragLightPos[NUM_LIGHTS];
 
 
 // set=1 is required, for some reason
@@ -19,8 +21,9 @@ layout(set=1, binding=0) uniform TranformBlock
 
 layout(set=1, binding=1) uniform LightBlockV
 {
-    mat4 lightMvp;
-};
+    mat4 mvp[NUM_LIGHTS];
+    int numLights;
+} lights;
 
 out gl_PerVertex {
     invariant vec4 gl_Position;
@@ -32,6 +35,8 @@ void main() {
     fragViewNormal = normalize(normalMatrix * inNormal);
     gl_Position = mvp * hp;
 
-    vec4 flps = lightMvp * hp;
-    fragLightPos = flps.xyz / flps.w;
+    for (uint i = 0; i < lights.numLights; i++) {
+        vec4 flps = lights.mvp[i] * hp;
+        fragLightPos[i] = flps.xyz / flps.w;
+    }
 }

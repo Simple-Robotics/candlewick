@@ -50,9 +50,12 @@ struct Shader {
   /// \brief Load shader from metadata.
   static Shader fromMetadata(const Device &device, const char *filename);
 
+  SDL_GPUShaderStage stage() const noexcept { return _stage; }
+
 private:
   SDL_GPUShader *_shader;
   SDL_GPUDevice *_device;
+  SDL_GPUShaderStage _stage;
 };
 
 inline Shader::Shader(Shader &&other) noexcept
