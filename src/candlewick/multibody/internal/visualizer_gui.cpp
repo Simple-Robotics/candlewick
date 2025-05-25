@@ -157,7 +157,7 @@ static void mouse_motion_handler(CylindricalCamera &controller,
     controller.viewportDrag(mvt, params.rotSensitivity, params.panSensitivity,
                             params.yInvert);
   }
-  if (mb & params.mouseButtons.panButton) {
+  if (mb & SDL_BUTTON_MASK(params.mouseButtons.panButton)) {
     controller.pan(mvt, params.panSensitivity);
   }
   if (mb & SDL_BUTTON_RMASK) {
@@ -190,6 +190,13 @@ void Visualizer::processEvents() {
     case SDL_EVENT_MOUSE_WHEEL:
       if (m_cameraControl)
         mouse_wheel_handler(this->controller, cameraParams, event.wheel);
+      break;
+    case SDL_EVENT_KEY_DOWN:
+      auto keyEvent = event.key;
+      if (keyEvent.key == SDLK_H) {
+        // toggle GUI on and off
+        m_showGui = !m_showGui;
+      }
       break;
     }
   }

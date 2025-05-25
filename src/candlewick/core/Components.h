@@ -3,6 +3,8 @@
 #include "Mesh.h"
 #include "MaterialUniform.h"
 
+#include <entt/entity/fwd.hpp>
+
 namespace candlewick {
 
 /// Tag struct for denoting an entity as opaque, for render pass organization.
@@ -37,5 +39,12 @@ struct MeshMaterialComponent {
 /// \returns whether the entity is transparent.
 bool updateTransparencyClassification(entt::registry &reg, entt::entity entity,
                                       const MeshMaterialComponent &mmc);
+
+inline void toggleDisable(entt::registry &reg, entt::entity id, bool flag) {
+  if (flag)
+    reg.remove<Disable>(id);
+  else
+    reg.emplace<Disable>(id);
+}
 
 } // namespace candlewick

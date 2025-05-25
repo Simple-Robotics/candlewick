@@ -125,7 +125,7 @@ void guiAddLightControls(std::span<DirectionalLight> lights) {
 void guiAddDisableCheckbox(const char *label, entt::registry &reg,
                            entt::entity id, bool &flag) {
   if (ImGui::Checkbox(label, &flag)) {
-    flag ? (void)reg.remove<Disable>(id) : reg.emplace<Disable>(id);
+    toggleDisable(reg, id, flag);
   }
 }
 
