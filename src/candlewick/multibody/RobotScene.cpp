@@ -33,7 +33,6 @@ struct alignas(16) LightSpaceMatricesUbo {
 struct alignas(16) ShadowAtlasInfoUbo {
   using Vec4u = Eigen::Matrix<Uint32, 4, 1, Eigen::DontAlign>;
   std::array<Vec4u, kNumLights> regions;
-  std::array<Uint32, 2> atlasSize;
 };
 
 void updateRobotTransforms(entt::registry &registry,
@@ -455,7 +454,6 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   const bool enable_shadows = m_config.enable_shadows;
   ShadowAtlasInfoUbo shadowAtlasUbo{
       .regions{},
-      .atlasSize{shadowPass.atlasDims()},
   };
   Mat4f lightViewProj[kNumLights];
   for (size_t i = 0; i < numLights; i++) {
