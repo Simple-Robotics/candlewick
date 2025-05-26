@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- core/GuiSystem : add overload for adding multiple GUI elements for `DirectionalLight`s
-- core/CommandBuffer.h : add overload for C-style arrays to uniform-pushing methods
-- core/Shader : store shader stage
-- core/DepthAndShadowPass.h : handle multiple shadow maps using a texture atlas
-- multibody : handle two-light setup w/ shadow mapping
-- multibody/Visualizer : use `H` key to toggle GUI
+- core/GuiSystem : add overload for adding multiple GUI elements for `DirectionalLight`s (https://github.com/Simple-Robotics/candlewick/pull/69)
+- core/CommandBuffer.h : add overload for C-style arrays to uniform-pushing methods (https://github.com/Simple-Robotics/candlewick/pull/69)
+- core/Shader : store shader stage (https://github.com/Simple-Robotics/candlewick/pull/69)
+- core/DepthAndShadowPass.h : handle multiple shadow maps using a texture atlas (https://github.com/Simple-Robotics/candlewick/pull/69)
+- multibody : handle two-light setup w/ shadow mapping (https://github.com/Simple-Robotics/candlewick/pull/69)
+- multibody/Visualizer : use `H` key to toggle GUI (https://github.com/Simple-Robotics/candlewick/pull/70)
 
 ## [0.1.0] - 2025-05-21
 
