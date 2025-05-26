@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core/DepthAndShadowPass.h : handle multiple shadow maps using a texture atlas (https://github.com/Simple-Robotics/candlewick/pull/69)
 - multibody : handle two-light setup w/ shadow mapping (https://github.com/Simple-Robotics/candlewick/pull/69)
 - multibody/Visualizer : use `H` key to toggle GUI (https://github.com/Simple-Robotics/candlewick/pull/70)
+- shaders : Soft shadows in PBR using percentage-closer filtering (PCF) (https://github.com/Simple-Robotics/candlewick/pull/71)
+- core : Tighter shadow frustum around the world-scene AABB (https://github.com/Simple-Robotics/candlewick/pull/71)
+- core : add `getAABBCorners()` util function in `Collision.h` header (https://github.com/Simple-Robotics/candlewick/pull/71)
 
 ## [0.1.0] - 2025-05-21
 
