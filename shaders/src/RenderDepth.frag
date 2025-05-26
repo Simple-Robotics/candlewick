@@ -1,7 +1,7 @@
 // To be used with DrawQuad.vert
 #version 450
 
-#include "depth_utils.glsl"
+#include "utils.glsl"
 
 #define VIZ_GRAYSCALE   0
 #define VIZ_HEATMAP     1
