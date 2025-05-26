@@ -61,11 +61,26 @@ float calcShadowmap(int lightIndex, float NdotL, ivec2 atlasSize) {
     }
 
     ivec4 region = lightRegions[lightIndex];
+    vec2 regionMin = vec2(region.xy) / atlasSize;
+    vec2 regionMax = vec2(region.xy + region.zw) / atlasSize;
     uv = region.xy + uv * region.zw;
     uv = uv / atlasSize;
 
-    vec3 texCoords = vec3(uv, depthRef);
-    return texture(shadowMap, texCoords);
+    float value = 0.0;
+    const vec2 offsets = 1.0 / atlasSize;
+    // pcf loop
+    const int halfKernel = 1;
+    const float weight = 1.0 / pow(2 * halfKernel + 1, 2);
+    for (int i = -halfKernel; i <= halfKernel; i++) {
+        for (int j = -halfKernel; j <= halfKernel; j++) {
+            vec2 offUV = uv + vec2(i, j) * offsets;
+            offUV = clamp(offUV, regionMin, regionMax);
+            vec3 texCoords = vec3(offUV, depthRef);
+            value += weight * texture(shadowMap, texCoords);
+        }
+    }
+
+    return value;
 }
 #endif
 
