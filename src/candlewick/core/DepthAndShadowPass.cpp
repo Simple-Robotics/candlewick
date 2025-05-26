@@ -273,23 +273,32 @@ void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
 void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               std::span<const DirectionalLight> dirLight,
                               std::span<const OpaqueCastable> castables,
-                              const AABB &worldSceneBounds) {
+                              const AABB &worldAABB) {
   using Eigen::Vector3d;
 
-  Float3 center = worldSceneBounds.center().cast<float>();
-  float radius = 0.5f * float(worldSceneBounds.size());
-  radius = std::ceil(radius * 16.f) / 16.f;
+  Float3 center = worldAABB.center().cast<float>();
 
   for (size_t i = 0; i < passInfo.numLights(); i++) {
-    const Float3 eye = center - radius * dirLight[i].direction.normalized();
+    Float3 tmpEye = center - 100.0f * dirLight[i].direction.normalized();
+    Mat4f tmplightView = lookAt(tmpEye, center, Float3::UnitZ());
+
     auto &lightView = passInfo.cam[i].view;
     auto &lightProj = passInfo.cam[i].projection;
-    lightView = lookAt(eye, center, Float3::UnitZ());
 
-    AABB bounds{Vector3d::Constant(-radius), Vector3d::Constant(radius)};
+    Mat3f R = tmplightView.topLeftCorner<3, 3>();
+    Float3 t = tmplightView.topRightCorner<3, 1>();
+    AABB bounds = coal::translate(coal::rotate(worldAABB, R.cast<double>()),
+                                  t.cast<double>());
+
+    Float3 lightSpaceCenter = bounds.center().cast<float>();
+    float radius = float(bounds.max_.z());
+
+    Float3 finalEye = center - radius * dirLight[i].direction.normalized();
+
+    lightView = lookAt(finalEye, center, Float3::UnitZ());
     lightProj = shadowOrthographicMatrix({bounds.width(), bounds.height()},
-                                         float(bounds.min_.z()),
-                                         float(bounds.max_.z()));
+                                         float(bounds.max_.z()),
+                                         float(bounds.min_.z()));
   }
   passInfo.render(cmdBuf, castables);
 }
