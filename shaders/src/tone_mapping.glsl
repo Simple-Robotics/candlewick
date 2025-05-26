@@ -5,10 +5,9 @@ vec3 reinhardToneMapping(vec3 color) {
     return color / (color + vec3(1.0));
 }
 
-// Exposure + Gamma (Simplified)
 vec3 exposureToneMapping(vec3 color, float exposure) {
-    // Exposure adjustment followed by gamma correction
-    return pow(1.0 - exp(-color * exposure), vec3(1.0/2.2));
+    // Exposure adjustment
+    return 1.0 - exp(-color * exposure);
 }
 
 // ACES Filmic Tone Mapping (Academy Color Encoding System)

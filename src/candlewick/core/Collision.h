@@ -24,4 +24,20 @@ inline Mat4f toTransformationMatrix(const OBB &obb) {
   return T;
 }
 
+inline std::array<Float3, 8> getAABBCorners(const AABB &aabb) {
+  const Float3 min = aabb.min_.cast<float>();
+  const Float3 max = aabb.max_.cast<float>();
+
+  return {
+      Float3{min.x(), min.y(), min.z()}, // 000
+      Float3{max.x(), min.y(), min.z()}, // 100
+      Float3{min.x(), max.y(), min.z()}, // 010
+      Float3{max.x(), max.y(), min.z()}, // 110
+      Float3{min.x(), min.y(), max.z()}, // 001
+      Float3{max.x(), min.y(), max.z()}, // 101
+      Float3{min.x(), max.y(), max.z()}, // 011
+      Float3{max.x(), max.y(), max.z()}, // 111
+  };
+}
+
 } // namespace candlewick

@@ -32,7 +32,6 @@ layout(set=3, binding=2) uniform EffectParams {
 
 layout(set = 3, binding = 3) uniform ShadowAtlasInfo {
     ivec4 lightRegions[NUM_LIGHTS];
-    uvec2 atlasSize;
 };
 
 #ifdef HAS_SHADOW_MAPS
@@ -49,7 +48,7 @@ layout(location=0) out vec4 fragColor;
 #endif
 
 #ifdef HAS_SHADOW_MAPS
-float calcShadowmap(int lightIndex, float NdotL) {
+float calcShadowmap(int lightIndex, float NdotL, ivec2 atlasSize) {
     // float bias = max(0.05 * (1.0 - NdotL), 0.005);
     float bias = 0.005;
     vec3 lightSpacePos = fragLightPos[lightIndex];
@@ -62,17 +61,35 @@ float calcShadowmap(int lightIndex, float NdotL) {
     }
 
     ivec4 region = lightRegions[lightIndex];
+    vec2 regionMin = vec2(region.xy) / atlasSize;
+    vec2 regionMax = vec2(region.xy + region.zw) / atlasSize;
     uv = region.xy + uv * region.zw;
     uv = uv / atlasSize;
 
-    vec3 texCoords = vec3(uv, depthRef);
-    return texture(shadowMap, texCoords);
+    float value = 0.0;
+    const vec2 offsets = 1.0 / atlasSize;
+    // pcf loop
+    const int halfKernel = 1;
+    const float weight = 1.0 / pow(2 * halfKernel + 1, 2);
+    for (int i = -halfKernel; i <= halfKernel; i++) {
+        for (int j = -halfKernel; j <= halfKernel; j++) {
+            vec2 offUV = uv + vec2(i, j) * offsets;
+            offUV = clamp(offUV, regionMin, regionMax);
+            vec3 texCoords = vec3(offUV, depthRef);
+            value += weight * texture(shadowMap, texCoords);
+        }
+    }
+
+    return value;
 }
 #endif
 
 void main() {
     vec3 normal = normalize(fragViewNormal);
-    vec3 V = normalize(-fragViewPos);
+    const vec3 V = normalize(-fragViewPos);
+#ifdef HAS_SHADOW_MAPS
+    const ivec2 atlasSize = textureSize(shadowMap, 0).xy;
+#endif
 
     if (!gl_FrontFacing) {
         // Flip normal for back faces
@@ -91,8 +108,8 @@ void main() {
             light.intensity[i]
         );
 #ifdef HAS_SHADOW_MAPS
-        float NdotL = max(dot(normal, lightDir), 0.0);
-        float shadowValue = calcShadowmap(i, NdotL);
+        const float NdotL = max(dot(normal, lightDir), 0.0);
+        const float shadowValue = calcShadowmap(i, NdotL, atlasSize);
         _lo *= shadowValue;
 #endif
         Lo += _lo;
