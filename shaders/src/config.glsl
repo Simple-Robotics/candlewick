@@ -1,1 +1,1 @@
-#define MAX_NUM_LIGHTS 2
+#define MAX_NUM_LIGHTS 4

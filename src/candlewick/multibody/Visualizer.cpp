@@ -52,7 +52,6 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
 
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
-  rconfig.shadow_config.numLights = kNumLights;
   robotScene.setConfig(rconfig);
   robotScene.loadModels(visualModel(), visualData());
 

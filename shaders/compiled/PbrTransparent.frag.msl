@@ -15,9 +15,9 @@ struct PbrMaterial
 
 struct LightBlock
 {
-    float3 direction[2];
-    float3 color[2];
-    float4 intensity[2];
+    float3 direction[4];
+    float3 color[4];
+    float4 intensity[4];
     int numLights;
 };
 

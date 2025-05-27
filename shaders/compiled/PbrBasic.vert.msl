@@ -53,7 +53,7 @@ struct TranformBlock
 
 struct LightBlockV
 {
-    float4x4 mvp[2];
+    float4x4 mvp[4];
     int numLights;
 };
 
@@ -63,6 +63,8 @@ struct main0_out
     float3 fragViewNormal [[user(locn1)]];
     float3 fragLightPos_0 [[user(locn2)]];
     float3 fragLightPos_1 [[user(locn3)]];
+    float3 fragLightPos_2 [[user(locn4)]];
+    float3 fragLightPos_3 [[user(locn5)]];
     float4 gl_Position [[position, invariant]];
 };
 
@@ -75,7 +77,7 @@ struct main0_in
 vertex main0_out main0(main0_in in [[stage_in]], constant TranformBlock& _25 [[buffer(0)]], constant LightBlockV& lights [[buffer(1)]])
 {
     main0_out out = {};
-    spvUnsafeArray<float3, 2> fragLightPos = {};
+    spvUnsafeArray<float3, 4> fragLightPos = {};
     float4 hp = float4(in.inPosition, 1.0);
     out.fragViewPos = float3((_25.modelView * hp).xyz);
     out.fragViewNormal = fast::normalize(_25.normalMatrix * in.inNormal);
@@ -88,5 +90,7 @@ vertex main0_out main0(main0_in in [[stage_in]], constant TranformBlock& _25 [[b
     }
     out.fragLightPos_0 = fragLightPos[0];
     out.fragLightPos_1 = fragLightPos[1];
+    out.fragLightPos_2 = fragLightPos[2];
+    out.fragLightPos_3 = fragLightPos[3];
     return out;
 }

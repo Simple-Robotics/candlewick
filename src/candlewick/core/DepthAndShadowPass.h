@@ -93,7 +93,7 @@ public:
   ~DepthPass() noexcept { this->release(); }
 };
 
-static constexpr size_t kNumLights = 2;
+static constexpr size_t kNumLights = 4;
 
 /// \ingroup depth_pass
 /// \brief Class for defining the shadow atlas and rendering it out.
@@ -113,7 +113,7 @@ public:
     float depth_bias_slope_factor = 0.f;
     bool enable_depth_bias = false;
     bool enable_depth_clip = false;
-    Uint32 numLights = kNumLights;
+    Uint32 numLights = 2;
   };
   /// %Texture atlas region, implicitly converts to an SDLGPU viewport.
   struct AtlasRegion {
