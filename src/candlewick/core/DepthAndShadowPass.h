@@ -96,6 +96,18 @@ public:
 static constexpr size_t kNumLights = 4;
 
 /// \ingroup depth_pass
+struct ShadowPassConfig {
+  // default is 2k x 2k texture
+  Uint32 width = 2048;
+  Uint32 height = 2048;
+  float depth_bias_constant_factor = 0.f;
+  float depth_bias_slope_factor = 0.f;
+  bool enable_depth_bias = false;
+  bool enable_depth_clip = false;
+  Uint32 numLights = 2;
+};
+
+/// \ingroup depth_pass
 /// \brief Class for defining the shadow atlas and rendering it out.
 ///
 /// The user has to take care of setting the "cameras" corresponding to the
@@ -104,17 +116,10 @@ class ShadowMapPass {
   SDL_GPUDevice *_device = nullptr;
   Uint32 _numLights = 0;
 
+  void configureAtlasRegions(const ShadowPassConfig &config);
+
 public:
-  struct Config {
-    // default is 2k x 2k texture
-    Uint32 width = 2048;
-    Uint32 height = 2048;
-    float depth_bias_constant_factor = 0.f;
-    float depth_bias_slope_factor = 0.f;
-    bool enable_depth_bias = false;
-    bool enable_depth_clip = false;
-    Uint32 numLights = 2;
-  };
+  using Config = ShadowPassConfig;
   /// %Texture atlas region, implicitly converts to an SDLGPU viewport.
   struct AtlasRegion {
     Uint32 x;
@@ -146,17 +151,11 @@ public:
 
   void render(CommandBuffer &cmdBuf, std::span<const OpaqueCastable> castables);
 
-  std::array<Uint32, 2> atlasDims() const {
-    return {shadowMap.width(), shadowMap.height()};
-  }
-
   void release() noexcept;
   ~ShadowMapPass() noexcept { this->release(); }
 
   auto numLights() const noexcept { return _numLights; }
 };
-
-using ShadowPassConfig = ShadowMapPass::Config;
 
 /// \addtogroup depth_pass
 /// \section depth_testing Depth testing in modern APIs
@@ -178,6 +177,7 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               std::span<const OpaqueCastable> castables,
                               const AABB &worldSceneBounds);
 
+/// \ingroup depth_pass
 /// \brief Render shadow pass, using a provided world-space frustum.
 ///
 /// This routine creates a bounding sphere around the frustum, and compute

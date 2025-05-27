@@ -116,6 +116,22 @@ void DepthPass::release() noexcept {
   _device = nullptr;
 }
 
+void ShadowMapPass::configureAtlasRegions(const Config &config) {
+  SDL_Log("Building shadow atlas.\n"
+          "  > Dims: (%d, %d)\n"
+          "  > %d regions:",
+          shadowMap.width(), shadowMap.height(), config.numLights);
+
+  // compute atlas regions
+  for (Uint32 i = 0; i < config.numLights; i++) {
+    regions[i] = AtlasRegion(i * config.width, 0, config.width, config.height);
+    const auto &reg = regions[i];
+    regions[i] = reg;
+    SDL_Log("    - %d: [%d, %d] x [%d, %d]", i, reg.x, reg.x + reg.w, reg.y,
+            reg.y + reg.h);
+  }
+}
+
 ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
                              SDL_GPUTextureFormat format, const Config &config)
     : _device(device), _numLights(config.numLights) {
@@ -136,19 +152,8 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
       .sample_count = SDL_GPU_SAMPLECOUNT_1,
       .props = 0,
   };
-  SDL_Log("Building shadow atlas.\n"
-          "  > Dims: (%d, %d)\n"
-          "  > %d regions:",
-          atlasWidth, atlasHeight, config.numLights);
 
-  // compute atlas regions
-  for (Uint32 i = 0; i < config.numLights; i++) {
-    regions[i] = AtlasRegion(i * config.width, 0, config.width, config.height);
-    const auto &reg = regions[i];
-    regions[i] = reg;
-    SDL_Log("    - %d: [%d, %d] x [%d, %d]", i, reg.x, reg.x + reg.w, reg.y,
-            reg.y + reg.h);
-  }
+  this->configureAtlasRegions(config);
 
   shadowMap = Texture(device, texInfo, "Shadow atlas");
   pipeline = create_depth_pass_pipeline(device, layout, format,
