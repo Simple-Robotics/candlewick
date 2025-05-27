@@ -152,7 +152,13 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
 
   shadowMap = Texture(device, texInfo, "Shadow atlas");
   pipeline = create_depth_pass_pipeline(device, layout, format,
-                                        config.depthPassConfig);
+                                        {
+                                            SDL_GPU_CULLMODE_FRONT,
+                                            config.depth_bias_constant_factor,
+                                            config.depth_bias_slope_factor,
+                                            config.enable_depth_bias,
+                                            config.enable_depth_clip,
+                                        });
   if (!pipeline)
     terminate_with_message("Failed to create shadow cast pipeline: {:s}.",
                            SDL_GetError());

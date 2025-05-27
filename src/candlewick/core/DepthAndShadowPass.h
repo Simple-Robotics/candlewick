@@ -109,13 +109,10 @@ public:
     // default is 2k x 2k texture
     Uint32 width = 2048;
     Uint32 height = 2048;
-    DepthPass::Config depthPassConfig{
-        .cull_mode = SDL_GPU_CULLMODE_NONE,
-        .depth_bias_constant_factor = 0.f,
-        .depth_bias_slope_factor = 0.f,
-        .enable_depth_bias = false,
-        .enable_depth_clip = false,
-    };
+    float depth_bias_constant_factor = 0.f;
+    float depth_bias_slope_factor = 0.f;
+    bool enable_depth_bias = false;
+    bool enable_depth_clip = false;
     Uint32 numLights = kNumLights;
   };
   /// %Texture atlas region, implicitly converts to an SDLGPU viewport.
