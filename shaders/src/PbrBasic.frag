@@ -10,7 +10,7 @@
 
 layout(location=0) in vec3 fragViewPos;
 layout(location=1) in vec3 fragViewNormal;
-layout(location=2) in vec3 fragLightPos[NUM_LIGHTS];
+layout(location=2) in vec3 fragLightPos[MAX_NUM_LIGHTS];
 
 // set=3 is required, see SDL3's documentation for SDL_CreateGPUShader
 // https://wiki.libsdl.org/SDL3/SDL_CreateGPUShader
@@ -20,9 +20,9 @@ layout (set=3, binding=0) uniform Material {
 };
 
 layout(set=3, binding=1) uniform LightBlock {
-    vec3 direction[NUM_LIGHTS];
-    vec3 color[NUM_LIGHTS];
-    float intensity[NUM_LIGHTS];
+    vec3 direction[MAX_NUM_LIGHTS];
+    vec3 color[MAX_NUM_LIGHTS];
+    float intensity[MAX_NUM_LIGHTS];
     int numLights;
 } light;
 
@@ -31,7 +31,7 @@ layout(set=3, binding=2) uniform EffectParams {
 } params;
 
 layout(set = 3, binding = 3) uniform ShadowAtlasInfo {
-    ivec4 lightRegions[NUM_LIGHTS];
+    ivec4 lightRegions[MAX_NUM_LIGHTS];
 };
 
 #ifdef HAS_SHADOW_MAPS
@@ -61,10 +61,10 @@ float calcShadowmap(int lightIndex, float NdotL, ivec2 atlasSize) {
     }
 
     ivec4 region = lightRegions[lightIndex];
-    vec2 regionMin = vec2(region.xy) / atlasSize;
-    vec2 regionMax = vec2(region.xy + region.zw) / atlasSize;
     uv = region.xy + uv * region.zw;
     uv = uv / atlasSize;
+    vec2 regionMin = vec2(region.xy) / atlasSize;
+    vec2 regionMax = vec2(region.xy + region.zw) / atlasSize;
 
     float value = 0.0;
     const vec2 offsets = 1.0 / atlasSize;

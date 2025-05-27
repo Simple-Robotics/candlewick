@@ -21,9 +21,9 @@ layout (set=3, binding=0) uniform Material {
 };
 
 layout(set=3, binding=1) uniform LightBlock {
-    vec3 direction[NUM_LIGHTS];
-    vec3 color[NUM_LIGHTS];
-    float intensity[NUM_LIGHTS];
+    vec3 direction[MAX_NUM_LIGHTS];
+    vec3 color[MAX_NUM_LIGHTS];
+    float intensity[MAX_NUM_LIGHTS];
     int numLights;
 } light;
 
