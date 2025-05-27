@@ -17,6 +17,8 @@
 ///
 /// \image html depth-prepass.png "Rendering the depth buffer after early pass"
 ///
+/// \image html softshadows.png "Soft shadows"
+///
 /// \}
 #pragma once
 
@@ -108,7 +110,8 @@ struct ShadowPassConfig {
 };
 
 /// \ingroup depth_pass
-/// \brief Class for defining the shadow atlas and rendering it out.
+/// \brief Class for defining the shadow maps (as an atlas) and rendering into
+/// it.
 ///
 /// The user has to take care of setting the "cameras" corresponding to the
 /// actual lights.
@@ -158,7 +161,7 @@ public:
 };
 
 /// \addtogroup depth_pass
-/// \section depth_testing Depth testing in modern APIs
+/// \section depth_testing Remarks on depth testing in modern APIs
 ///
 /// SDL GPU is based on modern graphics APIs like Vulkan, which tests depths for
 /// objects located in the \f$z \in [-1,0]\f$ half-volume of the NDC cube.
@@ -170,12 +173,15 @@ public:
 /// \ingroup depth_pass
 /// \{
 /// \brief Render shadow pass, using provided scene bounds.
-///
-/// The scene bounds are in world-space.
+/// \param cmdBuf Command buffer
+/// \param passInfo Shadow map pass object
+/// \param dirLight Array (view) of directional lights
+/// \param castables Collection of shadow-casting objects
+/// \param worldAABB World-space scene AABB
 void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               std::span<const DirectionalLight> dirLight,
                               std::span<const OpaqueCastable> castables,
-                              const AABB &worldSceneBounds);
+                              const AABB &worldAABB);
 
 /// \ingroup depth_pass
 /// \brief Render shadow pass, using a provided world-space frustum.
