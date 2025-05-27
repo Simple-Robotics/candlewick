@@ -74,7 +74,7 @@ void Visualizer::defaultGuiCallback() {
 
   ImGui::SeparatorText("Lights and camera controls");
 
-  guiAddLightControls(robotScene.directionalLight);
+  guiAddLightControls(robotScene.directionalLight, robotScene.numLights());
   guiAddCameraParams(controller, cameraParams);
 
   auto addDebugCheckbox = [this](const char *title,

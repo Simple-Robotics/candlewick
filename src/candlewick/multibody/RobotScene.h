@@ -185,6 +185,8 @@ namespace multibody {
     void collectOpaqueCastables();
     const std::vector<OpaqueCastable> &castables() const { return m_castables; }
 
+    Uint32 numLights() const noexcept { return shadowPass.numLights(); }
+
     entt::entity
     addEnvironmentObject(MeshData &&data, Mat4f placement,
                          PipelineType pipe_type = PIPELINE_TRIANGLEMESH);

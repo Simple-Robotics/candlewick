@@ -4,6 +4,7 @@
 #include <functional>
 #include <span>
 #include <entt/entity/fwd.hpp>
+#include <SDL3/SDL_stdinc.h>
 
 struct SDL_Window;
 
@@ -44,6 +45,9 @@ void guiAddLightControls(DirectionalLight &light);
 
 /// \brief Add controls for multiple lights.
 void guiAddLightControls(std::span<DirectionalLight> lights);
+
+void guiAddLightControls(std::span<DirectionalLight> lights, Uint32 numLights,
+                         Uint32 start = 0);
 
 /// \brief Adds an ImGui::Checkbox which toggles the Disable component on the
 /// entity.

@@ -421,7 +421,8 @@ int main(int argc, char **argv) {
         multibody::guiAddPinocchioModelInfo(registry, model, geom_model);
 
         ImGui::SeparatorText("Lights");
-        guiAddLightControls(robot_scene.directionalLight);
+        guiAddLightControls(robot_scene.directionalLight,
+                            robot_scene.numLights());
 
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),
