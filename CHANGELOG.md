@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - core: `Renderer` : fix not cleaning up depth texture if non-null (*critical*)
 - core : `DebugScene` : fix not setting pipeline handles to nullptr
+- multibody/Visualizer : fix not releasing transfer buffers before destroying render context (*critical*)
 
 ### Changed
 
