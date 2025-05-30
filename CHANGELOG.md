@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - core: `Renderer` : fix not cleaning up depth texture if non-null (*critical*)
+- core : `DebugScene` : fix not setting pipeline handles to nullptr
 
 ### Changed
 

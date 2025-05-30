@@ -140,9 +140,13 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 }
 
 void DebugScene::release() {
-  if (device()) {
+  if (device() && _trianglePipeline) {
     SDL_ReleaseGPUGraphicsPipeline(device(), _trianglePipeline);
+    _trianglePipeline = nullptr;
+  }
+  if (device() && _linePipeline) {
     SDL_ReleaseGPUGraphicsPipeline(device(), _linePipeline);
+    _linePipeline = nullptr;
   }
   // clean up all DebugMeshComponent objects.
   _registry.clear<DebugMeshComponent>();
