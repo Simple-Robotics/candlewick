@@ -71,6 +71,9 @@ void Renderer::destroy() noexcept {
   if (device && window) {
     SDL_ReleaseWindowFromGPUDevice(device, window);
   }
+  if (device && depth_texture) {
+    depth_texture.destroy();
+  }
   device.destroy();
   window.destroy();
 }

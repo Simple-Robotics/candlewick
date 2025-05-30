@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- core: `Renderer` : fix not cleaning up depth texture if non-null (*critical*)
+
 ### Changed
 
 - core : set max number of directional lights to 4
