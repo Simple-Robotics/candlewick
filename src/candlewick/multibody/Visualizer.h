@@ -7,7 +7,7 @@
 #include "../core/CameraControls.h"
 #include "../core/GuiSystem.h"
 #include "../core/DebugScene.h"
-#include "../core/Renderer.h"
+#include "../core/RenderContext.h"
 #include "../utils/WriteTextureToImage.h"
 #include "../utils/VideoRecorder.h"
 

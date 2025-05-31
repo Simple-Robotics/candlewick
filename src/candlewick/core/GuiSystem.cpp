@@ -1,5 +1,5 @@
 #include "GuiSystem.h"
-#include "Renderer.h"
+#include "RenderContext.h"
 #include "Components.h"
 #include "LightUniforms.h"
 #include "candlewick/config.h"

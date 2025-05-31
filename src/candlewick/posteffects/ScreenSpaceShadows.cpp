@@ -2,7 +2,7 @@
 
 #include "../core/math_types.h"
 #include "../core/DepthAndShadowPass.h"
-#include "../core/Renderer.h"
+#include "../core/RenderContext.h"
 #include "../core/Shader.h"
 #include "../core/Camera.h"
 

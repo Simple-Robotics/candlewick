@@ -1,5 +1,5 @@
 #include "DepthViz.h"
-#include "../Renderer.h"
+#include "../RenderContext.h"
 #include "../Shader.h"
 #include <format>
 

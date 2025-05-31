@@ -1,5 +1,5 @@
 #include "DepthAndShadowPass.h"
-#include "Renderer.h"
+#include "RenderContext.h"
 #include "Shader.h"
 #include "Collision.h"
 #include "Camera.h"

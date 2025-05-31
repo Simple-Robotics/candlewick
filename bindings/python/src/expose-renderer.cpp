@@ -1,5 +1,5 @@
 #include "fwd.hpp"
-#include "candlewick/core/Renderer.h"
+#include "candlewick/core/RenderContext.h"
 
 using namespace candlewick;
 

@@ -1,6 +1,6 @@
 #include "Common.h"
 
-#include "candlewick/core/Renderer.h"
+#include "candlewick/core/RenderContext.h"
 #include "candlewick/core/Shader.h"
 #include "candlewick/core/Mesh.h"
 #include "candlewick/core/MeshLayout.h"

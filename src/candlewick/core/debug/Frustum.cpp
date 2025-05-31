@@ -1,6 +1,6 @@
 #include "Frustum.h"
 
-#include "../Renderer.h"
+#include "../RenderContext.h"
 #include "../Shader.h"
 #include "../Camera.h"
 

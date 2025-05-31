@@ -1,6 +1,6 @@
 #include <nanobind/nanobind.h>
 
-#include "candlewick/core/Renderer.h"
+#include "candlewick/core/RenderContext.h"
 
 namespace nb = nanobind;
 using namespace nb::literals;

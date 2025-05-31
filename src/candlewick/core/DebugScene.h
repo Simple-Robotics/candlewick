@@ -2,7 +2,7 @@
 
 #include "Scene.h"
 #include "Mesh.h"
-#include "Renderer.h"
+#include "RenderContext.h"
 #include "math_types.h"
 
 #include <optional>

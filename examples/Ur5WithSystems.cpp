@@ -3,7 +3,7 @@
 
 #include "candlewick/core/debug/DepthViz.h"
 #include "candlewick/core/debug/Frustum.h"
-#include "candlewick/core/Renderer.h"
+#include "candlewick/core/RenderContext.h"
 #include "candlewick/core/GuiSystem.h"
 #include "candlewick/core/DebugScene.h"
 #include "candlewick/core/DepthAndShadowPass.h"

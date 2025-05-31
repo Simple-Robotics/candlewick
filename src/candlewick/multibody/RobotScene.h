@@ -6,7 +6,7 @@
 #include "Multibody.h"
 #include "../core/Device.h"
 #include "../core/Scene.h"
-#include "../core/Renderer.h"
+#include "../core/RenderContext.h"
 #include "../core/LightUniforms.h"
 #include "../core/Collision.h"
 #include "../core/DepthAndShadowPass.h"
