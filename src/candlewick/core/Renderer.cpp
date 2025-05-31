@@ -67,12 +67,13 @@ bool Renderer::acquireSwapchain(CommandBuffer &command_buffer) {
                                         NULL, NULL);
 }
 
-void Renderer::destroy() noexcept {
+Renderer::~Renderer() noexcept {
   if (device && window) {
     SDL_ReleaseWindowFromGPUDevice(device, window);
   }
-  device.destroy();
+  depth_texture.destroy();
   window.destroy();
+  device.destroy();
 }
 
 namespace rend {

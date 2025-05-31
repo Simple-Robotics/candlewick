@@ -49,4 +49,5 @@ int main(int argc, char **argv) {
 
     t += dt;
   }
+  return 0;
 }
