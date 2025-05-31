@@ -8,7 +8,7 @@ namespace candlewick {
 namespace frustum_debug {
 
   SDL_GPUGraphicsPipeline *
-  createFrustumDebugPipeline(const Renderer &renderer) {
+  createFrustumDebugPipeline(const RenderContext &renderer) {
     const auto &device = renderer.device;
     auto vertexShader = Shader::fromMetadata(device, "FrustumDebug.vert");
     auto fragmentShader = Shader::fromMetadata(device, "VertexColor.frag");
@@ -41,7 +41,7 @@ namespace frustum_debug {
 
   static constexpr Uint32 NUM_VERTICES = 36u;
 
-  SDL_GPURenderPass *getDefaultRenderPass(const Renderer &renderer,
+  SDL_GPURenderPass *getDefaultRenderPass(const RenderContext &renderer,
                                           CommandBuffer &cmdBuf) {
     SDL_GPUColorTargetInfo color_target;
     SDL_zero(color_target);
@@ -102,8 +102,8 @@ namespace frustum_debug {
 
 } // namespace frustum_debug
 
-FrustumBoundsDebugSystem::FrustumBoundsDebugSystem(entt::registry &registry,
-                                                   const Renderer &renderer)
+FrustumBoundsDebugSystem::FrustumBoundsDebugSystem(
+    entt::registry &registry, const RenderContext &renderer)
     : renderer(renderer)
     , device(renderer.device)
     , pipeline(nullptr)

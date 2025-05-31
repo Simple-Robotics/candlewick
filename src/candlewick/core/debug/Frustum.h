@@ -12,7 +12,8 @@
 namespace candlewick {
 namespace frustum_debug {
 
-  SDL_GPUGraphicsPipeline *createFrustumDebugPipeline(const Renderer &renderer);
+  SDL_GPUGraphicsPipeline *
+  createFrustumDebugPipeline(const RenderContext &renderer);
 
   void renderFrustum(CommandBuffer &cmdBuf, SDL_GPURenderPass *render_pass,
                      const Camera &mainCamera, const Camera &otherCam,
@@ -43,13 +44,14 @@ struct DebugBoundsComponent {
 };
 
 class FrustumBoundsDebugSystem final {
-  const Renderer &renderer;
+  const RenderContext &renderer;
   const Device &device;
   SDL_GPUGraphicsPipeline *pipeline;
   entt::registry &_registry;
 
 public:
-  FrustumBoundsDebugSystem(entt::registry &registry, const Renderer &renderer);
+  FrustumBoundsDebugSystem(entt::registry &registry,
+                           const RenderContext &renderer);
 
   entt::registry &registry() { return _registry; }
   const entt::registry &registry() const { return _registry; }

@@ -5,7 +5,7 @@
 
 namespace candlewick {
 
-DepthDebugPass DepthDebugPass::create(const Renderer &renderer,
+DepthDebugPass DepthDebugPass::create(const RenderContext &renderer,
                                       SDL_GPUTexture *depthTexture) {
   const auto &device = renderer.device;
   auto vertexShader = Shader::fromMetadata(device, "DrawQuad.vert");
@@ -60,8 +60,8 @@ struct alignas(16) cam_param_ubo_t {
   Uint32 is_ortho;
 };
 
-void renderDepthDebug(const Renderer &renderer, CommandBuffer &command_buffer,
-                      const DepthDebugPass &pass,
+void renderDepthDebug(const RenderContext &renderer,
+                      CommandBuffer &command_buffer, const DepthDebugPass &pass,
                       const DepthDebugPass::Options &opts) {
   SDL_GPUColorTargetInfo color_target;
   SDL_zero(color_target);

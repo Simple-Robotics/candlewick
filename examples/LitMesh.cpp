@@ -45,9 +45,9 @@ struct light_ubo_t {
 int main() {
   if (!SDL_Init(SDL_INIT_VIDEO))
     return 1;
-  Renderer ctx(Device{auto_detect_shader_format_subset(), false},
-               Window{__FILE__, wWidth, wHeight, 0},
-               SDL_GPU_TEXTUREFORMAT_D16_UNORM);
+  RenderContext ctx(Device{auto_detect_shader_format_subset(), false},
+                    Window{__FILE__, wWidth, wHeight, 0},
+                    SDL_GPU_TEXTUREFORMAT_D16_UNORM);
   Device &device = ctx.device;
   SDL_Window *window = ctx.window;
   const TestMesh test_mesh = meshes[0];

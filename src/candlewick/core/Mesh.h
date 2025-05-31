@@ -93,7 +93,7 @@ public:
   size_t numViews() const { return m_views.size(); }
 
   /// \brief Add a stored MeshView object. The added view will be drawn when
-  /// calling Renderer::draw() with a Mesh argument.
+  /// calling rend::draw() with a Mesh argument.
   /// \returns Reference to the created MeshView object.
   MeshView &addView(Uint32 vertexOffset, Uint32 vertexSubCount,
                     Uint32 indexOffset, Uint32 indexSubCount);

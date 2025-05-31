@@ -11,24 +11,25 @@
 
 namespace candlewick {
 
-/// \brief The Renderer class provides a rendering context for a graphical
+/// \brief The RenderContext class provides a rendering context for a graphical
 /// application.
 ///
 /// \sa Scene
 /// \sa Device
 /// \sa Mesh
-struct Renderer {
+struct RenderContext {
   Device device;
   Window window;
   SDL_GPUTexture *swapchain;
   Texture depth_texture{NoInit};
 
-  Renderer(NoInitT) : device(NoInit), window(nullptr), swapchain(nullptr) {}
+  RenderContext(NoInitT)
+      : device(NoInit), window(nullptr), swapchain(nullptr) {}
   /// \brief Constructor without a depth format.
-  Renderer(Device &&device, Window &&window);
+  RenderContext(Device &&device, Window &&window);
   /// \brief Constructor with a depth format. This will create a depth texture.
-  Renderer(Device &&device, Window &&window,
-           SDL_GPUTextureFormat suggested_depth_format);
+  RenderContext(Device &&device, Window &&window,
+                SDL_GPUTextureFormat suggested_depth_format);
 
   /// \brief Add a depth texture to the rendering context.
   /// \see hasDepthTexture()
@@ -59,9 +60,9 @@ struct Renderer {
 
   SDL_GPUTextureFormat depthFormat() const { return depth_texture.format(); }
 
-  ~Renderer() noexcept;
+  ~RenderContext() noexcept;
 
-  void destroy() noexcept { this->~Renderer(); }
+  void destroy() noexcept { this->~RenderContext(); }
 };
 
 namespace rend {

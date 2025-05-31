@@ -34,9 +34,9 @@ struct alignas(16) TransformUniformData {
 int main() {
   if (!SDL_Init(SDL_INIT_VIDEO))
     return 1;
-  Renderer ctx(Device{auto_detect_shader_format_subset(), false},
-               Window{__FILE__, int(wWidth), int(wHeight), 0},
-               SDL_GPU_TEXTUREFORMAT_D16_UNORM);
+  RenderContext ctx(Device{auto_detect_shader_format_subset(), false},
+                    Window{__FILE__, int(wWidth), int(wHeight), 0},
+                    SDL_GPU_TEXTUREFORMAT_D16_UNORM);
   Device &device = ctx.device;
   Window &window = ctx.window;
 

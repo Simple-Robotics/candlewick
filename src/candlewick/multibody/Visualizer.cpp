@@ -27,15 +27,15 @@ const char *sdlMouseButtonToString(Uint8 button) {
 
 namespace candlewick::multibody {
 
-static Renderer _create_renderer(const Visualizer::Config &config) {
+static RenderContext _create_renderer(const Visualizer::Config &config) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     terminate_with_message("Failed to init video: %s", SDL_GetError());
   }
 
-  return Renderer{Device{auto_detect_shader_format_subset()},
-                  Window{"Candlewick Pinocchio visualizer", int(config.width),
-                         int(config.height), 0},
-                  config.depth_stencil_format};
+  return RenderContext{Device{auto_detect_shader_format_subset()},
+                       Window{"Candlewick Pinocchio visualizer",
+                              int(config.width), int(config.height), 0},
+                       config.depth_stencil_format};
 }
 
 Visualizer::Visualizer(const Config &config, const pin::Model &model,

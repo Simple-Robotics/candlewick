@@ -8,7 +8,7 @@
 
 namespace candlewick {
 
-DebugScene::DebugScene(entt::registry &reg, const Renderer &renderer)
+DebugScene::DebugScene(entt::registry &reg, const RenderContext &renderer)
     : _registry(reg)
     , _renderer(renderer)
     , _trianglePipeline(nullptr)

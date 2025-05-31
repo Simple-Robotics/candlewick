@@ -94,9 +94,10 @@ int main() {
   }
 
   SDL_GPUTextureFormat depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
-  Renderer ctx(Device{auto_detect_shader_format_subset(), true},
-               Window{window}, // take ownership of existing SDL_Window handle
-               depth_stencil_format);
+  RenderContext ctx(
+      Device{auto_detect_shader_format_subset(), true},
+      Window{window}, // take ownership of existing SDL_Window handle
+      depth_stencil_format);
   Device &device = ctx.device;
   SDL_GPUTexture *depthTexture = ctx.depth_texture;
 

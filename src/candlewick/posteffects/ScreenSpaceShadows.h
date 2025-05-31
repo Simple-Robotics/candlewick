@@ -29,7 +29,7 @@ namespace effects {
     }
 
     ScreenSpaceShadowPass(NoInitT) {}
-    ScreenSpaceShadowPass(const Renderer &renderer, const Config &config);
+    ScreenSpaceShadowPass(const RenderContext &renderer, const Config &config);
 
     void release(SDL_GPUDevice *device) noexcept;
 

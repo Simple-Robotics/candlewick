@@ -11,13 +11,13 @@ struct SDL_Window;
 namespace candlewick {
 
 class GuiSystem {
-  Renderer const *m_renderer;
+  RenderContext const *m_renderer;
   bool m_initialized = false;
 
 public:
-  using GuiBehavior = std::function<void(const Renderer &)>;
+  using GuiBehavior = std::function<void(const RenderContext &)>;
 
-  GuiSystem(const Renderer &renderer, GuiBehavior behav);
+  GuiSystem(const RenderContext &renderer, GuiBehavior behav);
 
   void addCallback(GuiBehavior cb) { _callbacks.push_back(std::move(cb)); }
 
@@ -30,7 +30,7 @@ public:
   std::vector<GuiBehavior> _callbacks;
 
 private:
-  bool init(const Renderer &renderer);
+  bool init(const RenderContext &renderer);
 };
 
 /// \ingroup gui_util

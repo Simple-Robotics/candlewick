@@ -14,7 +14,7 @@ class Mesh;
 class MeshView;
 class MeshLayout;
 struct Shader;
-struct Renderer;
+struct RenderContext;
 struct Window;
 
 using coal::AABB;

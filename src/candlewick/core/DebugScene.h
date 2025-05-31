@@ -41,7 +41,7 @@ struct DebugMeshComponent {
 /// This implements a basic render system for DebugMeshComponent.
 class DebugScene {
   entt::registry &_registry;
-  const Renderer &_renderer;
+  const RenderContext &_renderer;
   SDL_GPUGraphicsPipeline *_trianglePipeline;
   SDL_GPUGraphicsPipeline *_linePipeline;
   SDL_GPUTextureFormat _swapchainTextureFormat, _depthFormat;
@@ -55,7 +55,7 @@ public:
   enum { TRANSFORM_SLOT = 0 };
   enum { COLOR_SLOT = 0 };
 
-  DebugScene(entt::registry &registry, const Renderer &renderer);
+  DebugScene(entt::registry &registry, const RenderContext &renderer);
   DebugScene(const DebugScene &) = delete;
   DebugScene &operator=(const DebugScene &) = delete;
 

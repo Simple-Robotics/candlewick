@@ -10,7 +10,7 @@
 
 namespace candlewick {
 namespace effects {
-  ScreenSpaceShadowPass::ScreenSpaceShadowPass(const Renderer &renderer,
+  ScreenSpaceShadowPass::ScreenSpaceShadowPass(const RenderContext &renderer,
                                                const Config &config)
       : config(config) {
     const Device &device = renderer.device;

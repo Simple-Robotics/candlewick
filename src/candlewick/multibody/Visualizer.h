@@ -45,9 +45,8 @@ void guiAddCameraParams(CylindricalCamera &controller,
 /// \brief A Pinocchio robot visualizer. The display() function will perform the
 /// draw calls.
 ///
-/// This visualizer is asynchronous. It will create its render context
-/// (Renderer) in a separate thread along with the GPU device and window, and
-/// run until shouldExit() returns true.
+/// This visualizer is synchronous. The window is only updated when `display()`
+/// is called.
 class Visualizer final : public BaseVisualizer {
   bool m_cameraControl = true;
   bool m_showGui = true;
@@ -75,7 +74,7 @@ public:
 
   using BaseVisualizer::setCameraPose;
   entt::registry registry;
-  Renderer renderer;
+  RenderContext renderer;
   GuiSystem guiSystem;
   RobotScene robotScene;
   DebugScene debugScene;

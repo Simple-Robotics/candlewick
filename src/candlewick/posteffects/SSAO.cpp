@@ -150,7 +150,7 @@ namespace ssao {
     return *this;
   }
 
-  SsaoPass::SsaoPass(const Renderer &renderer, SDL_GPUTexture *normalMap)
+  SsaoPass::SsaoPass(const RenderContext &renderer, SDL_GPUTexture *normalMap)
       : _device(renderer.device)
       , inDepthMap(renderer.depth_texture)
       , inNormalMap(normalMap) {

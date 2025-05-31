@@ -122,7 +122,7 @@ void RobotScene::clearRobotGeometries() {
   m_registry.destroy(view.begin(), view.end());
 }
 
-RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer)
+RobotScene::RobotScene(entt::registry &registry, const RenderContext &renderer)
     : m_registry(registry)
     , m_renderer(renderer)
     , m_config()
@@ -136,7 +136,7 @@ RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer)
   directionalLight[1].intensity = 4.f;
 }
 
-RobotScene::RobotScene(entt::registry &registry, const Renderer &renderer,
+RobotScene::RobotScene(entt::registry &registry, const RenderContext &renderer,
                        const pin::GeometryModel &geom_model,
                        const pin::GeometryData &geom_data, Config config)
     : RobotScene(registry, renderer) {
@@ -348,7 +348,7 @@ void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
 /// with just two configuration options: whether to load or clear the color and
 /// depth targets.
 static SDL_GPURenderPass *
-getRenderPass(const Renderer &renderer, CommandBuffer &command_buffer,
+getRenderPass(const RenderContext &renderer, CommandBuffer &command_buffer,
               SDL_GPULoadOp color_load_op, SDL_GPULoadOp depth_load_op,
               bool has_normals_target, const RobotScene::GBuffer &gbuffer) {
   SDL_GPUColorTargetInfo color_targets[2];
@@ -378,7 +378,7 @@ getRenderPass(const Renderer &renderer, CommandBuffer &command_buffer,
 }
 
 static SDL_GPURenderPass *
-getTransparentRenderPass(const Renderer &renderer,
+getTransparentRenderPass(const RenderContext &renderer,
                          CommandBuffer &command_buffer,
                          const RobotScene::GBuffer &gBuffer) {
   SDL_GPUColorTargetInfo targets[2];

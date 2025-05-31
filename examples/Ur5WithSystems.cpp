@@ -110,7 +110,7 @@ loadGeomObjFromFile(const char *name, std::string_view filename,
   return pin::GeometryObject{name, 0, convex, pl, "", scale};
 }
 
-void eventLoop(const Renderer &renderer) {
+void eventLoop(const RenderContext &renderer) {
   // update pixel density and display scale
   pixelDensity = renderer.window.pixelDensity();
   displayScale = renderer.window.displayScale();
@@ -185,7 +185,7 @@ void eventLoop(const Renderer &renderer) {
   }
 }
 
-static void screenshot_button_callback(Renderer &renderer,
+static void screenshot_button_callback(RenderContext &renderer,
                                        media::TransferBufferPool &pool,
                                        const char *filename) {
   const auto &device = renderer.device;
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
     return 1;
 
   // D16_UNORM works on macOS, D24_UNORM and D32_FLOAT break the depth prepass
-  Renderer renderer{
+  RenderContext renderer{
       Device{auto_detect_shader_format_subset(), false},
       Window(__FILE__, wWidth, wHeight, 0),
       SDL_GPU_TEXTUREFORMAT_D16_UNORM,
@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
   const char *screenshot_filename = nullptr;
 
   GuiSystem gui_system{
-      renderer, [&](const Renderer &r) {
+      renderer, [&](const RenderContext &r) {
         IMGUI_CHECKVERSION();
 
         static bool demo_window_open = true;

@@ -46,7 +46,8 @@ void exposeCore(nb::module_ &m) {
       },
       "name"_a);
 
-  nb::class_<Renderer>(m, "Renderer").def_ro("device", &Renderer::device);
+  nb::class_<RenderContext>(m, "RenderContext")
+      .def_ro("device", &RenderContext::device);
 }
 
 NB_MODULE(pycandlewick_nb, m) { exposeCore(m); }

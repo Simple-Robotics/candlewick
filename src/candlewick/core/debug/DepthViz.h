@@ -18,7 +18,7 @@ struct DepthDebugPass {
   SDL_GPUSampler *sampler;
   SDL_GPUGraphicsPipeline *pipeline;
 
-  static DepthDebugPass create(const Renderer &renderer,
+  static DepthDebugPass create(const RenderContext &renderer,
                                SDL_GPUTexture *depthTexture);
 
   void release(SDL_GPUDevice *device);
@@ -35,7 +35,7 @@ inline void DepthDebugPass::release(SDL_GPUDevice *device) {
   }
 }
 
-void renderDepthDebug(const Renderer &renderer, CommandBuffer &cmdBuf,
+void renderDepthDebug(const RenderContext &renderer, CommandBuffer &cmdBuf,
                       const DepthDebugPass &pass,
                       const DepthDebugPass::Options &opts);
 

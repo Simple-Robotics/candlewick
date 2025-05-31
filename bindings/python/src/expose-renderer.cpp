@@ -35,6 +35,6 @@ void exposeRenderer() {
               ("driver_name"_a = NULL),
               "Automatically detect the compatible set of shader formats."});
 
-  bp::class_<Renderer, boost::noncopyable>("Renderer", bp::no_init)
-      .def_readonly("device", &Renderer::device);
+  bp::class_<RenderContext, boost::noncopyable>("RenderContext", bp::no_init)
+      .def_readonly("device", &RenderContext::device);
 }

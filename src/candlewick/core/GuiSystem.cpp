@@ -8,14 +8,14 @@
 
 namespace candlewick {
 
-GuiSystem::GuiSystem(const Renderer &renderer, GuiBehavior behav)
+GuiSystem::GuiSystem(const RenderContext &renderer, GuiBehavior behav)
     : m_renderer(&renderer), _callbacks{behav} {
   if (!init(renderer)) {
     terminate_with_message("Failed to initialize ImGui for SDLGPU3.");
   }
 }
 
-bool GuiSystem::init(const Renderer &renderer) {
+bool GuiSystem::init(const RenderContext &renderer) {
   m_renderer = &renderer;
   assert(!m_initialized); // can't initialize twice
   IMGUI_CHECKVERSION();

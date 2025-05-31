@@ -7,7 +7,7 @@
 #include <SDL3/SDL_log.h>
 
 namespace candlewick {
-Renderer::Renderer(Device &&device_, Window &&window_)
+RenderContext::RenderContext(Device &&device_, Window &&window_)
     : device(std::move(device_))
     , window(std::move(window_))
     , swapchain(nullptr) {
@@ -15,13 +15,14 @@ Renderer::Renderer(Device &&device_, Window &&window_)
     throw RAIIException(SDL_GetError());
 }
 
-Renderer::Renderer(Device &&device_, Window &&window_,
-                   SDL_GPUTextureFormat suggested_depth_format)
-    : Renderer(std::move(device_), std::move(window_)) {
+RenderContext::RenderContext(Device &&device_, Window &&window_,
+                             SDL_GPUTextureFormat suggested_depth_format)
+    : RenderContext(std::move(device_), std::move(window_)) {
   createDepthTexture(suggested_depth_format);
 }
 
-void Renderer::createDepthTexture(SDL_GPUTextureFormat suggested_depth_format) {
+void RenderContext::createDepthTexture(
+    SDL_GPUTextureFormat suggested_depth_format) {
   auto [width, height] = window.size();
 
   SDL_GPUTextureCreateInfo texInfo{
@@ -55,19 +56,19 @@ void Renderer::createDepthTexture(SDL_GPUTextureFormat suggested_depth_format) {
   SDL_SetGPUTextureName(device, depth_texture, "Main depth texture");
 }
 
-bool Renderer::waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
+bool RenderContext::waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
   assert(SDL_IsMainThread());
   return SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, window,
                                                &swapchain, NULL, NULL);
 }
 
-bool Renderer::acquireSwapchain(CommandBuffer &command_buffer) {
+bool RenderContext::acquireSwapchain(CommandBuffer &command_buffer) {
   assert(SDL_IsMainThread());
   return SDL_AcquireGPUSwapchainTexture(command_buffer, window, &swapchain,
                                         NULL, NULL);
 }
 
-Renderer::~Renderer() noexcept {
+RenderContext::~RenderContext() noexcept {
   if (device && window) {
     SDL_ReleaseWindowFromGPUDevice(device, window);
   }

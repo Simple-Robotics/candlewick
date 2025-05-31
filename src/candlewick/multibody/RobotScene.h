@@ -156,12 +156,12 @@ namespace multibody {
     AABB worldSpaceBounds;
 
     /// \brief Non-initializing constructor.
-    RobotScene(entt::registry &registry, const Renderer &renderer);
+    RobotScene(entt::registry &registry, const RenderContext &renderer);
 
     /// \brief Constructor which initializes the system.
     ///
     /// loadModels() will be called.
-    RobotScene(entt::registry &registry, const Renderer &renderer,
+    RobotScene(entt::registry &registry, const RenderContext &renderer,
                const pin::GeometryModel &geom_model,
                const pin::GeometryData &geom_data, Config config);
 
@@ -241,7 +241,7 @@ namespace multibody {
 
   private:
     entt::registry &m_registry;
-    const Renderer &m_renderer;
+    const RenderContext &m_renderer;
     Config m_config;
     const pin::GeometryModel *m_geomModel;
     const pin::GeometryData *m_geomData;
