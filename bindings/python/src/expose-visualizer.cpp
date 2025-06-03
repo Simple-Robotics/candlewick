@@ -24,7 +24,11 @@ void exposeVisualizer() {
   bp::class_<Visualizer, boost::noncopyable>("Visualizer", bp::no_init)
       .def(bp::init<Visualizer::Config, const pin::Model &,
                     const pin::GeometryModel &>(
-          ("self"_a, "config", "model", "geomModel")))
+          ("self"_a, "config", "model", "visual_model")))
+      .def(bp::init<Visualizer::Config, const pin::Model &,
+                    const pin::GeometryModel &, pin::Data &,
+                    pin::GeometryData &>(
+          ("self"_a, "config", "model", "visual_model", "data", "visual_data")))
       .def(pinocchio::python::VisualizerPythonVisitor<Visualizer>{})
       .def_readonly("renderer", &Visualizer::renderer)
       .def(

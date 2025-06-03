@@ -19,7 +19,9 @@ print(f"Current shader directory: {cdw.currentShaderDirectory()}")
 robot = go2d.loadGo2()
 
 rmodel = robot.model
+rdata = robot.data
 visual_model = robot.visual_model
+visual_data = robot.visual_data
 
 q0 = rmodel.referenceConfigurations["standing"]
 dt = 0.01
@@ -27,7 +29,8 @@ dt = 0.01
 config = VisualizerConfig()
 config.width = 1600
 config.height = 900
-viz = Visualizer(config, rmodel, visual_model)
+viz = Visualizer(config, rmodel, visual_model, data=rdata, visual_data=visual_data)
+assert viz.hasExternalData
 
 print(
     "Visualizer has renderer:",

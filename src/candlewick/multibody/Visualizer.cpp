@@ -49,7 +49,25 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , debugScene{registry, renderer}
     , m_transferBuffers{renderer.device}
     , m_videoRecorder{NoInit} {
+  this->initialize();
+}
 
+Visualizer::Visualizer(const Config &config, const pin::Model &model,
+                       const pin::GeometryModel &visual_model, pin::Data &data,
+                       pin::GeometryData &visual_data,
+                       GuiSystem::GuiBehavior gui_callback)
+    : BaseVisualizer{model, visual_model, nullptr, data, visual_data, nullptr}
+    , registry{}
+    , renderer{_create_renderer(config)}
+    , guiSystem{renderer, std::move(gui_callback)}
+    , robotScene{registry, renderer}
+    , debugScene{registry, renderer}
+    , m_transferBuffers{renderer.device}
+    , m_videoRecorder{NoInit} {
+  this->initialize();
+}
+
+void Visualizer::initialize() {
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
   robotScene.setConfig(rconfig);
