@@ -90,7 +90,7 @@ void Visualizer::initialize() {
       },
   };
 
-  robotScene.worldSpaceBounds.update({-1., -1., 0.}, {+1., +1., 1.});
+  worldSceneBounds.update({-1., -1., 0.}, {+1., +1., 1.});
 
   const Uint32 prepeat = 25;
   m_plane = robotScene.addEnvironmentObject(
@@ -177,7 +177,7 @@ void Visualizer::render() {
     std::span castables = robotScene.castables();
     renderShadowPassFromAABB(command_buffer, robotScene.shadowPass,
                              robotScene.directionalLight, castables,
-                             robotScene.worldSpaceBounds);
+                             worldSceneBounds);
 
     auto &camera = controller.camera;
     robotScene.renderOpaque(command_buffer, camera);

@@ -87,6 +87,7 @@ public:
   CylindricalCamera controller;
   CameraControlParams cameraParams;
   EnvStatus envStatus;
+  AABB worldSceneBounds;
 
   struct Config {
     Uint32 width;

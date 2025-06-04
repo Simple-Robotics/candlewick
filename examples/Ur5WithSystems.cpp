@@ -453,7 +453,7 @@ int main(int argc, char **argv) {
   }
 #endif
 
-  AABB &worldSpaceBounds = robot_scene.worldSpaceBounds;
+  AABB worldSpaceBounds;
   worldSpaceBounds.update({-1.f, -1.f, 0.f}, {+1.f, +1.f, 1.f});
 
   frustumBoundsDebug.addBounds(worldSpaceBounds);

@@ -153,7 +153,6 @@ namespace multibody {
       SDL_GPUSampler *sampler = nullptr; // composite pass
     } gBuffer;
     ShadowMapPass shadowPass{NoInit};
-    AABB worldSpaceBounds;
 
     /// \brief Non-initializing constructor.
     RobotScene(entt::registry &registry, const RenderContext &renderer);
