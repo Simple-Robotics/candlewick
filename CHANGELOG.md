@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- multibody/Visualizer : pass fps to startRecording()
+
 ### Changed
 
 - core : rename header `{ Renderer.h => RenderContext.h }`

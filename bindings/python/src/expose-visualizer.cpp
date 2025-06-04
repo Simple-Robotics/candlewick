@@ -42,10 +42,10 @@ void exposeVisualizer() {
           ("self"_a, "filename"), "Save a screenshot to the specified file.")
       .def(
           "startRecording",
-          +[](Visualizer &viz, const std::string &filename) {
-            viz.startRecording(filename);
+          +[](Visualizer &viz, const std::string &filename, int fps) {
+            viz.startRecording(filename, fps);
           },
-          ("self"_a, "filename"_a))
+          ("self"_a, "filename"_a, "fps"_a = 30))
       .def("stopRecording", &Visualizer::stopRecording, "self"_a)
 // fix for Pinocchio 3.5.0
 #if PINOCCHIO_VERSION_AT_MOST(3, 5, 0)

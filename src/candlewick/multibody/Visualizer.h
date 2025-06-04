@@ -136,7 +136,7 @@ public:
 
   void takeScreenshot(std::string_view filename);
 
-  void startRecording(std::string_view filename);
+  void startRecording(std::string_view filename, int fps = 30);
 
   void stopRecording();
 
