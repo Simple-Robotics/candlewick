@@ -149,6 +149,7 @@ public:
 private:
   media::TransferBufferPool m_transferBuffers;
   media::VideoRecorder m_videoRecorder;
+  media::VideoRecorder::Settings m_videoSettings;
 };
 
 } // namespace candlewick::multibody

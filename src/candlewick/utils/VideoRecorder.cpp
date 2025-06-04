@@ -39,6 +39,8 @@ namespace media {
     return frame;
   }
 
+  // IMPLEMENTING CLASS ----------------------------------------------
+
   struct VideoRecorderImpl {
     int m_width;           //< Width of incoming frames
     int m_height;          //< Height of incoming frames
@@ -57,6 +59,7 @@ namespace media {
                       VideoRecorder::Settings settings);
 
     VideoRecorderImpl(const VideoRecorderImpl &) = delete;
+    VideoRecorderImpl &operator=(const VideoRecorderImpl &) = delete;
 
     void writeFrame(const Uint8 *data, Uint32 payloadSize,
                     AVPixelFormat avPixelFormat);
@@ -104,10 +107,8 @@ namespace media {
                                        VideoRecorder::Settings settings)
       : m_width(width), m_height(height) {
 
-    if (settings.outputWidth == 0)
-      settings.outputWidth = width;
-    if (settings.outputHeight == 0)
-      settings.outputHeight = height;
+    assert(settings.outputWidth > 0);
+    assert(settings.outputHeight > 0);
 
     codec = avcodec_find_encoder(AV_CODEC_ID_H264);
     if (!codec) {
@@ -233,7 +234,8 @@ namespace media {
     }
   }
 
-  // WRAPPING CLASS
+  // WRAPPING CLASS --------------------------------------------------
+
   VideoRecorder::VideoRecorder(NoInitT) : _impl() {}
   VideoRecorder::VideoRecorder(VideoRecorder &&) noexcept = default;
   VideoRecorder &VideoRecorder::operator=(VideoRecorder &&) noexcept = default;
@@ -241,8 +243,7 @@ namespace media {
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
                                std::string_view filename, Settings settings)
       : _width(width), _height(height) {
-    this->settings = settings;
-    this->open(width, height, filename);
+    this->open(width, height, filename, std::move(settings));
   }
 
   VideoRecorder::VideoRecorder(Uint32 width, Uint32 height,
@@ -250,13 +251,17 @@ namespace media {
       : VideoRecorder(width, height, filename, Settings{}) {}
 
   void VideoRecorder::open(Uint32 width, Uint32 height,
-                           std::string_view filename) {
+                           std::string_view filename, Settings settings) {
     if (_impl)
       terminate_with_message("Recording stream already open.");
 
     SDL_Log("[VideoRecorder] Opening stream at %s", filename.data());
     _width = width;
     _height = height;
+    if (settings.outputWidth == 0)
+      settings.outputWidth = int(_width);
+    if (settings.outputHeight == 0)
+      settings.outputHeight = int(_height);
     _impl = std::make_unique<VideoRecorderImpl>(int(_width), int(_height),
                                                 filename, settings);
   }

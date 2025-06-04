@@ -448,8 +448,9 @@ int main(int argc, char **argv) {
   media::VideoRecorder recorder{NoInit};
   media::TransferBufferPool transfer_buffer_pool{renderer.device};
   if (performRecording) {
-    recorder.settings.fps = 50;
-    recorder.open(wWidth, wHeight, "ur5.mp4");
+    media::VideoRecorder::Settings settings;
+    settings.fps = 50;
+    recorder.open(wWidth, wHeight, "ur5.mp4", settings);
   }
 #endif
 

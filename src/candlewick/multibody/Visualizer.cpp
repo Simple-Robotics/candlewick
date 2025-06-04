@@ -205,7 +205,8 @@ void Visualizer::startRecording(std::string_view filename) {
     terminate_with_message("Recording stream was already opened.");
 
   auto [width, height] = renderer.window.sizeInPixels();
-  m_videoRecorder.open(Uint16(width), Uint16(height), filename);
+  m_videoRecorder.open(Uint16(width), Uint16(height), filename,
+                       m_videoSettings);
   m_currentVideoFilename = filename;
 }
 

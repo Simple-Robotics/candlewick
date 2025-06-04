@@ -111,7 +111,7 @@ void Visualizer::defaultGuiCallback() {
                       ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
     guiAddFileDialog(renderer.window, DialogFileType::VIDEOS,
                      m_currentVideoFilename);
-    auto &settings = m_videoRecorder.settings;
+    auto &settings = m_videoSettings;
     ImGui::BeginDisabled(m_videoRecorder.isRecording());
     ImGui::SliderInt("bitrate", &settings.bitRate, 2'000'000, 6'000'000);
     ImGui::SliderInt("framerate", &settings.fps, 10, 60);
