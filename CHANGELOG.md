@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - core : rename header `{ Renderer.h => RenderContext.h }`
+- multibody : remove world scene bounds from RobotScene
+- `Visualizer` : add `worldSceneBounds` data member
+- python : expose `Visualizer::worldSceneBounds`
 
 ## [0.2.0] - 2025-05-31
 
