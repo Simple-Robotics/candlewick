@@ -38,6 +38,7 @@ print(
     "driver name:",
     viz.renderer.device.driverName(),
 )
+print("Scene bounds:", viz.worldSceneBounds)
 
 viz.startRecording("go2_record.mp4")
 

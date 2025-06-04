@@ -16,6 +16,8 @@ using namespace candlewick::multibody;
                           bp::return_internal_reference<>()))
 
 void exposeVisualizer() {
+  using pinocchio::python::VisualizerPythonVisitor;
+
   eigenpy::OptionalConverter<ConstVectorRef, std::optional>::registration();
   bp::class_<Visualizer::Config>("VisualizerConfig", bp::init<>("self"_a))
       .def_readwrite("width", &Visualizer::Config::width)
@@ -29,8 +31,9 @@ void exposeVisualizer() {
                     const pin::GeometryModel &, pin::Data &,
                     pin::GeometryData &>(
           ("self"_a, "config", "model", "visual_model", "data", "visual_data")))
-      .def(pinocchio::python::VisualizerPythonVisitor<Visualizer>{})
+      .def(VisualizerPythonVisitor<Visualizer>{})
       .def_readonly("renderer", &Visualizer::renderer)
+      .def_readwrite("worldSceneBounds", &Visualizer::worldSceneBounds)
       .def(
           "takeScreenshot",
           +[](Visualizer &viz, const std::string &filename) {
