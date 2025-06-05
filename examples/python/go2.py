@@ -10,7 +10,6 @@ except ImportError:
         "This example requires the go2_description package, which was not found. Download it at: https://github.com/inria-paris-robotics-lab/go2_description"
     )
     raise
-import time
 import tqdm
 
 
@@ -45,6 +44,6 @@ with cdw.video_context.create_recorder_context(viz, "go2_record.mp4"):
         if viz.shouldExit:
             break
         viz.display(q0)
-        time.sleep(dt)
+        # time.sleep(dt)
 
 print("Goodbye...")
