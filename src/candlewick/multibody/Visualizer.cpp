@@ -150,11 +150,11 @@ Visualizer::~Visualizer() {
 }
 
 void Visualizer::displayImpl() {
-  processEvents();
+  this->processEvents();
 
   debugScene.update();
   robotScene.updateTransforms();
-  render();
+  this->render();
 
   if (!m_currentScreenshotFilename.empty()) {
     takeScreenshot(m_currentScreenshotFilename);

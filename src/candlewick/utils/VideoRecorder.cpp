@@ -42,9 +42,9 @@ namespace media {
   // IMPLEMENTING CLASS ----------------------------------------------
 
   struct VideoRecorderImpl {
-    int m_width;           //< Width of incoming frames
-    int m_height;          //< Height of incoming frames
-    Uint32 m_frameCounter; //< Number of recorded frames
+    int m_width{0};           //< Width of incoming frames
+    int m_height{0};          //< Height of incoming frames
+    Uint32 m_frameCounter{0}; //< Number of recorded frames
 
     AVFormatContext *formatContext = nullptr;
     const AVCodec *codec = nullptr;
