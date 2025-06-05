@@ -60,5 +60,5 @@ endif(GENERATE_PYTHON_STUBS)
 set(PYTHON_FILES __init__.py)
 
 foreach(pyfile ${PYTHON_FILES})
-  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME} __init__.py)
+  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME} ${pyfile})
 endforeach()
