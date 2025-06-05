@@ -30,7 +30,7 @@ config = VisualizerConfig()
 config.width = 1600
 config.height = 900
 viz = Visualizer(config, rmodel, visual_model, data=rdata, visual_data=visual_data)
-assert viz.hasExternalData
+assert viz.hasExternalData()
 
 print(
     "Visualizer has renderer:",
@@ -40,13 +40,11 @@ print(
 )
 print("Scene bounds:", viz.worldSceneBounds)
 
-viz.startRecording("go2_record.mp4")
+with cdw.video_context.create_recorder_context(viz, "go2_record.mp4"):
+    for i in tqdm.tqdm(range(1000)):
+        if viz.shouldExit:
+            break
+        viz.display(q0)
+        time.sleep(dt)
 
-for i in tqdm.tqdm(range(1000)):
-    if viz.shouldExit:
-        break
-    viz.display(q0)
-    time.sleep(dt)
-
-viz.stopRecording()
 print("Goodbye...")
