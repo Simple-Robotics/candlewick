@@ -6,7 +6,7 @@ from .pycandlewick import __version__
 def _process():
     import sys
     import inspect
-    import os.path
+    from pathlib import Path
     from . import pycandlewick
 
     lib_name = "candlewick"
@@ -17,11 +17,10 @@ def _process():
         mod_info[1].__file__ = pycandlewick.__file__
         mod_info[1].__name__ = mod_name
 
-    share_dir = os.path.join(os.path.dirname(__file__), "../../../../share")
-    shaders_dir = os.path.join(share_dir, "candlewick", "shaders")
-    shaders_dir = os.path.abspath(shaders_dir)
-    compiled_shaders_dir = os.path.join(shaders_dir, "compiled")
-    pycandlewick.setShadersDirectory(compiled_shaders_dir)
+    share_dir = Path(__file__).parent / "../../../../share"
+    shaders_dir = share_dir.resolve() / "candlewick" / "shaders"
+    compiled_shaders_dir = shaders_dir / "compiled"
+    pycandlewick.setShadersDirectory(str(compiled_shaders_dir))
 
 
 _process()
