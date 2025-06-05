@@ -478,13 +478,13 @@ int main(int argc, char **argv) {
     pin::updateGeometryPlacements(model, pin_data, geom_model, geom_data);
     q = qn;
     debug_scene.update();
+    robot_scene.updateTransforms();
 
     // acquire command buffer and swapchain
     CommandBuffer command_buffer = renderer.acquireCommandBuffer();
 
     if (renderer.waitAndAcquireSwapchain(command_buffer)) {
       const GpuMat4 viewProj = g_camera.camera.viewProj();
-      robot_scene.updateTransforms();
       robot_scene.collectOpaqueCastables();
       auto &castables = robot_scene.castables();
       renderShadowPassFromAABB(command_buffer, shadowPassInfo,
