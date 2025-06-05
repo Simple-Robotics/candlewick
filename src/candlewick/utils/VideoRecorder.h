@@ -18,9 +18,9 @@ namespace media {
   class TransferBufferPool;
 
   class VideoRecorder {
-    std::unique_ptr<VideoRecorderImpl> _impl;
-    Uint32 _width;
-    Uint32 _height;
+    std::unique_ptr<VideoRecorderImpl> m_impl;
+    Uint32 m_width;
+    Uint32 m_height;
 
   public:
     struct Settings {
@@ -45,7 +45,7 @@ namespace media {
               Settings settings);
 
     /// \brief Returns whether the recording stream is open.
-    bool isRecording() const { return _impl != nullptr; }
+    bool isRecording() const { return m_impl != nullptr; }
 
     /// \brief Constructor for the video recorder.
     ///
