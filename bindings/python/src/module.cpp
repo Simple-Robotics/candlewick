@@ -30,9 +30,6 @@ BOOST_PYTHON_MODULE(pycandlewick) {
   exposeMeshData();
   exposeRenderer();
 #ifdef CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
-  {
-    bp::scope submod = get_namespace("multibody");
-    exposeVisualizer();
-  }
+  exposeVisualizer();
 #endif
 }
