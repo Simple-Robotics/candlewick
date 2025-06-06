@@ -148,6 +148,7 @@ void DebugScene::release() {
     m_linePipeline = nullptr;
   }
   // clean up all DebugMeshComponent objects.
-  m_registry.clear<DebugMeshComponent>();
+  auto view = m_registry.group<DebugMeshComponent>();
+  m_registry.destroy(view.begin(), view.end());
 }
 } // namespace candlewick
