@@ -153,14 +153,14 @@ static void mouse_motion_handler(CylindricalCamera &controller,
   Float2 mvt{event.xrel, event.yrel};
   SDL_MouseButtonFlags mb = event.state;
   // check if left mouse pressed
-  if (mb & SDL_BUTTON_LMASK) {
+  if (mb & SDL_BUTTON_MASK(params.mouseButtons.rotButton)) {
     controller.viewportDrag(mvt, params.rotSensitivity, params.panSensitivity,
                             params.yInvert);
   }
   if (mb & SDL_BUTTON_MASK(params.mouseButtons.panButton)) {
     controller.pan(mvt, params.panSensitivity);
   }
-  if (mb & SDL_BUTTON_RMASK) {
+  if (mb & SDL_BUTTON_MASK(params.mouseButtons.yRotButton)) {
     Radf rot_angle = params.localRotSensitivity * mvt.y();
     camera_util::localRotateXAroundOrigin(controller.camera, rot_angle);
   }

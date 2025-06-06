@@ -35,7 +35,9 @@ struct CameraControlParams {
 
   // Mouse button modifiers
   struct MouseConfig {
+    Uint8 rotButton = SDL_BUTTON_LEFT;
     Uint8 panButton = SDL_BUTTON_MIDDLE;
+    Uint8 yRotButton = SDL_BUTTON_RIGHT;
   } mouseButtons;
 };
 

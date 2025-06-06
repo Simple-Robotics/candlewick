@@ -101,11 +101,15 @@ void Visualizer::initialize() {
 
   this->resetCamera();
 
-  SDL_Log(" Controls:");
-  SDL_Log(" ——————————————————————");
-  SDL_Log(" Toggle GUI:      [%s]", "H");
-  SDL_Log(" Pan camera:      [%s]",
+  SDL_Log("┌───────Controls────────");
+  SDL_Log("│ Toggle GUI:      [%s]", "H");
+  SDL_Log("│ Move camera:     [%s]",
+          sdlMouseButtonToString(cameraParams.mouseButtons.rotButton));
+  SDL_Log("│ Pan camera:      [%s]",
           sdlMouseButtonToString(cameraParams.mouseButtons.panButton));
+  SDL_Log("│ Y-rotate camera: [%s]",
+          sdlMouseButtonToString(cameraParams.mouseButtons.yRotButton));
+  SDL_Log("└───────────────────────");
 }
 
 void Visualizer::resetCamera() {
