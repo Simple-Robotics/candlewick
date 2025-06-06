@@ -185,6 +185,24 @@ void eventLoop(const RenderContext &renderer) {
   }
 }
 
+static void addTeapotGeometry(pin::GeometryModel &geom_model) {
+  // add a geom obj
+  const char *basePath = SDL_GetBasePath();
+  char meshPath[256];
+  SDL_snprintf(meshPath, 256, "%s../../../%s", basePath,
+               "assets/meshes/teapot.obj");
+  pin::SE3 pl = pin::SE3::Identity();
+  pl.translation() << -1.f, 1.f, 0.4;
+  using Eigen::Matrix3d;
+  using Eigen::Vector3d;
+  Matrix3d R = Eigen::AngleAxisd(constants::Pi_2, Vector3d::UnitX()).matrix();
+  pl.rotation().applyOnTheLeft(R);
+  auto convex_obj = loadGeomObjFromFile("teapot", meshPath, pl);
+  convex_obj.meshColor = 0xAAB02355_rgba;
+  convex_obj.overrideMaterial = true;
+  geom_model.addGeometryObject(convex_obj);
+}
+
 static void screenshot_button_callback(RenderContext &renderer,
                                        media::TransferBufferPool &pool,
                                        const char *filename) {
@@ -234,34 +252,24 @@ int main(int argc, char **argv) {
   //   gobj.meshColor = 0xA03232FF_rgba;
   //   geom_model.addGeometryObject(gobj);
   // }
-  {
-    // add a geom obj
-    const char *basePath = SDL_GetBasePath();
-    char meshPath[256];
-    SDL_snprintf(meshPath, 256, "%s../../../%s", basePath,
-                 "assets/meshes/teapot.obj");
-    pin::SE3 pl = pin::SE3::Identity();
-    pl.translation() << -1.f, 1.f, 0.4;
-    using Eigen::Matrix3d;
-    using Eigen::Vector3d;
-    Matrix3d R = Eigen::AngleAxisd(constants::Pi_2, Vector3d::UnitX()).matrix();
-    pl.rotation().applyOnTheLeft(R);
-    auto convex_obj = loadGeomObjFromFile("teapot", meshPath, pl);
-    convex_obj.meshColor = 0xAAB02355_rgba;
-    convex_obj.overrideMaterial = true;
-    geom_model.addGeometryObject(convex_obj);
-  }
+  addTeapotGeometry(geom_model);
 
   pin::Data pin_data{model};
   pin::GeometryData geom_data{geom_model};
 
   RobotScene robot_scene{registry, renderer, geom_model, geom_data,
                          robot_scene_config};
-  auto &sceneLight = robot_scene.directionalLight[0];
-  sceneLight = {
-      .direction = {-1.f, 0.f, -1.},
-      .color = {1.0, 1.0, 1.0},
-      .intensity = 8.0,
+  robot_scene.directionalLight = {
+      DirectionalLight{
+          .direction = {-1.f, 0.f, -1.f},
+          .color = {1.0, 1.0, 1.0},
+          .intensity = 8.0,
+      },
+      DirectionalLight{
+          .direction = {0.5, 1., -1.},
+          .color = {1.0, 1.0, 1.0},
+          .intensity = 8.0,
+      },
   };
 
   // Add plane
