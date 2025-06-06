@@ -46,10 +46,6 @@ class DebugScene {
   SDL_GPUGraphicsPipeline *m_linePipeline;
   std::vector<std::unique_ptr<IDebugSubSystem>> m_subsystems;
 
-  void renderMeshComponents(CommandBuffer &cmdBuf,
-                            SDL_GPURenderPass *render_pass,
-                            const Camera &camera) const;
-
 public:
   enum { TRANSFORM_SLOT = 0 };
   enum { COLOR_SLOT = 0 };
