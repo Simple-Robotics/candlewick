@@ -45,38 +45,6 @@ DebugScene::addLineGrid(std::optional<Float4> color) {
   return {entity, item};
 }
 
-void DebugScene::renderMeshComponents(CommandBuffer &cmdBuf,
-                                      SDL_GPURenderPass *render_pass,
-                                      const Camera &camera) const {
-  const Mat4f viewProj = camera.viewProj();
-
-  auto view =
-      m_registry.view<const DebugMeshComponent, const TransformComponent>(
-          entt::exclude<Disable>);
-  view.each([&](auto &cmd, auto &tr) {
-    if (!cmd.enable)
-      return;
-
-    switch (cmd.pipeline_type) {
-    case DebugPipelines::TRIANGLE_FILL:
-      SDL_BindGPUGraphicsPipeline(render_pass, m_trianglePipeline);
-      break;
-    case DebugPipelines::LINE:
-      SDL_BindGPUGraphicsPipeline(render_pass, m_linePipeline);
-      break;
-    }
-
-    const GpuMat4 mvp = viewProj * tr;
-    cmdBuf.pushVertexUniform(TRANSFORM_SLOT, mvp);
-    rend::bindMesh(render_pass, cmd.mesh);
-    for (size_t i = 0; i < cmd.mesh.numViews(); i++) {
-      const auto &color = cmd.colors[i];
-      cmdBuf.pushFragmentUniform(COLOR_SLOT, color);
-      rend::drawView(render_pass, cmd.mesh.view(i));
-    }
-  });
-}
-
 void DebugScene::setupPipelines(const MeshLayout &layout) {
   if (m_linePipeline && m_trianglePipeline)
     return;
@@ -133,7 +101,32 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
   SDL_GPURenderPass *render_pass =
       SDL_BeginGPURenderPass(cmdBuf, &color_target_info, 1, &depth_target_info);
 
-  renderMeshComponents(cmdBuf, render_pass, camera);
+  const Mat4f viewProj = camera.viewProj();
+
+  auto group = m_registry.group<const DebugMeshComponent>(
+      entt::get<const TransformComponent>, entt::exclude<Disable>);
+  group.each([&](auto &cmd, auto &tr) {
+    if (!cmd.enable)
+      return;
+
+    switch (cmd.pipeline_type) {
+    case DebugPipelines::TRIANGLE_FILL:
+      SDL_BindGPUGraphicsPipeline(render_pass, m_trianglePipeline);
+      break;
+    case DebugPipelines::LINE:
+      SDL_BindGPUGraphicsPipeline(render_pass, m_linePipeline);
+      break;
+    }
+
+    const GpuMat4 mvp = viewProj * tr;
+    cmdBuf.pushVertexUniform(TRANSFORM_SLOT, mvp);
+    rend::bindMesh(render_pass, cmd.mesh);
+    for (size_t i = 0; i < cmd.mesh.numViews(); i++) {
+      const auto &color = cmd.colors[i];
+      cmdBuf.pushFragmentUniform(COLOR_SLOT, color);
+      rend::drawView(render_pass, cmd.mesh.view(i));
+    }
+  });
 
   SDL_EndGPURenderPass(render_pass);
 }
