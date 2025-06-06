@@ -51,8 +51,8 @@ if(GENERATE_PYTHON_STUBS)
   LOAD_STUBGEN()
   GENERATE_STUBS(
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${PROJECT_NAME}
-    ${PYTHON_SITELIB}
+    ${PROJECT_NAME}.pycandlewick
+    ${PYTHON_SITELIB}/candlewick
     pycandlewick
   )
 endif(GENERATE_PYTHON_STUBS)
