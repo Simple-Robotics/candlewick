@@ -9,15 +9,13 @@
 namespace candlewick {
 
 DebugScene::DebugScene(entt::registry &reg, const RenderContext &renderer)
-    : _registry(reg)
-    , _renderer(renderer)
-    , _trianglePipeline(nullptr)
-    , _linePipeline(nullptr) {
-  _swapchainTextureFormat = renderer.getSwapchainTextureFormat();
-  _depthFormat = renderer.depthFormat();
-}
+    : m_registry(reg)
+    , m_renderer(renderer)
+    , m_trianglePipeline(nullptr)
+    , m_linePipeline(nullptr) {}
 
-std::tuple<entt::entity, DebugMeshComponent &> DebugScene::addTriad() {
+std::tuple<entt::entity, DebugMeshComponent &>
+DebugScene::addTriad(const Float3 &scale) {
   auto triad_datas = loadTriadSolid();
   std::vector<GpuVec4> triad_colors(3);
   Mesh triad = createMeshFromBatch(device(), triad_datas, true);
@@ -25,10 +23,11 @@ std::tuple<entt::entity, DebugMeshComponent &> DebugScene::addTriad() {
     triad_colors[i] = triad_datas[i].material.baseColor;
   }
   setupPipelines(triad.layout());
-  auto entity = _registry.create();
-  auto &item = _registry.emplace<DebugMeshComponent>(
+  auto entity = m_registry.create();
+  auto &item = m_registry.emplace<DebugMeshComponent>(
       entity, DebugPipelines::TRIANGLE_FILL, std::move(triad), triad_colors);
-  _registry.emplace<TransformComponent>(entity, Mat4f::Identity());
+  item.scale = scale;
+  m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
 
@@ -39,10 +38,10 @@ DebugScene::addLineGrid(std::optional<Float4> color) {
   GpuVec4 grid_color = color.value_or(grid_data.material.baseColor);
 
   setupPipelines(grid.layout());
-  auto entity = _registry.create();
-  auto &item = _registry.emplace<DebugMeshComponent>(
+  auto entity = m_registry.create();
+  auto &item = m_registry.emplace<DebugMeshComponent>(
       entity, DebugPipelines::LINE, std::move(grid), std::vector{grid_color});
-  _registry.emplace<TransformComponent>(entity, Mat4f::Identity());
+  m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
 
@@ -52,7 +51,7 @@ void DebugScene::renderMeshComponents(CommandBuffer &cmdBuf,
   const Mat4f viewProj = camera.viewProj();
 
   auto view =
-      _registry.view<const DebugMeshComponent, const TransformComponent>(
+      m_registry.view<const DebugMeshComponent, const TransformComponent>(
           entt::exclude<Disable>);
   view.each([&](auto &cmd, auto &tr) {
     if (!cmd.enable)
@@ -60,10 +59,10 @@ void DebugScene::renderMeshComponents(CommandBuffer &cmdBuf,
 
     switch (cmd.pipeline_type) {
     case DebugPipelines::TRIANGLE_FILL:
-      SDL_BindGPUGraphicsPipeline(render_pass, _trianglePipeline);
+      SDL_BindGPUGraphicsPipeline(render_pass, m_trianglePipeline);
       break;
     case DebugPipelines::LINE:
-      SDL_BindGPUGraphicsPipeline(render_pass, _linePipeline);
+      SDL_BindGPUGraphicsPipeline(render_pass, m_linePipeline);
       break;
     }
 
@@ -79,13 +78,13 @@ void DebugScene::renderMeshComponents(CommandBuffer &cmdBuf,
 }
 
 void DebugScene::setupPipelines(const MeshLayout &layout) {
-  if (_linePipeline && _trianglePipeline)
+  if (m_linePipeline && m_trianglePipeline)
     return;
   auto vertexShader = Shader::fromMetadata(device(), "Hud3dElement.vert");
   auto fragmentShader = Shader::fromMetadata(device(), "Hud3dElement.frag");
   SDL_GPUColorTargetDescription color_desc;
   SDL_zero(color_desc);
-  color_desc.format = _swapchainTextureFormat;
+  color_desc.format = m_renderer.getSwapchainTextureFormat();
   SDL_GPUGraphicsPipelineCreateInfo info{
       .vertex_shader = vertexShader,
       .fragment_shader = fragmentShader,
@@ -102,24 +101,24 @@ void DebugScene::setupPipelines(const MeshLayout &layout) {
                            .enable_depth_write = true},
       .target_info{.color_target_descriptions = &color_desc,
                    .num_color_targets = 1,
-                   .depth_stencil_format = _depthFormat,
+                   .depth_stencil_format = m_renderer.depthFormat(),
                    .has_depth_stencil_target = true},
       .props = 0,
   };
-  if (!_trianglePipeline)
-    _trianglePipeline = SDL_CreateGPUGraphicsPipeline(device(), &info);
+  if (!m_trianglePipeline)
+    m_trianglePipeline = SDL_CreateGPUGraphicsPipeline(device(), &info);
 
   // re-use
   info.primitive_type = SDL_GPU_PRIMITIVETYPE_LINELIST;
-  if (!_linePipeline)
-    _linePipeline = SDL_CreateGPUGraphicsPipeline(device(), &info);
+  if (!m_linePipeline)
+    m_linePipeline = SDL_CreateGPUGraphicsPipeline(device(), &info);
 }
 
 void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 
   SDL_GPUColorTargetInfo color_target_info;
   SDL_zero(color_target_info);
-  color_target_info.texture = _renderer.swapchain;
+  color_target_info.texture = m_renderer.swapchain;
   color_target_info.load_op = SDL_GPU_LOADOP_LOAD;
   color_target_info.store_op = SDL_GPU_STOREOP_STORE;
   SDL_GPUDepthStencilTargetInfo depth_target_info;
@@ -128,7 +127,7 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
   depth_target_info.store_op = SDL_GPU_STOREOP_STORE;
   depth_target_info.stencil_load_op = SDL_GPU_LOADOP_LOAD;
   depth_target_info.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
-  depth_target_info.texture = _renderer.depth_texture;
+  depth_target_info.texture = m_renderer.depth_texture;
   depth_target_info.cycle = false;
 
   SDL_GPURenderPass *render_pass =
@@ -140,15 +139,15 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 }
 
 void DebugScene::release() {
-  if (device() && _trianglePipeline) {
-    SDL_ReleaseGPUGraphicsPipeline(device(), _trianglePipeline);
-    _trianglePipeline = nullptr;
+  if (device() && m_trianglePipeline) {
+    SDL_ReleaseGPUGraphicsPipeline(device(), m_trianglePipeline);
+    m_trianglePipeline = nullptr;
   }
-  if (device() && _linePipeline) {
-    SDL_ReleaseGPUGraphicsPipeline(device(), _linePipeline);
-    _linePipeline = nullptr;
+  if (device() && m_linePipeline) {
+    SDL_ReleaseGPUGraphicsPipeline(device(), m_linePipeline);
+    m_linePipeline = nullptr;
   }
   // clean up all DebugMeshComponent objects.
-  _registry.clear<DebugMeshComponent>();
+  m_registry.clear<DebugMeshComponent>();
 }
 } // namespace candlewick

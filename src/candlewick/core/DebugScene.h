@@ -40,12 +40,11 @@ struct DebugMeshComponent {
 ///
 /// This implements a basic render system for DebugMeshComponent.
 class DebugScene {
-  entt::registry &_registry;
-  const RenderContext &_renderer;
-  SDL_GPUGraphicsPipeline *_trianglePipeline;
-  SDL_GPUGraphicsPipeline *_linePipeline;
-  SDL_GPUTextureFormat _swapchainTextureFormat, _depthFormat;
-  std::vector<std::unique_ptr<IDebugSubSystem>> _systems;
+  entt::registry &m_registry;
+  const RenderContext &m_renderer;
+  SDL_GPUGraphicsPipeline *m_trianglePipeline;
+  SDL_GPUGraphicsPipeline *m_linePipeline;
+  std::vector<std::unique_ptr<IDebugSubSystem>> m_subsystems;
 
   void renderMeshComponents(CommandBuffer &cmdBuf,
                             SDL_GPURenderPass *render_pass,
@@ -59,29 +58,30 @@ public:
   DebugScene(const DebugScene &) = delete;
   DebugScene &operator=(const DebugScene &) = delete;
 
-  const Device &device() const noexcept { return _renderer.device; }
-  entt::registry &registry() { return _registry; }
-  const entt::registry &registry() const { return _registry; }
+  const Device &device() const noexcept { return m_renderer.device; }
+  entt::registry &registry() { return m_registry; }
+  const entt::registry &registry() const { return m_registry; }
 
   /// \brief Add a subsystem (IDebugSubSystem) to the scene.
   template <std::derived_from<IDebugSubSystem> System, typename... Args>
   System &addSystem(Args &&...args) {
     auto sys = std::make_unique<System>(std::forward<Args>(args)...);
-    _systems.push_back(std::move(sys));
-    return static_cast<System &>(*_systems.back());
+    m_subsystems.push_back(std::move(sys));
+    return static_cast<System &>(*m_subsystems.back());
   }
 
   /// \brief Setup pipelines; this will only have an effect **ONCE**.
   void setupPipelines(const MeshLayout &layout);
 
   /// \brief Just the basic 3D triad.
-  std::tuple<entt::entity, DebugMeshComponent &> addTriad();
+  std::tuple<entt::entity, DebugMeshComponent &>
+  addTriad(const Float3 &scale = Float3::Ones());
   /// \brief Add a basic line grid.
   std::tuple<entt::entity, DebugMeshComponent &>
   addLineGrid(std::optional<Float4> color = std::nullopt);
 
   void update() {
-    for (auto &system : _systems) {
+    for (auto &system : m_subsystems) {
       system->update(*this);
     }
   }

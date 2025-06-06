@@ -10,8 +10,7 @@ entt::entity RobotDebugSystem::addFrameTriad(DebugScene &scene,
                                              pin::FrameIndex frame_id,
                                              const Float3 &scale) {
   entt::registry &reg = scene.registry();
-  auto [ent, triad] = scene.addTriad();
-  triad.scale = scale;
+  auto [ent, triad] = scene.addTriad(scale);
   reg.emplace<PinFrameComponent>(ent, frame_id);
   return ent;
 }
