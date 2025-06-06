@@ -22,8 +22,8 @@ struct RobotDebugSystem final : IDebugSubSystem {
   entt::entity addFrameVelocityArrow(DebugScene &scene,
                                      pin::FrameIndex frame_id);
 
-  /// \brief Update the visualization of the frame placements and their
-  /// velocities.
+  /// \brief Update the transform components for the debug visual entities,
+  /// according to their frame placements and velocities.
   ///
   /// \warning We expect pinocchio::updateFramePlacements() or
   /// pinocchio::framesForwardKinematics() to be called first!

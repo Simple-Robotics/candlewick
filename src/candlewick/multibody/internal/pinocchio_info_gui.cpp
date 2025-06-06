@@ -120,7 +120,7 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
       coal::NODE_TYPE nodeType = coll.getNodeType();
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      ImGui::Text("%zu", id.geom_index);
+      ImGui::Text("%zu", id);
       ImGui::TableNextColumn();
       ImGui::Text("%s", gobj.name.c_str());
       ImGui::TableNextColumn();
@@ -134,7 +134,7 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
       ImGui::TableNextColumn();
       char chk_label[32];
       bool enabled = !disabled.contains(ent);
-      SDL_snprintf(chk_label, 32, "###enabled%zu", id.geom_index);
+      SDL_snprintf(chk_label, 32, "###enabled%zu", id);
       guiAddDisableCheckbox(chk_label, reg, ent, enabled);
     }
     ImGui::EndTable();
