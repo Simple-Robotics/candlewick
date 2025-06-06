@@ -53,7 +53,7 @@ class Visualizer final : public BaseVisualizer {
   bool m_cameraControl = true;
   bool m_showGui = true;
   bool m_shouldExit = false;
-  entt::entity m_plane, m_grid, m_triad;
+  entt::entity m_grid, m_triad;
   std::string m_currentScreenshotFilename{};
   std::string m_currentVideoFilename{};
 
@@ -77,7 +77,6 @@ public:
   struct EnvStatus {
     bool show_our_about = false;
     bool show_imgui_about = false;
-    bool show_plane = false;
   };
 
   using BaseVisualizer::setCameraPose;

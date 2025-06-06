@@ -94,9 +94,6 @@ void Visualizer::defaultGuiCallback() {
                         ImGuiColorEditFlags_AlphaPreview);
     }
     addDebugCheckbox("triad", m_triad);
-    ImGui::SameLine();
-    guiAddDisableCheckbox("Render plane", registry, m_plane,
-                          envStatus.show_plane);
   }
 
   if (ImGui::CollapsingHeader("Robot model info",

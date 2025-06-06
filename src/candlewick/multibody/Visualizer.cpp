@@ -92,13 +92,6 @@ void Visualizer::initialize() {
 
   worldSceneBounds.update({-1., -1., 0.}, {+1., +1., 1.});
 
-  const Uint32 prepeat = 25;
-  m_plane = robotScene.addEnvironmentObject(
-      loadPlaneTiled(0.5f, prepeat, prepeat), Mat4f::Identity());
-  if (!envStatus.show_plane) {
-    registry.emplace<Disable>(m_plane);
-  }
-
   this->resetCamera();
 
   SDL_Log("┌───────Controls────────");
