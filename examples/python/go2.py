@@ -1,5 +1,5 @@
 import candlewick as cdw
-from candlewick.multibody import Visualizer, VisualizerConfig
+from candlewick import Visualizer, VisualizerConfig
 
 try:
     import go2_description as go2d

@@ -15,7 +15,7 @@ import argparse
 
 import pinocchio as pin
 
-from candlewick.multibody import Visualizer, VisualizerConfig
+from candlewick import Visualizer, VisualizerConfig
 
 try:
     from robot_descriptions.loaders.pinocchio import load_robot_description

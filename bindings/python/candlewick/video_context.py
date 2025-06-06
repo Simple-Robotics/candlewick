@@ -1,4 +1,4 @@
-from .pycandlewick.multibody import Visualizer
+from . import Visualizer
 from contextlib import contextmanager
 
 

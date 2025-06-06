@@ -2,7 +2,7 @@ import example_robot_data as erd
 import pinocchio as pin
 import time
 import numpy as np
-from candlewick.multibody import Visualizer, VisualizerConfig
+from candlewick import Visualizer, VisualizerConfig
 
 robot = erd.load("ur10")
 model: pin.Model = robot.model
