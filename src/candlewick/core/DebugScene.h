@@ -66,8 +66,8 @@ public:
   template <std::derived_from<IDebugSubSystem> System, typename... Args>
   System &addSystem(Args &&...args) {
     auto sys = std::make_unique<System>(std::forward<Args>(args)...);
-    m_subsystems.push_back(std::move(sys));
-    return static_cast<System &>(*m_subsystems.back());
+    auto &p = m_subsystems.emplace_back(std::move(sys));
+    return static_cast<System &>(*p);
   }
 
   /// \brief Setup pipelines; this will only have an effect **ONCE**.
