@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - utils/VideoRecorder.cpp : fix `m_frameCounter` not being initialized
 - bindings/python : fix recorder context helper
 
+### Changed
+
+- rename macro `CDW_ASSERT` to `CANDLEWICK_ASSERT` (for consistency)
+
 ## [0.3.0] - 2025-06-05
 
 ### Added

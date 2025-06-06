@@ -82,8 +82,8 @@ MeshData loadCoalConvex(const coal::ConvexBase &geom_) {
 
 MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {
   using namespace coal;
-  CDW_ASSERT(geometry.getObjectType() == OT_GEOM,
-             "CollisionGeometry object type must be OT_GEOM !");
+  CANDLEWICK_ASSERT(geometry.getObjectType() == OT_GEOM,
+                    "CollisionGeometry object type must be OT_GEOM !");
   MeshData meshData{NoInit};
   Eigen::Affine3f transform = Eigen::Affine3f::Identity();
   const NODE_TYPE nodeType = geometry.getNodeType();
