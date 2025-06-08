@@ -31,9 +31,9 @@ entt::entity RobotDebugSystem::addFrameVelocityArrow(DebugScene &scene,
 }
 
 void RobotDebugSystem::updateFrames(entt::registry &reg) {
-  auto group = reg.group<const DebugMeshComponent>(
-      entt::get<const PinFrameComponent, TransformComponent>);
-  for (auto &&[ent, dmc, frame_id, tr] : group.each()) {
+  auto view = reg.view<const PinFrameComponent, const DebugMeshComponent,
+                       TransformComponent>();
+  for (auto &&[ent, frame_id, dmc, tr] : view.each()) {
     Mat4f pose{m_robotData.oMf[frame_id].cast<float>()};
     auto D = dmc.scale.homogeneous().asDiagonal();
     tr.noalias() = pose * D;
@@ -43,14 +43,14 @@ void RobotDebugSystem::updateFrames(entt::registry &reg) {
 void RobotDebugSystem::updateFrameVelocities(entt::registry &reg) {
   constexpr float vel_scale = 0.5f;
 
-  auto group = reg.group<const DebugMeshComponent>(
-      entt::get<const PinFrameVelocityComponent, TransformComponent>);
-  for (auto &&[ent, dmc, frame_id, tr] : group.each()) {
+  auto view = reg.view<const PinFrameVelocityComponent,
+                       const DebugMeshComponent, TransformComponent>();
+  for (auto &&[ent, fvc, dmc, tr] : view.each()) {
     Motionf vel =
-        pin::getFrameVelocity(m_robotModel, m_robotData, frame_id, pin::LOCAL)
+        pin::getFrameVelocity(m_robotModel, m_robotData, fvc, pin::LOCAL)
             .cast<float>();
 
-    const SE3f pose = m_robotData.oMf[frame_id].cast<float>();
+    const SE3f pose = m_robotData.oMf[fvc].cast<float>();
     Eigen::Quaternionf quatf;
     tr = pose.toHomogeneousMatrix();
     auto v = vel.linear();

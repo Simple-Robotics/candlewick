@@ -113,8 +113,9 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 
   const Mat4f viewProj = camera.viewProj();
 
-  auto group = m_registry.group<const DebugMeshComponent>(
-      entt::get<const TransformComponent>, entt::exclude<Disable>);
+  auto group =
+      m_registry.view<const DebugMeshComponent, const TransformComponent>(
+          entt::exclude<Disable>);
   group.each([&](auto &cmd, auto &tr) {
     if (!cmd.enable)
       return;
@@ -151,7 +152,7 @@ void DebugScene::release() {
     m_linePipeline = nullptr;
   }
   // clean up all DebugMeshComponent objects.
-  auto view = m_registry.group<DebugMeshComponent>();
+  auto view = m_registry.view<DebugMeshComponent>();
   m_registry.destroy(view.begin(), view.end());
 }
 } // namespace candlewick
