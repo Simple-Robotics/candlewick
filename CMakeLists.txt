@@ -65,8 +65,6 @@ cmake_dependent_option(
   OFF
 )
 
-set(INSTALL_DOCUMENTATION OFF CACHE BOOL "" FORCE)
-
 set(
   CMAKE_MODULE_PATH
   "${PROJECT_SOURCE_DIR}/cmake/find-external/Simde"
