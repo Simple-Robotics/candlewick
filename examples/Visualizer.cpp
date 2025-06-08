@@ -29,6 +29,8 @@ int main(int argc, char **argv) {
 
   Visualizer visualizer{{1920, 1280}, model, geom_model};
   assert(!visualizer.hasExternalData());
+  visualizer.addFrameViz(model.getFrameId("elbow_joint"));
+  visualizer.addFrameViz(model.getFrameId("ee_link"));
 
   Eigen::VectorXd q0 = pin::neutral(model);
   Eigen::VectorXd q1 = pin::randomConfiguration(model);

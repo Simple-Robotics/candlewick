@@ -56,6 +56,9 @@ class Visualizer final : public BaseVisualizer {
   entt::entity m_grid, m_triad;
   std::string m_currentScreenshotFilename{};
   std::string m_currentVideoFilename{};
+  RobotDebugSystem *robotDebug = nullptr;
+  std::vector<entt::entity> m_debug_frame_pos;
+  std::vector<entt::entity> m_debug_frame_vel;
 
   void initialize();
 
@@ -141,8 +144,20 @@ public:
 
   void stopRecording();
 
+  /// \brief Add visualization for a given frame.
+  void addFrameViz(pin::FrameIndex id);
+
+  /// \brief Remove all frame visualizations.
+  void removeFramesViz() {
+    registry.destroy(m_debug_frame_pos.begin(), m_debug_frame_pos.end());
+    registry.destroy(m_debug_frame_vel.begin(), m_debug_frame_vel.end());
+    m_debug_frame_pos.clear();
+    m_debug_frame_vel.clear();
+  }
+
   /// \brief Clear objects
   void clean() override {
+    removeFramesViz();
     robotScene.clearEnvironment();
     robotScene.clearRobotGeometries();
   }

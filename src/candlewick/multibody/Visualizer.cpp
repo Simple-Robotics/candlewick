@@ -1,9 +1,10 @@
 #include "Visualizer.h"
 #include "../core/Device.h"
-#include "../core/Components.h"
 #include "../core/CameraControls.h"
 #include "../core/DepthAndShadowPass.h"
 #include "RobotDebug.h"
+
+#include <pinocchio/algorithm/frames.hpp>
 
 namespace candlewick {
 const char *sdlMouseButtonToString(Uint8 button) {
@@ -69,10 +70,11 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
 void Visualizer::initialize() {
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
+  rconfig.enable_normal_target = true;
   robotScene.setConfig(rconfig);
   robotScene.loadModels(visualModel(), visualData());
 
-  debugScene.addSystem<RobotDebugSystem>(this->model(), data());
+  robotDebug = &debugScene.addSystem<RobotDebugSystem>(this->model(), data());
   std::tie(m_triad, std::ignore) = debugScene.addTriad();
   std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
 
@@ -146,6 +148,9 @@ Visualizer::~Visualizer() {
 }
 
 void Visualizer::displayImpl() {
+  // update frames. needed for frame debug viz
+  pin::updateFramePlacements(model(), data());
+
   this->processEvents();
 
   debugScene.update();
@@ -153,7 +158,7 @@ void Visualizer::displayImpl() {
   this->render();
 
   if (!m_currentScreenshotFilename.empty()) {
-    takeScreenshot(m_currentScreenshotFilename);
+    this->takeScreenshot(m_currentScreenshotFilename);
     m_currentScreenshotFilename.clear();
   }
 
@@ -211,6 +216,13 @@ void Visualizer::stopRecording() {
   m_currentVideoFilename.clear();
   SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
   m_videoRecorder.close();
+}
+
+void Visualizer::addFrameViz(pin::FrameIndex id) {
+  assert(robotDebug);
+  m_debug_frame_pos.push_back(robotDebug->addFrameTriad(debugScene, id));
+  m_debug_frame_vel.push_back(
+      robotDebug->addFrameVelocityArrow(debugScene, id));
 }
 
 } // namespace candlewick::multibody
