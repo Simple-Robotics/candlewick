@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- core/DebugScene : clean up entities with `DebugMeshComponent`
+
+### Changed
+
+- core/DebugScene : pass `Float3` scale to `addTriad()`
+
+### Removed
+
+- remove default plane from Visualizer class
+
+**Python**
+- Removed `multibody` submodule. All symbols included in the main module.
+- Fix stubs being generated for non-extension module classes/functions
+
 ## [0.3.1] - 2025-06-05
 
 ### Fixed
