@@ -31,13 +31,17 @@ int main(int argc, char **argv) {
   assert(!visualizer.hasExternalData());
   visualizer.addFrameViz(model.getFrameId("elbow_joint"));
   visualizer.addFrameViz(model.getFrameId("ee_link"));
+  pin::Data &data = visualizer.data();
 
   Eigen::VectorXd q0 = pin::neutral(model);
   Eigen::VectorXd q1 = pin::randomConfiguration(model);
 
   double dt = 1. / static_cast<double>(fps);
-  std::chrono::duration<double> dt_ms{dt};
+  using duration_t = std::chrono::duration<double>;
   Eigen::VectorXd q = q0;
+  Eigen::VectorXd qn = q;
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
+
   double t = 0.;
 
   while (!visualizer.shouldExit()) {
@@ -45,11 +49,15 @@ int main(int argc, char **argv) {
 
     double alpha = std::sin(t);
     pin::interpolate(model, q0, q1, alpha, q);
+    pin::difference(model, qn, q, v);
+    v /= dt;
+    pin::forwardKinematics(model, data, q, v);
 
-    visualizer.display(q);
-    std::this_thread::sleep_until(now + dt_ms);
+    visualizer.display();
+    std::this_thread::sleep_until(now + duration_t(dt));
 
     t += dt;
+    qn = q;
   }
   return 0;
 }
