@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Multibody.h"
-#include "Components.h"
 #include "../core/DebugScene.h"
 
 namespace candlewick::multibody {
