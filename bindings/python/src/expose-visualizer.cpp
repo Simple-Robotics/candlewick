@@ -47,7 +47,8 @@ void exposeVisualizer() {
           },
           ("self"_a, "filename"_a, "fps"_a = 30))
       .def("stopRecording", &Visualizer::stopRecording, "self"_a)
-      .def("addFrameViz", &Visualizer::addFrameViz, ("self"_a, "frame_id"),
+      .def("addFrameViz", &Visualizer::addFrameViz,
+           ("self"_a, "frame_id", "show_velocity"_a = true),
            "Add visualization (triad and frame velocity) for the given frame "
            "by ID.")
       .def("removeFramesViz", &Visualizer::removeFramesViz, ("self"_a),

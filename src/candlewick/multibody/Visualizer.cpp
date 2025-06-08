@@ -218,11 +218,12 @@ void Visualizer::stopRecording() {
   m_videoRecorder.close();
 }
 
-void Visualizer::addFrameViz(pin::FrameIndex id) {
+void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
   assert(robotDebug);
   m_debug_frame_pos.push_back(robotDebug->addFrameTriad(debugScene, id));
-  m_debug_frame_vel.push_back(
-      robotDebug->addFrameVelocityArrow(debugScene, id));
+  if (show_velocity)
+    m_debug_frame_vel.push_back(
+        robotDebug->addFrameVelocityArrow(debugScene, id));
 }
 
 } // namespace candlewick::multibody
