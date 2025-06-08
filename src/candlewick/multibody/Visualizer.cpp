@@ -202,7 +202,7 @@ void Visualizer::startRecording(std::string_view filename, int fps) {
 
   auto [width, height] = renderer.window.sizeInPixels();
   m_videoSettings.fps = fps;
-  m_videoRecorder.open(Uint16(width), Uint16(height), filename,
+  m_videoRecorder.open(Uint32(width), Uint32(height), filename,
                        m_videoSettings);
   m_currentVideoFilename = filename;
 }
