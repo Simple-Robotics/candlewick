@@ -3,7 +3,6 @@
 #include "../core/Components.h"
 #include "../core/CameraControls.h"
 #include "../core/DepthAndShadowPass.h"
-#include "../primitives/Plane.h"
 #include "RobotDebug.h"
 
 namespace candlewick {
