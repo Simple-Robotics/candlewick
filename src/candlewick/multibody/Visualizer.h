@@ -145,7 +145,7 @@ public:
   void stopRecording();
 
   /// \brief Add visualization for a given frame.
-  void addFrameViz(pin::FrameIndex id);
+  void addFrameViz(pin::FrameIndex id, bool show_velocity = true);
 
   /// \brief Remove all frame visualizations.
   void removeFramesViz() {
