@@ -14,6 +14,16 @@ DebugScene::DebugScene(entt::registry &reg, const RenderContext &renderer)
     , m_trianglePipeline(nullptr)
     , m_linePipeline(nullptr) {}
 
+DebugScene::DebugScene(DebugScene &&other)
+    : m_registry(other.m_registry)
+    , m_renderer(other.m_renderer)
+    , m_trianglePipeline(other.m_trianglePipeline)
+    , m_linePipeline(other.m_linePipeline)
+    , m_subsystems(std::move(other.m_subsystems)) {
+  other.m_trianglePipeline = nullptr;
+  other.m_linePipeline = nullptr;
+}
+
 std::tuple<entt::entity, DebugMeshComponent &>
 DebugScene::addTriad(const Float3 &scale) {
   auto triad_datas = loadTriadSolid();
