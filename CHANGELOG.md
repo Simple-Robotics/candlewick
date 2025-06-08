@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - core/DebugScene : clean up entities with `DebugMeshComponent`
+- core/`DebugScene` : add move ctor, explicitly delete move assignment op
 
 ### Changed
 

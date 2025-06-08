@@ -27,10 +27,12 @@ struct IDebugSubSystem {
   virtual ~IDebugSubSystem() = default;
 };
 
+/// \brief Component for simple mesh with colors.
+///
+/// This is meant for the \c Hud3dElement shader.
 struct DebugMeshComponent {
   DebugPipelines pipeline_type;
   Mesh mesh;
-  // fragment shader
   std::vector<GpuVec4> colors;
   bool enable = true;
   Float3 scale = Float3::Ones();
@@ -42,8 +44,8 @@ struct DebugMeshComponent {
 class DebugScene {
   entt::registry &m_registry;
   const RenderContext &m_renderer;
-  SDL_GPUGraphicsPipeline *m_trianglePipeline;
-  SDL_GPUGraphicsPipeline *m_linePipeline;
+  SDL_GPUGraphicsPipeline *m_trianglePipeline{nullptr};
+  SDL_GPUGraphicsPipeline *m_linePipeline{nullptr};
   std::vector<std::unique_ptr<IDebugSubSystem>> m_subsystems;
 
 public:
@@ -53,6 +55,8 @@ public:
   DebugScene(entt::registry &registry, const RenderContext &renderer);
   DebugScene(const DebugScene &) = delete;
   DebugScene &operator=(const DebugScene &) = delete;
+  DebugScene(DebugScene &&other);
+  DebugScene &operator=(DebugScene &&) = delete;
 
   const Device &device() const noexcept { return m_renderer.device; }
   entt::registry &registry() { return m_registry; }
