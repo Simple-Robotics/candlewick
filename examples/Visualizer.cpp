@@ -1,6 +1,6 @@
 #include "candlewick/multibody/Visualizer.h"
 
-#include <robot_descriptions_cpp/robot_load.hpp>
+#include <robot_descriptions_cpp/robot_spec.hpp>
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/geometry.hpp>

@@ -11,7 +11,9 @@ if(BUILD_PINOCCHIO_VISUALIZER)
   target_sources(ExamplesCommon PRIVATE lib/GenHeightfield.cpp)
   target_link_libraries(ExamplesCommon PUBLIC candlewick_multibody)
 
-  find_package(robot_descriptions_cpp REQUIRED)
+  set(ROBOT_DESCRIPTIONS_CPP_INSTALL OFF CACHE BOOL "")
+  set(ROBOT_DESCRIPTIONS_CPP_TESTING OFF CACHE BOOL "")
+  add_subdirectory(robot_descriptions_cpp EXCLUDE_FROM_ALL)
 endif()
 
 function(add_candlewick_example filename)
@@ -33,7 +35,7 @@ if(BUILD_PINOCCHIO_VISUALIZER)
   add_candlewick_example(
     Ur5WithSystems.cpp
     CLI11::CLI11
-    robot_descriptions_cpp::robot_descriptions_cpp
+    robot_descriptions_cpp
   )
-  add_candlewick_example(Visualizer.cpp CLI11::CLI11 robot_descriptions_cpp::robot_descriptions_cpp)
+  add_candlewick_example(Visualizer.cpp CLI11::CLI11 robot_descriptions_cpp)
 endif()
