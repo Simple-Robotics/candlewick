@@ -1,5 +1,4 @@
 #include "RobotScene.h"
-#include "Components.h"
 #include "LoadPinocchioGeometry.h"
 #include "../core/Components.h"
 #include "../core/Shader.h"
