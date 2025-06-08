@@ -20,7 +20,7 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 
-#include <robot_descriptions_cpp/robot_load.hpp>
+#include <robot_descriptions_cpp/robot_spec.hpp>
 
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/data.hpp>
@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
   pin::Model model;
   pin::GeometryModel geom_model;
   robot_descriptions::loadModelsFromToml("ur.toml", "ur5_gripper", model,
-                                         &geom_model, NULL);
+                                         &geom_model, NULL, true);
   // ADD HEIGHTFIELD GEOM
   // {
   //   auto hfield = generatePerlinNoiseHeightfield(40, 10u, 6.f);
