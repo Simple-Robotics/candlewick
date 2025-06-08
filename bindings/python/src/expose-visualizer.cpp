@@ -47,6 +47,11 @@ void exposeVisualizer() {
           },
           ("self"_a, "filename"_a, "fps"_a = 30))
       .def("stopRecording", &Visualizer::stopRecording, "self"_a)
+      .def("addFrameViz", &Visualizer::addFrameViz, ("self"_a, "frame_id"),
+           "Add visualization (triad and frame velocity) for the given frame "
+           "by ID.")
+      .def("removeFramesViz", &Visualizer::removeFramesViz, ("self"_a),
+           "Remove visualization for all frames.")
 // fix for Pinocchio 3.5.0
 #if PINOCCHIO_VERSION_AT_MOST(3, 5, 0)
       .DEF_PROP_PROXY(model)
