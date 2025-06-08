@@ -94,6 +94,9 @@ void Visualizer::defaultGuiCallback() {
                         ImGuiColorEditFlags_AlphaPreview);
     }
     addDebugCheckbox("triad", m_triad);
+    ImGui::SameLine();
+    ImGui::Checkbox("Ambient occlusion (SSAO)",
+                    &robotScene.config().enable_ssao);
   }
 
   if (ImGui::CollapsingHeader("Robot model info",
