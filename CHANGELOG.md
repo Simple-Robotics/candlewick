@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - core/DebugScene : pass `Float3` scale to `addTriad()`
+- multibody : deprecate header `<candlewick/multibody/Components.h>`
 
 ### Removed
 

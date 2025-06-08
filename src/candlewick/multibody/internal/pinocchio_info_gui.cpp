@@ -1,5 +1,4 @@
 #include "candlewick/multibody/Multibody.h"
-#include "candlewick/multibody/Components.h"
 #include "candlewick/core/Components.h"
 #include "candlewick/core/GuiSystem.h"
 #include "candlewick/core/errors.h"
