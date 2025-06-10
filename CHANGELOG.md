@@ -9,21 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- multibody/`Visualizer` : add frame visualization
+- multibody/Visualizer : add frame visualization
 - core/DebugScene : clean up entities with `DebugMeshComponent`
-- core/`DebugScene` : add move ctor, explicitly delete move assignment op
+- core/DebugScene : add move ctor, explicitly delete move assignment op
 
 ### Changed
 
 - core/DebugScene : pass `Float3` scale to `addTriad()`
 - multibody : deprecate header `<candlewick/multibody/Components.h>`
+- rename macro `CDW_ASSERT` to `CANDLEWICK_ASSERT` (for consistency)
+- multibody/Visualizer : make more mouse buttons configurable
+- docs : fix linking to pinocchio docs
 
 ### Removed
 
 - remove default plane from Visualizer class
 
 **Python**
-- Removed `multibody` submodule. All symbols included in the main module.
+- Removed `multibody` submodule. All symbols included in the main module. (**BREAKING CHANGE**)
 - Fix stubs being generated for non-extension module classes/functions
 
 ## [0.3.1] - 2025-06-05
@@ -32,10 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - utils/VideoRecorder.cpp : fix `m_frameCounter` not being initialized
 - bindings/python : fix recorder context helper
-
-### Changed
-
-- rename macro `CDW_ASSERT` to `CANDLEWICK_ASSERT` (for consistency)
 
 ## [0.3.0] - 2025-06-05
 
