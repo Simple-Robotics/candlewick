@@ -9,6 +9,7 @@ set(
   pycandlewick_SOURCES
   src/expose-mesh-data.cpp
   src/expose-renderer.cpp
+  src/expose-recording.cpp
   src/module.cpp
 )
 

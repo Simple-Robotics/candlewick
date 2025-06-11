@@ -29,6 +29,7 @@ BOOST_PYTHON_MODULE(pycandlewick) {
 
   exposeMeshData();
   exposeRenderer();
+  exposeVideoRecorder();
 #ifdef CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
   exposeVisualizer();
 #endif
