@@ -42,11 +42,13 @@ void exposeVisualizer() {
           ("self"_a, "filename"), "Save a screenshot to the specified file.")
       .def(
           "startRecording",
-          +[](Visualizer &viz, const std::string &filename, int fps) {
-            viz.startRecording(filename, fps);
+          +[](Visualizer &viz, const std::string &filename) {
+            viz.startRecording(filename);
           },
-          ("self"_a, "filename"_a, "fps"_a = 30))
+          ("self"_a, "filename"_a))
       .def("stopRecording", &Visualizer::stopRecording, "self"_a)
+      .def("videoSettings", &Visualizer::videoSettings, "self"_a,
+           bp::return_internal_reference<>())
       .def("addFrameViz", &Visualizer::addFrameViz,
            ("self"_a, "frame_id", "show_velocity"_a = true),
            "Add visualization (triad and frame velocity) for the given frame "

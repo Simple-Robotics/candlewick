@@ -140,9 +140,11 @@ public:
 
   void takeScreenshot(std::string_view filename);
 
-  void startRecording(std::string_view filename, int fps = 30);
+  void startRecording(std::string_view filename);
 
   void stopRecording();
+
+  auto &videoSettings() { return m_videoSettings; }
 
   /// \brief Add visualization for a given frame.
   /// \param id Frame index

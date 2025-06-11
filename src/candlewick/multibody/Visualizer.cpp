@@ -201,12 +201,11 @@ void Visualizer::takeScreenshot(std::string_view filename) {
                            Uint16(height), filename);
 }
 
-void Visualizer::startRecording(std::string_view filename, int fps) {
+void Visualizer::startRecording(std::string_view filename) {
   if (m_videoRecorder.isRecording())
     terminate_with_message("Recording stream was already opened.");
 
   auto [width, height] = renderer.window.sizeInPixels();
-  m_videoSettings.fps = fps;
   m_videoRecorder.open(Uint32(width), Uint32(height), filename,
                        m_videoSettings);
   m_currentVideoFilename = filename;

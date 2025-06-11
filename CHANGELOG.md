@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Added
+### Added
 
 - bindings/python : expose video recorder settings
+
+### Changed
+
+- multibody/Visualizer : expose video settings directly instead of passing fps parameter
 
 ## [0.4.0] - 2025-06-10
 

@@ -8,6 +8,7 @@ using namespace candlewick;
 
 void exposeMeshData();
 void exposeRenderer();
+void exposeVideoRecorder();
 #ifdef CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
 void exposeVisualizer();
 #endif
