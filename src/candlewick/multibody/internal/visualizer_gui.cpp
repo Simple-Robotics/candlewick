@@ -104,17 +104,24 @@ void Visualizer::defaultGuiCallback() {
     guiAddPinocchioModelInfo(registry, m_model, visualModel());
   }
 
-  if (ImGui::CollapsingHeader("Screenshot and video recording")) {
+  if (ImGui::CollapsingHeader(
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+          "Screenshots/Video recording"
+#else
+          "Screenshots"
+#endif
+          )) {
     screenshot_taker_gui(renderer.window, m_currentScreenshotFilename);
 
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
     ImGui::BeginChild("video_record", {0, 0},
                       ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
     guiAddFileDialog(renderer.window, DialogFileType::VIDEOS,
                      m_currentVideoFilename);
-    auto &settings = m_videoSettings;
+
     ImGui::BeginDisabled(m_videoRecorder.isRecording());
-    ImGui::SliderInt("bitrate", &settings.bitRate, 2'000'000, 6'000'000);
-    ImGui::SliderInt("framerate", &settings.fps, 10, 60);
+    ImGui::SliderInt("bitrate", &m_videoSettings.bitRate, 2'000'000, 6'000'000);
+    ImGui::SliderInt("framerate", &m_videoSettings.fps, 10, 60);
     ImGui::EndDisabled();
 
     if (!m_videoRecorder.isRecording()) {
@@ -136,6 +143,7 @@ void Visualizer::defaultGuiCallback() {
       }
     }
     ImGui::EndChild();
+#endif
   };
 
   ImGui::End();

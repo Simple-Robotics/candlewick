@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        environment: [all-test]
+        environment: [test-no-ffmpeg, test-all]
         build_type: [Release]
 
     steps:

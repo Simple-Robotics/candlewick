@@ -14,7 +14,9 @@
 #include "candlewick/multibody/RobotScene.h"
 #include "candlewick/multibody/RobotDebug.h"
 #include "candlewick/primitives/Primitives.h"
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
 #include "candlewick/utils/VideoRecorder.h"
+#endif
 #include "candlewick/utils/WriteTextureToImage.h"
 
 #include <imgui.h>
@@ -452,9 +454,9 @@ int main(int argc, char **argv) {
   Eigen::VectorXd q0 = pin::neutral(model);
   Eigen::VectorXd q1 = pin::randomConfiguration(model);
 
+  media::TransferBufferPool transfer_buffer_pool{renderer.device};
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   media::VideoRecorder recorder{NoInit};
-  media::TransferBufferPool transfer_buffer_pool{renderer.device};
   if (performRecording) {
     media::VideoRecorder::Settings settings;
     settings.fps = 50;
@@ -552,9 +554,9 @@ int main(int argc, char **argv) {
   robot_scene.release();
   debug_scene.release();
   gui_system.release();
+  transfer_buffer_pool.release();
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   recorder.close();
-  transfer_buffer_pool.release();
 #endif
   renderer.destroy();
   SDL_Quit();

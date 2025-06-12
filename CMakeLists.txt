@@ -86,6 +86,9 @@ ADD_PROJECT_DEPENDENCY(SDL3 3.2.4 REQUIRED)
 ADD_PROJECT_DEPENDENCY(assimp REQUIRED)
 ADD_PROJECT_DEPENDENCY(Eigen3 REQUIRED)
 ADD_PROJECT_DEPENDENCY(coal REQUIRED PKG_CONFIG_REQUIRES "coal >= 3.0.0")
+ADD_PROJECT_DEPENDENCY(nlohmann_json 3.11.3 REQUIRED)
+ADD_PROJECT_DEPENDENCY(EnTT REQUIRED)
+ADD_PROJECT_DEPENDENCY(magic_enum 0.9.7 CONFIG REQUIRED)
 if(BUILD_PINOCCHIO_VISUALIZER)
   ADD_PROJECT_DEPENDENCY(
     pinocchio
@@ -93,6 +96,14 @@ if(BUILD_PINOCCHIO_VISUALIZER)
     PKG_CONFIG_REQUIRES "pinocchio >= 3.7.0"
   )
 endif()
+ADD_PROJECT_DEPENDENCY(
+  FFmpeg
+  7.0.0
+  COMPONENTS
+  avformat
+  avcodec
+  swscale
+)
 set(CANDLEWICK_ASSETS_DIR ${PROJECT_SOURCE_DIR}/assets)
 set(CANDLEWICK_SHADER_SRC_DIR ${PROJECT_SOURCE_DIR}/shaders)
 set(
@@ -100,6 +111,15 @@ set(
   ${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/shaders
 )
 message(STATUS "Shader install dir: ${CANDLEWICK_SHADER_INSTALL_DIR}")
+
+if(FFmpeg_FOUND)
+  message(STATUS "FFmpeg found (version ${FFmpeg_VERSION}).")
+  option(
+    BUILD_WITH_FFMPEG_SUPPORT
+    "Build Candlewick with support for FFmpeg and video recording features."
+    ON
+  )
+endif()
 
 add_subdirectory(external)
 add_subdirectory(src)

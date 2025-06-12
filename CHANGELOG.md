@@ -10,14 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - bindings/python : expose video recorder settings
+- pixi : separate `pinocchio` and `ffmpeg` features, add to CI build matrix
 
 ### Changed
 
 - multibody/Visualizer : expose video settings directly instead of passing fps parameter
+- cmake : allow user to turn off FFmpeg support/video recording features even if FFmpeg was detected
 
 ### Fixed
 
-- support for Coal's current `devel` branch (remove incompatible fwd-declarations, just include `<coal/shape/geometric_shapes.h>`)
+- support for Coal's current `devel` branch (remove incompatible fwd-declarations, just include `<coal/shape/geometric_shapes.h>`) (https://github.com/Simple-Robotics/candlewick/pull/81)
+- Make FFmpeg actually optional: add option to turn off support even with FFmpeg installed, fix building with support turned off
 
 ## [0.4.0] - 2025-06-10
 

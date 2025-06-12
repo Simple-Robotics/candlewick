@@ -9,7 +9,6 @@ set(
   pycandlewick_SOURCES
   src/expose-mesh-data.cpp
   src/expose-renderer.cpp
-  src/expose-recording.cpp
   src/module.cpp
 )
 
@@ -28,6 +27,9 @@ if(BUILD_PINOCCHIO_VISUALIZER)
     pycandlewick
     PRIVATE CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
   )
+endif()
+if(BUILD_WITH_FFMPEG_SUPPORT)
+  target_sources(pycandlewick PRIVATE src/expose-recording.cpp)
 endif()
 
 set_target_properties(

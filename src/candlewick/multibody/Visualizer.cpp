@@ -5,6 +5,7 @@
 #include "RobotDebug.h"
 
 #include <pinocchio/algorithm/frames.hpp>
+#include <SDL3/SDL_init.h>
 
 namespace candlewick {
 const char *sdlMouseButtonToString(Uint8 button) {
@@ -48,7 +49,10 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , robotScene{registry, renderer}
     , debugScene{registry, renderer}
     , m_transferBuffers{renderer.device}
-    , m_videoRecorder{NoInit} {
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+    , m_videoRecorder{NoInit}
+#endif
+{
   this->initialize();
 }
 
@@ -63,7 +67,10 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , robotScene{registry, renderer}
     , debugScene{registry, renderer}
     , m_transferBuffers{renderer.device}
-    , m_videoRecorder{NoInit} {
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+    , m_videoRecorder{NoInit}
+#endif
+{
   this->initialize();
 }
 
@@ -136,8 +143,9 @@ void Visualizer::setCameraPose(const Eigen::Ref<const Matrix4> &pose) {
 }
 
 Visualizer::~Visualizer() {
-  if (m_videoRecorder.isRecording())
-    this->stopRecording();
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+  this->stopRecording();
+#endif
   m_transferBuffers.release();
 
   robotScene.release();
@@ -162,12 +170,14 @@ void Visualizer::displayImpl() {
     m_currentScreenshotFilename.clear();
   }
 
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   if (m_videoRecorder.isRecording()) {
     CommandBuffer command_buffer{device()};
     m_videoRecorder.writeTextureToVideoFrame(
         command_buffer, device(), m_transferBuffers, renderer.swapchain,
         renderer.getSwapchainTextureFormat());
   }
+#endif
 }
 
 void Visualizer::render() {
@@ -201,7 +211,8 @@ void Visualizer::takeScreenshot(std::string_view filename) {
                            Uint16(height), filename);
 }
 
-void Visualizer::startRecording(std::string_view filename) {
+void Visualizer::startRecording([[maybe_unused]] std::string_view filename) {
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   if (m_videoRecorder.isRecording())
     terminate_with_message("Recording stream was already opened.");
 
@@ -209,12 +220,22 @@ void Visualizer::startRecording(std::string_view filename) {
   m_videoRecorder.open(Uint32(width), Uint32(height), filename,
                        m_videoSettings);
   m_currentVideoFilename = filename;
+#else
+  SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+              "Visualizer::%s() does nothing here, since Candlewick was "
+              "compiled without FFmpeg support.",
+              __FUNCTION__);
+#endif
 }
 
 void Visualizer::stopRecording() {
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+  if (!m_videoRecorder.isRecording())
+    return;
   m_currentVideoFilename.clear();
   SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
   m_videoRecorder.close();
+#endif
 }
 
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {

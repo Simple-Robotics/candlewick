@@ -42,13 +42,24 @@ void exposeVisualizer() {
           ("self"_a, "filename"), "Save a screenshot to the specified file.")
       .def(
           "startRecording",
-          +[](Visualizer &viz, const std::string &filename) {
+          +[]([[maybe_unused]] Visualizer &viz,
+              [[maybe_unused]] const std::string &filename) {
+#ifndef CANDLEWICK_WITH_FFMPEG_SUPPORT
+            PyErr_WarnEx(PyExc_UserWarning,
+                         "Recording videos is not available because Candlewick "
+                         "was built without FFmpeg support.",
+                         1);
+            bp::throw_error_already_set();
+#else
             viz.startRecording(filename);
+#endif
           },
           ("self"_a, "filename"_a))
       .def("stopRecording", &Visualizer::stopRecording, "self"_a)
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
       .def("videoSettings", &Visualizer::videoSettings, "self"_a,
            bp::return_internal_reference<>())
+#endif
       .def("addFrameViz", &Visualizer::addFrameViz,
            ("self"_a, "frame_id", "show_velocity"_a = true),
            "Add visualization (triad and frame velocity) for the given frame "
