@@ -2,13 +2,13 @@
 
 #include "../utils/Utils.h"
 
-#include <coal/fwd.hh>
+#include <coal/shape/geometric_shapes.h>
+
+// fwd declarations
 
 namespace coal {
 template <typename BV> class HeightField;
 class OBBRSS;
-class ShapeBase;
-class ConvexBase;
 } // namespace coal
 
 namespace candlewick {
