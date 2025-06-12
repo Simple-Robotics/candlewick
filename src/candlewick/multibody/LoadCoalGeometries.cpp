@@ -119,9 +119,10 @@ MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {
   }
   case GEOM_CAPSULE: {
     auto &g = castCoalGeom<Capsule>(geometry);
-    const float length = static_cast<float>(2 * g.halfLength);
-    transform.scale(float(g.radius));
-    meshData = loadCapsuleSolid(6u, 16u, length);
+    const float length = 2 * static_cast<float>(g.halfLength);
+    const float radius = static_cast<float>(g.radius);
+    transform.scale(radius);
+    meshData = loadCapsuleSolid(12u, 32u, length / radius);
     break;
   }
   case GEOM_CONE: {
