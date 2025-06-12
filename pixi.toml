@@ -45,9 +45,11 @@ build = { cmd = "cmake --build build --target all", depends-on = ["configure"]}
 clean = { cmd = "rm -rf build" }
 doc = { cmd = "cmake --build build --target doc", depends-on = ["configure"] }
 
+[feature.ffmpeg.dependencies]
+ffmpeg = ">=7"
+
 [feature.pinocchio.dependencies]
 pinocchio = ">=3.5"
-ffmpeg = ">=7"
 
 [feature.pinocchio.activation]
 env = { CANDLEWICK_WITH_PINOCCHIO = "ON" }
@@ -62,10 +64,12 @@ env = { CANDLEWICK_BUILD_TESTS = "ON" }
 doxygen = "*"
 
 [environments]
-pinocchio = { features = ["pinocchio"] }
+pinocchio = { features = ["pinocchio", "ffmpeg"] }
 # test core
 test = { features = ["test"] }
-# test all (pinocchio)
-all-test = { features = ["pinocchio", "test"]}
+# test pinocchio, no ffmpeg
+test-no-ffmpeg = { features = ["pinocchio", "test"] }
+# test all (pinocchio + ffmpeg)
+test-all = { features = ["pinocchio", "ffmpeg", "test"]}
 # doc environment
 doc = { features = ["doc", "default"] }
