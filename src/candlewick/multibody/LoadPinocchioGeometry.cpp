@@ -18,6 +18,7 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
 
   Float4 meshColor = gobj.meshColor.cast<float>();
   const char *meshPath = gobj.meshPath.c_str();
+  bool overrideMaterial = gobj.overrideMaterial;
 
   switch (objType) {
   case OT_BVH: {
@@ -27,6 +28,8 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
   case OT_GEOM: {
     const ShapeBase &shape = castCoalGeom<ShapeBase>(collgom);
     meshData.emplace_back(loadCoalPrimitive(shape));
+    // always set material color for OT_GEOM
+    overrideMaterial = true;
     break;
   }
   case OT_HFIELD: {
@@ -51,7 +54,7 @@ void loadGeometryObject(const pin::GeometryObject &gobj,
     break;
   }
   for (auto &data : meshData) {
-    if (gobj.overrideMaterial)
+    if (overrideMaterial)
       data.material.baseColor = meshColor;
   }
 }
