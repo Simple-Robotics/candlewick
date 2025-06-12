@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - multibody/Visualizer : expose video settings directly instead of passing fps parameter
 
+### Fixed
+
+- support for Coal's current `devel` branch (remove incompatible fwd-declarations, just include `<coal/shape/geometric_shapes.h>`)
+
 ## [0.4.0] - 2025-06-10
 
 ### Added
