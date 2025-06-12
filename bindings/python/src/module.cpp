@@ -8,7 +8,9 @@ using namespace candlewick;
 
 void exposeMeshData();
 void exposeRenderer();
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
 void exposeVideoRecorder();
+#endif
 #ifdef CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
 void exposeVisualizer();
 #endif
@@ -30,7 +32,9 @@ BOOST_PYTHON_MODULE(pycandlewick) {
 
   exposeMeshData();
   exposeRenderer();
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   exposeVideoRecorder();
+#endif
 #ifdef CANDLEWICK_PYTHON_PINOCCHIO_SUPPORT
   exposeVisualizer();
 #endif

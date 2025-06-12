@@ -9,10 +9,12 @@
 #include "../core/DebugScene.h"
 #include "../core/RenderContext.h"
 #include "../utils/WriteTextureToImage.h"
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
 #include "../utils/VideoRecorder.h"
+#endif
 
 #include <pinocchio/visualizers/base-visualizer.hpp>
-#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_mouse.h>
 #include <entt/entity/registry.hpp>
 
 namespace candlewick::multibody {
@@ -55,7 +57,6 @@ class Visualizer final : public BaseVisualizer {
   bool m_shouldExit = false;
   entt::entity m_grid, m_triad;
   std::string m_currentScreenshotFilename{};
-  std::string m_currentVideoFilename{};
   RobotDebugSystem *robotDebug = nullptr;
   std::vector<entt::entity> m_debug_frame_pos;
   std::vector<entt::entity> m_debug_frame_vel;
@@ -144,7 +145,9 @@ public:
 
   void stopRecording();
 
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   auto &videoSettings() { return m_videoSettings; }
+#endif
 
   /// \brief Add visualization for a given frame.
   /// \param id Frame index
@@ -175,8 +178,11 @@ public:
 
 private:
   media::TransferBufferPool m_transferBuffers;
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+  std::string m_currentVideoFilename{};
   media::VideoRecorder m_videoRecorder;
   media::VideoRecorder::Settings m_videoSettings;
+#endif
 };
 
 } // namespace candlewick::multibody
