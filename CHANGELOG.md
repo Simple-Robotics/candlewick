@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - support for Coal's current `devel` branch (remove incompatible fwd-declarations, just include `<coal/shape/geometric_shapes.h>`) (https://github.com/Simple-Robotics/candlewick/pull/81)
 - Make FFmpeg actually optional: add option to turn off support even with FFmpeg installed, fix building with support turned off
+- multibody/LoadCoalGeometries : fix setting the shape parameters for Capsule primitive (https://github.com/Simple-Robotics/candlewick/pull/84)
+- multibody::loadGeometryObject() : always override material for `OT_GEOM` geometries (https://github.com/Simple-Robotics/candlewick/pull/84)
 
 ## [0.4.0] - 2025-06-10
 
