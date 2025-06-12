@@ -2,7 +2,6 @@
 #include "LoadCoalGeometries.h"
 #include "../core/errors.h"
 #include "../utils/LoadMesh.h"
-#include "../utils/MeshTransforms.h"
 
 #include <pinocchio/multibody/geometry.hpp>
 #include <coal/hfield.h>
