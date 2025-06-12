@@ -1,17 +1,5 @@
 # Copyright (c) 2024-2025 ManifoldFR
 
-ADD_PROJECT_DEPENDENCY(nlohmann_json 3.11.3 REQUIRED)
-ADD_PROJECT_DEPENDENCY(EnTT REQUIRED)
-ADD_PROJECT_DEPENDENCY(magic_enum 0.9.7 CONFIG REQUIRED)
-ADD_PROJECT_DEPENDENCY(
-  FFmpeg
-  7.0.0
-  COMPONENTS
-  avformat
-  avcodec
-  swscale
-)
-
 add_library(
   candlewick_core
   SHARED
@@ -79,11 +67,8 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-if(FFmpeg_FOUND)
-  message(
-    STATUS
-    "FFmpeg found (version ${FFmpeg_VERSION}). Building video module for candlewick_core."
-  )
+if(BUILD_WITH_FFMPEG_SUPPORT)
+  message(STATUS "Candlewick will be built with FFmpeg support.")
   target_compile_definitions(
     candlewick_core
     PUBLIC CANDLEWICK_WITH_FFMPEG_SUPPORT
