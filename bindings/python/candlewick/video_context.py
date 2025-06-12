@@ -1,9 +1,18 @@
-from . import Visualizer
-from . import VideoRecorderSettings
 from contextlib import contextmanager
+from . import Visualizer
+import warnings
 
+try:
+    import importlib
 
-_DEFAULT_VIDEO_SETTINGS = VideoRecorderSettings()
+    importlib.import_module("VideoRecorderSettings", package=".")
+    CANDLEWICK_HAS_VIDEO_RECORDER = True
+except ImportError:
+    CANDLEWICK_HAS_VIDEO_RECORDER = False
+
+_DEFAULT_VIDEO_SETTINGS = {"fps": 30, "bitRate": 3_000_000}
+
+__all__ = ["create_recorder_context"]
 
 
 @contextmanager
@@ -11,16 +20,18 @@ def create_recorder_context(
     viz: Visualizer,
     filename: str,
     /,
-    fps: int = _DEFAULT_VIDEO_SETTINGS.fps,
-    bitRate: int = _DEFAULT_VIDEO_SETTINGS.bitRate,
+    fps: int = _DEFAULT_VIDEO_SETTINGS["fps"],
+    bitRate: int = _DEFAULT_VIDEO_SETTINGS["bitRate"],
 ):
-    viz.videoSettings().fps = fps
-    viz.videoSettings().bitRate = bitRate
-    viz.startRecording(filename)
+    if not CANDLEWICK_HAS_VIDEO_RECORDER:
+        warnings.warn(
+            "This context will do nothing, as Candlewick was built without video recording support."
+        )
+    else:
+        viz.videoSettings().fps = fps
+        viz.videoSettings().bitRate = bitRate
+        viz.startRecording(filename)
     try:
         yield
     finally:
         viz.stopRecording()
-
-
-__all__ = ["create_recorder_context"]

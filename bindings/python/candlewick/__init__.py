@@ -1,7 +1,7 @@
 # ruff: noqa: F401, F403, F405
 from .pycandlewick import *  # noqa
 from .pycandlewick import __version__
-from . import video_context
+from .video_context import *
 
 
 def _process():
