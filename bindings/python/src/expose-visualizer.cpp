@@ -34,6 +34,9 @@ void exposeVisualizer() {
       .def(VisualizerPythonVisitor<Visualizer>{})
       .def_readonly("renderer", &Visualizer::renderer)
       .def_readwrite("worldSceneBounds", &Visualizer::worldSceneBounds)
+      .add_property("device",
+                    bp::make_function(&Visualizer::device,
+                                      bp::return_internal_reference<>()))
       .def(
           "takeScreenshot",
           +[](Visualizer &viz, const std::string &filename) {
