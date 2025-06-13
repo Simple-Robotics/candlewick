@@ -20,12 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - multibody/Visualizer : expose video settings directly instead of passing fps parameter
-- cmake : allow user to turn off FFmpeg support/video recording features even if FFmpeg was detected
+- cmake : allow user to turn off FFmpeg support/video recording features even if FFmpeg was detected (https://github.com/Simple-Robotics/candlewick/pull/83)
 
 ### Fixed
 
 - support for Coal's current `devel` branch (remove incompatible fwd-declarations, just include `<coal/shape/geometric_shapes.h>`) (https://github.com/Simple-Robotics/candlewick/pull/81)
-- Make FFmpeg actually optional: add option to turn off support even with FFmpeg installed, fix building with support turned off
+- Make FFmpeg actually optional: add option to turn off support even with FFmpeg installed, fix building with support turned off (https://github.com/Simple-Robotics/candlewick/pull/83)
 - multibody/LoadCoalGeometries : fix setting the shape parameters for Capsule primitive (https://github.com/Simple-Robotics/candlewick/pull/84)
 - multibody::loadGeometryObject() : always override material for `OT_GEOM` geometries (https://github.com/Simple-Robotics/candlewick/pull/84)
 
