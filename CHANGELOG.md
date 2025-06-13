@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2025-06-13
 
+## [0.5.0] - 2025-06-13
+
 ### Added
 
 - bindings/python : expose video recorder settings
@@ -179,6 +181,7 @@ This is the first release to use a changelog.
 
 
 [Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.5.0...v0.5.0
 [0.5.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/Simple-Robotics/candlewick/compare/v0.3.0...v0.3.1
