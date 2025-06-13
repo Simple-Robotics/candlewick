@@ -22,6 +22,7 @@ nlohmann_json = ">=3.12.0,<4"
 coal = ">=3.0.1,<4"
 assimp = ">=5.4.3,<6"
 eigenpy = ">=3.10.3,<4"
+eigen = ">=3.4.0,<4"
 
 [activation]
 scripts = ["scripts/pixi/activation.sh"]
