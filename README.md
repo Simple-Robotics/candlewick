@@ -36,13 +36,11 @@ Here's a Python example:
 ```python
 import example_robot_data as erd
 import pinocchio as pin
-import numpy as np
-from candlewick.multibody import Visualizer, VisualizerConfig
+from candlewick import Visualizer, VisualizerConfig, create_recorder_context
 
 robot = erd.load("ur10")
 model: pin.Model = robot.model
-data: pin.Data = robot.data
-visual_model = robot.visual_model
+visual_model: pin.GeometryModel = robot.visual_model
 
 config = VisualizerConfig()
 config.width = 1280
@@ -50,8 +48,11 @@ config.height = 720
 viz = Visualizer(config, model, visual_model)
 
 q0 = pin.neutral(model)
-viz.setCameraPose(pin.SE3.Identity())
-viz.display(q0)
+viz.addFrameViz(model.getFrameId("tool0"))
+
+with create_recorder_context(viz, "ur10_video.mp4"):
+  while not viz.shouldExit:
+    viz.display(q0)
 ```
 
 
