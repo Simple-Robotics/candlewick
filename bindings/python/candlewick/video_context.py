@@ -1,14 +1,6 @@
 from contextlib import contextmanager
-from . import Visualizer
+from . import Visualizer, hasFfmpegSupport
 import warnings
-
-try:
-    import importlib
-
-    importlib.import_module("VideoRecorderSettings", package=".")
-    CANDLEWICK_HAS_VIDEO_RECORDER = True
-except ImportError:
-    CANDLEWICK_HAS_VIDEO_RECORDER = False
 
 _DEFAULT_VIDEO_SETTINGS = {"fps": 30, "bitRate": 3_000_000}
 
@@ -23,7 +15,7 @@ def create_recorder_context(
     fps: int = _DEFAULT_VIDEO_SETTINGS["fps"],
     bitRate: int = _DEFAULT_VIDEO_SETTINGS["bitRate"],
 ):
-    if not CANDLEWICK_HAS_VIDEO_RECORDER:
+    if not hasFfmpegSupport():
         warnings.warn(
             "This context will do nothing, as Candlewick was built without video recording support."
         )

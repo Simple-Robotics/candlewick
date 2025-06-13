@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - bindings/python : expose video recorder settings
+- bindings/python : add function `hasFfmpegSupport()` to check if... library was built with FFmpeg support
 - pixi : separate `pinocchio` and `ffmpeg` features, add to CI build matrix
 
 ### Changed

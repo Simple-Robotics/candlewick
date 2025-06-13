@@ -26,6 +26,14 @@ BOOST_PYTHON_MODULE(pycandlewick) {
   }
   bp::def("setShadersDirectory", &setShadersDirectory, ("path"_a));
   bp::def("currentShaderDirectory", &currentShaderDirectory);
+  bp::def(
+      "hasFfmpegSupport", +[] {
+#ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
+        return true;
+#else
+    return false;
+#endif
+      });
 
   // Register SDL_Quit() as a function to call when interpreter exits.
   Py_AtExit(SDL_Quit);
