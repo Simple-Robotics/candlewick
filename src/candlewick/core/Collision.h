@@ -6,7 +6,6 @@
 namespace candlewick {
 
 using coal::AABB;
-using coal::OBB;
 
 inline Mat4f toTransformationMatrix(const AABB &aabb) {
   Mat4f T = Mat4f::Identity();
@@ -16,7 +15,7 @@ inline Mat4f toTransformationMatrix(const AABB &aabb) {
   return T;
 }
 
-inline Mat4f toTransformationMatrix(const OBB &obb) {
+inline Mat4f toTransformationMatrix(const coal::OBB &obb) {
   Mat4f T = Mat4f::Identity();
   auto D = obb.extent.asDiagonal();
   T.block<3, 3>(0, 0) = (obb.axes * D).cast<float>();

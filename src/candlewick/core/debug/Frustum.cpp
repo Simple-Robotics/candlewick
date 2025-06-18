@@ -85,7 +85,8 @@ namespace frustum_debug {
   }
 
   void renderOBB(CommandBuffer &cmdBuf, SDL_GPURenderPass *render_pass,
-                 const Camera &camera, const OBB &obb, const Float4 &color) {
+                 const Camera &camera, const coal::OBB &obb,
+                 const Float4 &color) {
     Mat4f transform = toTransformationMatrix(obb);
     Mat4f mvp = camera.viewProj() * transform;
     Float3 eyePos = obb.center().cast<float>();
@@ -130,7 +131,7 @@ void FrustumBoundsDebugSystem::render(CommandBuffer &cmdBuf,
                      frustum_debug::renderAABB(cmdBuf, render_pass, camera,
                                                bounds, item.color);
                    },
-                   [&](const OBB &obb) {
+                   [&](const coal::OBB &obb) {
                      frustum_debug::renderOBB(cmdBuf, render_pass, camera, obb,
                                               item.color);
                    },
