@@ -139,6 +139,13 @@ frustumBoundingSphereCenterRadius(const FrustumCornersType &worldSpaceCorners) {
   return {frustumCenter, radius};
 }
 
+inline void frustumApplyTransform(FrustumCornersType &corners,
+                                  const Mat4f &tr) {
+  for (auto &x : corners) {
+    x = (tr * x.homogeneous()).head<3>();
+  }
+}
+
 /// \}
 
 } // namespace candlewick
