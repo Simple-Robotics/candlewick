@@ -190,7 +190,7 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
 /// light-space view and projection matrices which will enclose this bounding
 /// sphere within the light volume. The frustum can be obtained from the
 /// world-space camera.
-/// \sa frustumFromCameraProjection()
+/// \sa frustumFromCameraViewProj()
 void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                                  std::span<const DirectionalLight> dirLight,
                                  std::span<const OpaqueCastable> castables,

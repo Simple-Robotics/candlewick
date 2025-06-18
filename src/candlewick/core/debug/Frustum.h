@@ -24,7 +24,7 @@ namespace frustum_debug {
                   const Float4 &color = 0x00BFFFff_rgbaf);
 
   void renderOBB(CommandBuffer &cmdBuf, SDL_GPURenderPass *render_pass,
-                 const Camera &camera, const OBB &obb,
+                 const Camera &camera, const coal::OBB &obb,
                  const Float4 &color = 0x00BFFFff_rgbaf);
 
   void renderFrustum(CommandBuffer &cmdBuf, SDL_GPURenderPass *render_pass,
@@ -39,7 +39,7 @@ struct DebugFrustumComponent {
 };
 
 struct DebugBoundsComponent {
-  std::variant<AABB, OBB> bounds;
+  std::variant<AABB, coal::OBB> bounds;
   GpuVec4 color = 0xA03232FF_rgbaf;
 };
 

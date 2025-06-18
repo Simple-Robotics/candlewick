@@ -262,21 +262,29 @@ void renderShadowPassFromFrustum(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                                  std::span<const DirectionalLight> dirLight,
                                  std::span<const OpaqueCastable> castables,
                                  const FrustumCornersType &worldSpaceCorners) {
-  using Eigen::Vector3d;
-
   auto [center, radius] = frustumBoundingSphereCenterRadius(worldSpaceCorners);
-  radius = std::ceil(radius * 16.f) / 16.f;
 
   for (size_t i = 0; i < passInfo.numLights(); i++) {
-    const Float3 eye = center - radius * dirLight[i].direction.normalized();
+    Float3 eye = center - radius * dirLight[i].direction.normalized();
+    Mat4f tmpLightView = lookAt(eye, center, Float3::UnitZ());
+    // transform corners to light-space
+    FrustumCornersType corners = worldSpaceCorners;
+    frustumApplyTransform(corners, tmpLightView);
+
+    coal::AABB bounds;
+    for (const auto &c : corners) {
+      bounds += c.cast<coal::CoalScalar>();
+    }
+    float r = float(bounds.max_.z());
+
     auto &lightView = passInfo.cam[i].view;
     auto &lightProj = passInfo.cam[i].projection;
+    eye = center - r * dirLight[i].direction.normalized();
     lightView = lookAt(eye, center, Float3::UnitZ());
 
-    AABB bounds{Vector3d::Constant(-radius), Vector3d::Constant(radius)};
     lightProj = shadowOrthographicMatrix({bounds.width(), bounds.height()},
-                                         float(bounds.min_.z()),
-                                         float(bounds.max_.z()));
+                                         float(bounds.max_.z()),
+                                         float(bounds.min_.z()));
   }
   passInfo.render(cmdBuf, castables);
 }
@@ -285,28 +293,21 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               std::span<const DirectionalLight> dirLight,
                               std::span<const OpaqueCastable> castables,
                               const AABB &worldAABB) {
-  using Eigen::Vector3d;
-
   Float3 center = worldAABB.center().cast<float>();
 
   for (size_t i = 0; i < passInfo.numLights(); i++) {
-    Float3 tmpEye = center - 100.0f * dirLight[i].direction.normalized();
-    Mat4f tmplightView = lookAt(tmpEye, center, Float3::UnitZ());
+    Float3 eye = center - 100.0f * dirLight[i].direction.normalized();
+    Mat4f tmpLightView = lookAt(eye, center, Float3::UnitZ());
+    AABB bounds = applyTransformToAABB(worldAABB, tmpLightView);
 
     auto &lightView = passInfo.cam[i].view;
     auto &lightProj = passInfo.cam[i].projection;
 
-    Mat3f R = tmplightView.topLeftCorner<3, 3>();
-    Float3 t = tmplightView.topRightCorner<3, 1>();
-    AABB bounds = coal::translate(coal::rotate(worldAABB, R.cast<double>()),
-                                  t.cast<double>());
-
-    Float3 lightSpaceCenter = bounds.center().cast<float>();
     float radius = float(bounds.max_.z());
 
-    Float3 finalEye = center - radius * dirLight[i].direction.normalized();
+    eye = center - radius * dirLight[i].direction.normalized();
 
-    lightView = lookAt(finalEye, center, Float3::UnitZ());
+    lightView = lookAt(eye, center, Float3::UnitZ());
     lightProj = shadowOrthographicMatrix({bounds.width(), bounds.height()},
                                          float(bounds.max_.z()),
                                          float(bounds.min_.z()));

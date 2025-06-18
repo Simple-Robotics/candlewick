@@ -69,8 +69,6 @@ class Visualizer final : public BaseVisualizer {
 
   void displayImpl() override;
 
-  const Device &device() const { return renderer.device; }
-
   GuiSystem::GuiBehavior getDefaultCallback() {
     return [this](auto &) { this->defaultGuiCallback(); };
   }
@@ -105,6 +103,7 @@ public:
   void defaultGuiCallback();
 
   void resetCamera();
+
   void loadViewerModel() override;
 
   Visualizer(const Config &config, const pin::Model &model,
@@ -126,6 +125,8 @@ public:
                    getDefaultCallback()) {}
 
   ~Visualizer() override;
+
+  const Device &device() const { return renderer.device; }
 
   void setCameraTarget(const Eigen::Ref<const Vector3> &target) override;
 

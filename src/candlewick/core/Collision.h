@@ -6,7 +6,6 @@
 namespace candlewick {
 
 using coal::AABB;
-using coal::OBB;
 
 inline Mat4f toTransformationMatrix(const AABB &aabb) {
   Mat4f T = Mat4f::Identity();
@@ -16,7 +15,7 @@ inline Mat4f toTransformationMatrix(const AABB &aabb) {
   return T;
 }
 
-inline Mat4f toTransformationMatrix(const OBB &obb) {
+inline Mat4f toTransformationMatrix(const coal::OBB &obb) {
   Mat4f T = Mat4f::Identity();
   auto D = obb.extent.asDiagonal();
   T.block<3, 3>(0, 0) = (obb.axes * D).cast<float>();
@@ -38,6 +37,14 @@ inline std::array<Float3, 8> getAABBCorners(const AABB &aabb) {
       Float3{min.x(), max.y(), max.z()}, // 011
       Float3{max.x(), max.y(), max.z()}, // 111
   };
+}
+
+inline AABB applyTransformToAABB(const AABB &aabb, const Mat4f &tr_) {
+  using coal::CoalScalar;
+  auto tr = tr_.cast<CoalScalar>();
+  coal::Matrix3s R = tr.topLeftCorner<3, 3>();
+  coal::Vec3s t = tr.topRightCorner<3, 1>();
+  return coal::translate(coal::rotate(aabb, R), t);
 }
 
 } // namespace candlewick

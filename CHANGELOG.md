@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- multibody/Visualizer : expose 'device'
+- core : make `renderShadowPassFromFrustum()` work properly
+
+### Removed
+
+- core : remove using-decl of `coal::OBB`
+
 ## [0.5.0] - 2025-06-13
 
 ### Added

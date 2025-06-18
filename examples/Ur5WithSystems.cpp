@@ -497,9 +497,12 @@ int main(int argc, char **argv) {
       const GpuMat4 viewProj = g_camera.camera.viewProj();
       robot_scene.collectOpaqueCastables();
       auto &castables = robot_scene.castables();
-      renderShadowPassFromAABB(command_buffer, shadowPassInfo,
-                               robot_scene.directionalLight, castables,
-                               worldSpaceBounds);
+      // renderShadowPassFromAABB(command_buffer, shadowPassInfo,
+      //                          robot_scene.directionalLight, castables,
+      //                          worldSpaceBounds);
+      renderShadowPassFromFrustum(command_buffer, shadowPassInfo,
+                                  robot_scene.directionalLight, castables,
+                                  frustumFromCameraViewProj(viewProj));
       depthPass.render(command_buffer, viewProj, castables);
       switch (g_showDebugViz) {
       case FULL_RENDER:

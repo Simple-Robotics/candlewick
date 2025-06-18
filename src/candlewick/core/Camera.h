@@ -104,9 +104,9 @@ inline float perspectiveProjFar(const Mat4f &proj) {
   return std::abs(proj(2, 3) / (proj(2, 2) + 1.f));
 }
 
-/// \brief Extract the array of frustum corners, given a camera projection
-/// matrix.
-inline FrustumCornersType frustumFromCameraProjection(const Mat4f &camProj) {
+/// \brief Extract the array of frustum corners, given the camera
+/// view-projection matrix.
+inline FrustumCornersType frustumFromCameraViewProj(const Mat4f &camProj) {
   auto invProj = camProj.inverse();
   FrustumCornersType out;
   for (Uint8 i = 0; i < 8; i++) {
@@ -124,11 +124,6 @@ inline FrustumCornersType frustumFromCameraProjection(const Mat4f &camProj) {
   return out;
 }
 
-/// \brief Get the corners of a Camera's view frustum, in world space.
-inline FrustumCornersType frustumFromCamera(const Camera &camera) {
-  return frustumFromCameraProjection(camera.viewProj());
-}
-
 inline std::pair<Float3, float>
 frustumBoundingSphereCenterRadius(const FrustumCornersType &worldSpaceCorners) {
   Float3 frustumCenter = Float3::Zero();
@@ -142,6 +137,13 @@ frustumBoundingSphereCenterRadius(const FrustumCornersType &worldSpaceCorners) {
     radius = std::max(radius, (c - frustumCenter).norm());
   }
   return {frustumCenter, radius};
+}
+
+inline void frustumApplyTransform(FrustumCornersType &corners,
+                                  const Mat4f &tr) {
+  for (auto &x : corners) {
+    x = (tr * x.homogeneous()).head<3>();
+  }
 }
 
 /// \}
