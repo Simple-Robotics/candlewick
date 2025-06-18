@@ -40,4 +40,12 @@ inline std::array<Float3, 8> getAABBCorners(const AABB &aabb) {
   };
 }
 
+inline AABB applyTransformToAABB(const AABB &aabb, const Mat4f &tr_) {
+  using coal::CoalScalar;
+  auto tr = tr_.cast<CoalScalar>();
+  coal::Matrix3s R = tr.topLeftCorner<3, 3>();
+  coal::Vec3s t = tr.topRightCorner<3, 1>();
+  return coal::translate(coal::rotate(aabb, R), t);
+}
+
 } // namespace candlewick

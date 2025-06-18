@@ -285,21 +285,15 @@ void renderShadowPassFromAABB(CommandBuffer &cmdBuf, ShadowMapPass &passInfo,
                               std::span<const DirectionalLight> dirLight,
                               std::span<const OpaqueCastable> castables,
                               const AABB &worldAABB) {
-  using Eigen::Vector3d;
-
   Float3 center = worldAABB.center().cast<float>();
 
   for (size_t i = 0; i < passInfo.numLights(); i++) {
     Float3 tmpEye = center - 100.0f * dirLight[i].direction.normalized();
-    Mat4f tmplightView = lookAt(tmpEye, center, Float3::UnitZ());
+    Mat4f tmpLightView = lookAt(tmpEye, center, Float3::UnitZ());
+    AABB bounds = applyTransformToAABB(worldAABB, tmpLightView);
 
     auto &lightView = passInfo.cam[i].view;
     auto &lightProj = passInfo.cam[i].projection;
-
-    Mat3f R = tmplightView.topLeftCorner<3, 3>();
-    Float3 t = tmplightView.topRightCorner<3, 1>();
-    AABB bounds = coal::translate(coal::rotate(worldAABB, R.cast<double>()),
-                                  t.cast<double>());
 
     Float3 lightSpaceCenter = bounds.center().cast<float>();
     float radius = float(bounds.max_.z());
