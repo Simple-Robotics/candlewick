@@ -99,19 +99,24 @@ namespace media {
 
     auto res = downloadTexture(command_buffer, device, pool, texture, format,
                                width, height);
+    assert(width == res.width);
+    assert(height == res.height);
 
-    Uint32 *pixels_to_write = res.data;
+    auto size = size_t(res.height * res.width);
+    std::vector<Uint32> pixels_to_write;
+    pixels_to_write.resize(size);
+    std::copy_n(res.data, size, pixels_to_write.begin());
 
     switch (format) {
     case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
-      bgraToRgbaConvert(pixels_to_write, res.width * res.height);
+      bgraToRgbaConvert(pixels_to_write.data(), res.width * res.height);
       break;
     default:
       break;
     }
 
-    bool ret = fpng::fpng_encode_image_to_file(filename.data(), pixels_to_write,
-                                               width, height, 4);
+    bool ret = fpng::fpng_encode_image_to_file(
+        filename.data(), pixels_to_write.data(), width, height, 4);
 
     if (!ret)
       terminate_with_message(
