@@ -165,9 +165,10 @@ void Visualizer::displayImpl() {
   robotScene.updateTransforms();
   this->render();
 
-  if (!m_currentScreenshotFilename.empty()) {
+  if (m_shouldScreenshot) {
     this->takeScreenshot(m_currentScreenshotFilename);
     m_currentScreenshotFilename.clear();
+    m_shouldScreenshot = false;
   }
 
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT

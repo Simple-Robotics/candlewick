@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- slightly rework file dialog GUI
+
+### Fixed
+
+- fix screenshot PNG color channel ordering
+
 ## [0.6.0] - 2025-06-19
 
 ### Changed

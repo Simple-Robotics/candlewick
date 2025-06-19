@@ -66,18 +66,18 @@ void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
   ImGui::Text("%s", out.empty() ? "(none)" : out.c_str());
 }
 
-std::string generateMediaFilenameFromTimestamp(const char *prefix,
-                                               const char *extension,
-                                               DialogFileType file_type) {
+void generateMediaFilenameFromTimestamp(const char *prefix, std::string &out,
+                                        const char *extension,
+                                        DialogFileType file_type) {
   const std::chrono::time_point now = std::chrono::system_clock::now();
   auto time = std::chrono::system_clock::to_time_t(now);
   auto tm = std::localtime(&time);
-  const char *picturesDir =
-      SDL_GetUserFolder(g_dialog_file_type_folder[int(file_type)]);
   std::ostringstream oss;
-  oss << picturesDir << prefix << " " << std::put_time(tm, "%F %H-%M-%S %z")
-      << extension;
-  return oss.str();
+  oss << SDL_GetUserFolder(g_dialog_file_type_folder[int(file_type)]) << prefix
+      << " " << std::put_time(tm, "%F %H-%M-%S %z") << extension;
+  std::string_view view = oss.view();
+  if (!view.empty())
+    out = view;
 }
 
 } // namespace candlewick
