@@ -179,7 +179,7 @@ public:
 private:
   media::TransferBufferPool m_transferBuffers;
   std::string m_currentScreenshotFilename;
-  bool m_shouldScreenshot;
+  bool m_shouldScreenshot = false;
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   std::string m_currentVideoFilename;
   media::VideoRecorder m_videoRecorder;
