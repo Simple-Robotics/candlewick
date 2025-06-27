@@ -30,19 +30,6 @@ void guiAddCameraParams(CylindricalCamera &controller,
   }
 }
 
-static void screenshot_taker_gui(SDL_Window *window, std::string &filename) {
-  static std::string out;
-  out.reserve(64ul);
-
-  ImGui::BeginChild("screenshot_taker", {0, 0},
-                    ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
-  guiAddFileDialog(window, DialogFileType::IMAGES, out);
-  if (ImGui::Button("Take screenshot"))
-    filename = out.empty() ? generateMediaFilenameFromTimestamp() : out;
-
-  ImGui::EndChild();
-}
-
 void Visualizer::defaultGuiCallback() {
 
   // Verify ABI compatibility between caller code and compiled version of Dear
@@ -111,7 +98,19 @@ void Visualizer::defaultGuiCallback() {
           "Screenshots"
 #endif
           )) {
-    screenshot_taker_gui(renderer.window, m_currentScreenshotFilename);
+    ImGui::BeginChild("screenshot_taker", {0, 0},
+                      ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
+    guiAddFileDialog(renderer.window, DialogFileType::IMAGES,
+                     m_currentScreenshotFilename);
+    if (ImGui::Button("Take screenshot")) {
+      m_shouldScreenshot = true;
+      if (m_currentScreenshotFilename.empty()) {
+        generateMediaFilenameFromTimestamp("cdw_screenshot",
+                                           m_currentScreenshotFilename);
+      }
+    }
+
+    ImGui::EndChild();
 
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
     ImGui::BeginChild("video_record", {0, 0},

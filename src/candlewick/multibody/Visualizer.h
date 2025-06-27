@@ -56,7 +56,6 @@ class Visualizer final : public BaseVisualizer {
   bool m_showGui = true;
   bool m_shouldExit = false;
   entt::entity m_grid, m_triad;
-  std::string m_currentScreenshotFilename{};
   RobotDebugSystem *robotDebug = nullptr;
   std::vector<entt::entity> m_debug_frame_pos;
   std::vector<entt::entity> m_debug_frame_vel;
@@ -179,8 +178,10 @@ public:
 
 private:
   media::TransferBufferPool m_transferBuffers;
+  std::string m_currentScreenshotFilename;
+  bool m_shouldScreenshot = false;
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
-  std::string m_currentVideoFilename{};
+  std::string m_currentVideoFilename;
   media::VideoRecorder m_videoRecorder;
   media::VideoRecorder::Settings m_videoSettings;
 #endif

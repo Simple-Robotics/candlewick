@@ -39,6 +39,19 @@ namespace media {
     return frame;
   }
 
+  static AVPixelFormat
+  convert_SDLTextureFormatTo_AVPixelFormat(SDL_GPUTextureFormat pixelFormat) {
+    switch (pixelFormat) {
+    case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
+      return AV_PIX_FMT_BGRA;
+    case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
+      return AV_PIX_FMT_RGBA;
+    default:
+      terminate_with_message("Unsupported SDL GPU texture format {:s}",
+                             magic_enum::enum_name(pixelFormat));
+    }
+  }
+
   // IMPLEMENTING CLASS ----------------------------------------------
 
   struct VideoRecorderImpl {
@@ -46,14 +59,14 @@ namespace media {
     int m_height{0};          //< Height of incoming frames
     Uint32 m_frameCounter{0}; //< Number of recorded frames
 
-    AVFormatContext *formatContext = nullptr;
-    const AVCodec *codec = nullptr;
-    AVCodecContext *codecContext = nullptr;
-    AVStream *videoStream = nullptr;
-    SwsContext *swsContext = nullptr;
-    AVFrame *frame = nullptr;
-    AVFrame *tmpFrame = nullptr;
-    AVPacket *packet = nullptr;
+    AVFormatContext *m_formatContext = nullptr;
+    const AVCodec *m_codec = nullptr;
+    AVCodecContext *m_codecContext = nullptr;
+    AVStream *m_videoStream = nullptr;
+    SwsContext *m_swsContext = nullptr;
+    AVFrame *m_frame = nullptr;
+    AVFrame *m_tmpFrame = nullptr;
+    AVPacket *m_packet = nullptr;
 
     VideoRecorderImpl(int width, int height, std::string_view filename,
                       VideoRecorder::Settings settings);
@@ -70,36 +83,36 @@ namespace media {
 
     // delayed initialization, given actual input specs
     void lazyInit(AVPixelFormat inputFormat) {
-      tmpFrame = allocate_frame(inputFormat, m_width, m_height);
-      if (!tmpFrame)
+      m_tmpFrame = allocate_frame(inputFormat, m_width, m_height);
+      if (!m_tmpFrame)
         terminate_with_message("Failed to allocate temporary video frame.");
 
-      swsContext =
-          sws_getContext(tmpFrame->width, tmpFrame->height, inputFormat,
-                         frame->width, frame->height, codecContext->pix_fmt,
-                         SWS_BILINEAR, nullptr, nullptr, nullptr);
-      if (!swsContext)
+      m_swsContext = sws_getContext(m_tmpFrame->width, m_tmpFrame->height,
+                                    inputFormat, m_frame->width,
+                                    m_frame->height, m_codecContext->pix_fmt,
+                                    SWS_BILINEAR, nullptr, nullptr, nullptr);
+      if (!m_swsContext)
         terminate_with_message("Failed to create SwsContext.");
     }
   };
 
   void VideoRecorderImpl::close() noexcept {
     m_frameCounter = 0;
-    if (!formatContext)
+    if (!m_formatContext)
       return;
 
-    av_write_trailer(formatContext);
+    av_write_trailer(m_formatContext);
 
     // close out stream
-    av_frame_free(&frame);
-    av_frame_free(&tmpFrame);
-    av_packet_free(&packet);
-    avcodec_free_context(&codecContext);
+    av_frame_free(&m_frame);
+    av_frame_free(&m_tmpFrame);
+    av_packet_free(&m_packet);
+    avcodec_free_context(&m_codecContext);
 
-    avio_closep(&formatContext->pb);
-    avformat_free_context(formatContext);
-    sws_freeContext(swsContext);
-    formatContext = nullptr;
+    avio_closep(&m_formatContext->pb);
+    avformat_free_context(m_formatContext);
+    sws_freeContext(m_swsContext);
+    m_formatContext = nullptr;
   }
 
   VideoRecorderImpl::VideoRecorderImpl(int width, int height,
@@ -110,12 +123,12 @@ namespace media {
     assert(settings.outputWidth > 0);
     assert(settings.outputHeight > 0);
 
-    codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-    if (!codec) {
+    m_codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+    if (!m_codec) {
       terminate_with_message("Failed to find encoder for codec H264");
     }
 
-    int ret = avformat_alloc_output_context2(&formatContext, nullptr, nullptr,
+    int ret = avformat_alloc_output_context2(&m_formatContext, nullptr, nullptr,
                                              filename.data());
     char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
     if (ret < 0) {
@@ -123,92 +136,93 @@ namespace media {
       terminate_with_message("Could not create output context: %s", errbuf);
     }
 
-    videoStream = avformat_new_stream(formatContext, codec);
-    if (!videoStream)
+    m_videoStream = avformat_new_stream(m_formatContext, m_codec);
+    if (!m_videoStream)
       terminate_with_message("Could not allocate video stream.");
 
-    codecContext = avcodec_alloc_context3(codec);
-    if (!codecContext) {
+    m_codecContext = avcodec_alloc_context3(m_codec);
+    if (!m_codecContext) {
       terminate_with_message("Could not allocate video codec context.");
     }
 
-    codecContext->width = settings.outputWidth;
-    codecContext->height = settings.outputHeight;
+    m_codecContext->width = settings.outputWidth;
+    m_codecContext->height = settings.outputHeight;
     // use YUV420P as it is the most widely supported format
     // for H.264
-    codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
-    codecContext->time_base = AVRational{1, settings.fps};
-    codecContext->framerate = AVRational{settings.fps, 1};
-    codecContext->gop_size = 10;
-    codecContext->max_b_frames = 1;
-    codecContext->bit_rate = settings.bitRate;
+    m_codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
+    m_codecContext->time_base = AVRational{1, settings.fps};
+    m_codecContext->framerate = AVRational{settings.fps, 1};
+    m_codecContext->gop_size = 10;
+    m_codecContext->max_b_frames = 1;
+    m_codecContext->bit_rate = settings.bitRate;
 
-    ret = avcodec_parameters_from_context(videoStream->codecpar, codecContext);
+    ret = avcodec_parameters_from_context(m_videoStream->codecpar,
+                                          m_codecContext);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
       terminate_with_message("Couldn't copy codec params: {:s}", errbuf);
     }
 
-    ret = avcodec_open2(codecContext, codec, nullptr);
+    ret = avcodec_open2(m_codecContext, m_codec, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
       terminate_with_message("Couldn't open codec: {:s}", errbuf);
     }
 
-    ret = avio_open(&formatContext->pb, filename.data(), AVIO_FLAG_WRITE);
+    ret = avio_open(&m_formatContext->pb, filename.data(), AVIO_FLAG_WRITE);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
       terminate_with_message("Couldn't open output stream: {:s}", errbuf);
     }
 
-    ret = avformat_write_header(formatContext, nullptr);
+    ret = avformat_write_header(m_formatContext, nullptr);
     if (ret < 0) {
       av_strerror(ret, errbuf, AV_ERROR_MAX_STRING_SIZE);
       terminate_with_message("Couldn't write output header: {:s}", errbuf);
     }
 
-    packet = av_packet_alloc();
-    if (!packet)
+    m_packet = av_packet_alloc();
+    if (!m_packet)
       terminate_with_message("Failed to allocate AVPacket");
 
     // principal frame
-    frame = allocate_frame(codecContext->pix_fmt, codecContext->width,
-                           codecContext->height);
-    if (!frame)
+    m_frame = allocate_frame(m_codecContext->pix_fmt, m_codecContext->width,
+                             m_codecContext->height);
+    if (!m_frame)
       terminate_with_message("Failed to allocate frame.");
   }
 
   void VideoRecorderImpl::writeFrame(const Uint8 *data, Uint32 payloadSize,
                                      AVPixelFormat avPixelFormat) {
-    assert(frame);
+    assert(m_frame);
     int ret;
-    if (!tmpFrame) {
+    if (!m_tmpFrame) {
       lazyInit(avPixelFormat);
     }
 
     char errbuf[AV_ERROR_MAX_STRING_SIZE]{0};
-    ret = av_frame_make_writable(tmpFrame);
+    ret = av_frame_make_writable(m_tmpFrame);
     if (ret < 0)
       terminate_with_message(
           "Failed to make tmpFrame writable: {:s}",
           av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
 
     // copy input payload to tmp frame
-    memcpy(tmpFrame->data[0], data, payloadSize);
+    memcpy(m_tmpFrame->data[0], data, payloadSize);
 
     // ensure frame writable
-    ret = av_frame_make_writable(frame);
+    ret = av_frame_make_writable(m_frame);
     if (ret < 0) {
       terminate_with_message(
           "Failed to make frame writable: {:s}",
           av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
     }
-    frame->pts = m_frameCounter++;
+    m_frame->pts = m_frameCounter++;
 
-    sws_scale(swsContext, tmpFrame->data, tmpFrame->linesize, 0, m_height,
-              frame->data, frame->linesize);
+    sws_scale(m_swsContext, m_tmpFrame->data, m_tmpFrame->linesize, 0, m_height,
+              m_frame->data, m_frame->linesize);
 
-    ret = avcodec_send_frame(codecContext, frame);
+    ret = avcodec_send_frame(m_codecContext, m_frame);
     if (ret < 0) {
       terminate_with_message(
           "Error sending frame {:s}",
@@ -216,7 +230,7 @@ namespace media {
     }
 
     while (ret >= 0) {
-      ret = avcodec_receive_packet(codecContext, packet);
+      ret = avcodec_receive_packet(m_codecContext, m_packet);
       if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
         break;
       }
@@ -226,11 +240,11 @@ namespace media {
             av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, ret));
       }
 
-      av_packet_rescale_ts(packet, codecContext->time_base,
-                           videoStream->time_base);
-      packet->stream_index = videoStream->index;
-      av_interleaved_write_frame(formatContext, packet);
-      av_packet_unref(packet);
+      av_packet_rescale_ts(m_packet, m_codecContext->time_base,
+                           m_videoStream->time_base);
+      m_packet->stream_index = m_videoStream->index;
+      av_interleaved_write_frame(m_formatContext, m_packet);
+      av_packet_unref(m_packet);
     }
   }
 
@@ -271,19 +285,6 @@ namespace media {
   void VideoRecorder::close() noexcept {
     if (m_impl)
       m_impl.reset();
-  }
-
-  static AVPixelFormat
-  convert_SDLTextureFormatTo_AVPixelFormat(SDL_GPUTextureFormat pixelFormat) {
-    switch (pixelFormat) {
-    case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
-      return AV_PIX_FMT_BGRA;
-    case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
-      return AV_PIX_FMT_RGBA;
-    default:
-      terminate_with_message("Unsupported SDL GPU texture format {:s}",
-                             magic_enum::enum_name(pixelFormat));
-    }
   }
 
   VideoRecorder::~VideoRecorder() = default;
