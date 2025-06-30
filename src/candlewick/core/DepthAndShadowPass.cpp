@@ -153,9 +153,9 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
       .props = 0,
   };
 
+  shadowMap = Texture(device, texInfo, "Shadow atlas");
   this->configureAtlasRegions(config);
 
-  shadowMap = Texture(device, texInfo, "Shadow atlas");
   pipeline = create_depth_pass_pipeline(device, layout, format,
                                         {
                                             SDL_GPU_CULLMODE_FRONT,
