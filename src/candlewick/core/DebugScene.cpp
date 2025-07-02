@@ -33,10 +33,10 @@ DebugScene::addTriad(const Float3 &scale) {
     triad_colors[i] = triad_datas[i].material.baseColor;
   }
   setupPipelines(triad.layout());
-  auto entity = m_registry.create();
+  entt::entity entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::TRIANGLE_FILL, std::move(triad), triad_colors);
-  item.scale = scale;
+      entity, DebugPipelines::TRIANGLE_FILL, std::move(triad), triad_colors,
+      true, scale);
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
