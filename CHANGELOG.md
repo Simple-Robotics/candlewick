@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- bindings/python : add expose-debug.cpp, expose DebugMeshComponent
+
 ### Changed
 
 - slightly rework file dialog GUI

@@ -7,6 +7,7 @@ find_package(eigenpy 3.2.0 REQUIRED)
 
 set(
   pycandlewick_SOURCES
+  src/expose-debug.cpp
   src/expose-mesh-data.cpp
   src/expose-renderer.cpp
   src/module.cpp
