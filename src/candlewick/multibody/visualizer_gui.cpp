@@ -170,6 +170,20 @@ void Visualizer::defaultGuiCallback() {
 #endif
   };
 
+  if (ImGui::CollapsingHeader("Robot debug")) {
+    auto view = registry.view<DebugMeshComponent, const PinFrameComponent>();
+    for (auto [ent, dmc, fc] : view.each()) {
+      auto frame_name = model().frames[fc].name.c_str();
+      char label[64];
+      SDL_snprintf(label, 64, "frame_%d", int(fc));
+      ImGui::PushID(label);
+      ImGui::Text("%s", frame_name);
+      ImGui::SameLine();
+      guiAddDebugMesh(dmc);
+      ImGui::PopID();
+    }
+  }
+
   ImGui::End();
 }
 
