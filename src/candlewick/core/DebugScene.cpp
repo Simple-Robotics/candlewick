@@ -27,30 +27,30 @@ DebugScene::DebugScene(DebugScene &&other)
 std::tuple<entt::entity, DebugMeshComponent &>
 DebugScene::addTriad(const Float3 &scale) {
   auto triad_datas = loadTriadSolid();
-  std::vector<GpuVec4> triad_colors(3);
+  std::vector<Float4> triad_colors(3);
   Mesh triad = createMeshFromBatch(device(), triad_datas, true);
   for (size_t i = 0; i < 3; i++) {
     triad_colors[i] = triad_datas[i].material.baseColor;
   }
   setupPipelines(triad.layout());
-  auto entity = m_registry.create();
+  entt::entity entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::TRIANGLE_FILL, std::move(triad), triad_colors);
-  item.scale = scale;
+      entity, DebugPipelines::TRIANGLE_FILL, std::move(triad), triad_colors,
+      true, scale);
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
 
 std::tuple<entt::entity, DebugMeshComponent &>
-DebugScene::addLineGrid(std::optional<Float4> color) {
+DebugScene::addLineGrid(const Float4 &color) {
   auto grid_data = loadGrid(20);
   Mesh grid = createMesh(device(), grid_data, true);
-  GpuVec4 grid_color = color.value_or(grid_data.material.baseColor);
 
   setupPipelines(grid.layout());
   auto entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::LINE, std::move(grid), std::vector{grid_color});
+      entity, DebugPipelines::TRIANGLE_LINE, std::move(grid),
+      std::vector{color});
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
@@ -124,7 +124,7 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
     case DebugPipelines::TRIANGLE_FILL:
       SDL_BindGPUGraphicsPipeline(render_pass, m_trianglePipeline);
       break;
-    case DebugPipelines::LINE:
+    case DebugPipelines::TRIANGLE_LINE:
       SDL_BindGPUGraphicsPipeline(render_pass, m_linePipeline);
       break;
     }

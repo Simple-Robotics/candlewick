@@ -30,6 +30,30 @@ void guiAddCameraParams(CylindricalCamera &controller,
   }
 }
 
+void guiAddDebugMesh(DebugMeshComponent &dmc,
+                     bool enable_pipeline_switch = true) {
+  ImGui::Checkbox("##enabled", &dmc.enable);
+  Uint32 col_id = 0;
+  ImGuiColorEditFlags color_flags = ImGuiColorEditFlags_NoAlpha |
+                                    ImGuiColorEditFlags_NoSidePreview |
+                                    ImGuiColorEditFlags_NoInputs;
+  char label[32];
+  for (auto &col : dmc.colors) {
+    SDL_snprintf(label, sizeof(label), "##color##%u", col_id);
+    ImGui::SameLine();
+    ImGui::ColorEdit4(label, col.data(), color_flags);
+    col_id++;
+  }
+  if (enable_pipeline_switch) {
+    const char *names[] = {"FILL", "LINE"};
+    static_assert(IM_ARRAYSIZE(names) ==
+                  magic_enum::enum_count<DebugPipelines>());
+    ImGui::SameLine();
+    ImGui::Combo("Mode##pipeline", (int *)&dmc.pipeline_type, names,
+                 IM_ARRAYSIZE(names));
+  }
+}
+
 void Visualizer::defaultGuiCallback() {
 
   // Verify ABI compatibility between caller code and compiled version of Dear
@@ -59,29 +83,30 @@ void Visualizer::defaultGuiCallback() {
               renderer.window.pixelDensity(), renderer.window.displayScale());
   ImGui::Text("Device driver: %s", renderer.device.driverName());
 
-  ImGui::SeparatorText("Lights and camera controls");
+  if (ImGui::CollapsingHeader("Lights and camera controls")) {
+    guiAddLightControls(robotScene.directionalLight, robotScene.numLights());
+    guiAddCameraParams(controller, cameraParams);
+  }
 
-  guiAddLightControls(robotScene.directionalLight, robotScene.numLights());
-  guiAddCameraParams(controller, cameraParams);
-
-  auto addDebugCheckbox = [this](const char *title,
-                                 entt::entity ent) -> auto & {
-    char label[32];
-    SDL_snprintf(label, sizeof(label), "hud.%s", title);
-    auto &dmc = registry.get<DebugMeshComponent>(ent);
-    ImGui::Checkbox(label, &dmc.enable);
-    return dmc;
-  };
-  if (ImGui::CollapsingHeader("Settings (HUD and env)",
-                              ImGuiTreeNodeFlags_DefaultOpen)) {
+  if (ImGui::CollapsingHeader("Settings (HUD and env)")) {
     {
-      auto &dmc = addDebugCheckbox("grid", m_grid);
+      const char *name = "hud.grid";
+      ImGui::PushID(name);
+      ImGui::Text("%s", name);
+      auto &dmc = registry.get<DebugMeshComponent>(m_grid);
       ImGui::SameLine();
-      ImGui::ColorEdit4("hud.grid.color", dmc.colors[0].data(),
-                        ImGuiColorEditFlags_AlphaPreview);
+      guiAddDebugMesh(dmc, false);
+      ImGui::PopID();
     }
-    addDebugCheckbox("triad", m_triad);
-    ImGui::SameLine();
+    {
+      const char *name = "hud.triad";
+      ImGui::PushID(name);
+      ImGui::Text("%s", name);
+      auto &dmc = registry.get<DebugMeshComponent>(m_triad);
+      ImGui::SameLine();
+      guiAddDebugMesh(dmc);
+      ImGui::PopID();
+    }
     ImGui::Checkbox("Ambient occlusion (SSAO)",
                     &robotScene.config().enable_ssao);
   }
@@ -144,6 +169,20 @@ void Visualizer::defaultGuiCallback() {
     ImGui::EndChild();
 #endif
   };
+
+  if (ImGui::CollapsingHeader("Robot debug")) {
+    auto view = registry.view<DebugMeshComponent, const PinFrameComponent>();
+    for (auto [ent, dmc, fc] : view.each()) {
+      auto frame_name = model().frames[fc].name.c_str();
+      char label[64];
+      SDL_snprintf(label, 64, "frame_%d", int(fc));
+      ImGui::PushID(label);
+      ImGui::Text("%s", frame_name);
+      ImGui::SameLine();
+      guiAddDebugMesh(dmc);
+      ImGui::PopID();
+    }
+  }
 
   ImGui::End();
 }

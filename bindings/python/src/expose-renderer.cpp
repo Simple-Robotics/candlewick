@@ -9,7 +9,7 @@ BOOST_PYTHON_FUNCTION_OVERLOADS(adfs_overloads,
 void exposeRenderer() {
   bp::class_<Device, boost::noncopyable>("Device", bp::no_init)
       .def("driverName", &Device::driverName, ("self"_a))
-      .def("shaderFormats", &Device::shaderFormats);
+      .def("shaderFormats", &Device::shaderFormats, ("self"_a));
 
   bp::def("get_num_gpu_drivers", SDL_GetNumGPUDrivers,
           "Get number of available GPU drivers.");

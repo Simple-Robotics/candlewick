@@ -81,7 +81,7 @@ void Visualizer::initialize() {
   robotScene.setConfig(rconfig);
   robotScene.loadModels(visualModel(), visualData());
 
-  robotDebug = &debugScene.addSystem<RobotDebugSystem>(this->model(), data());
+  m_robotDebug = &debugScene.addSystem<RobotDebugSystem>(this->model(), data());
   std::tie(m_triad, std::ignore) = debugScene.addTriad();
   std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
 
@@ -241,10 +241,10 @@ void Visualizer::stopRecording() {
 
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
   assert(robotDebug);
-  m_debug_frame_pos.push_back(robotDebug->addFrameTriad(debugScene, id));
+  m_debug_frame_pos.push_back(m_robotDebug->addFrameTriad(debugScene, id));
   if (show_velocity)
     m_debug_frame_vel.push_back(
-        robotDebug->addFrameVelocityArrow(debugScene, id));
+        m_robotDebug->addFrameVelocityArrow(debugScene, id));
 }
 
 } // namespace candlewick::multibody
