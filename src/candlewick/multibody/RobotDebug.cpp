@@ -21,7 +21,7 @@ entt::entity RobotDebugSystem::addFrameVelocityArrow(DebugScene &scene,
   entt::registry &reg = scene.registry();
   MeshData arrow_data = loadArrowSolid(false);
   Mesh mesh = createMesh(scene.device(), arrow_data, true);
-  GpuVec4 color = 0xFF217Eff_rgbaf;
+  Float4 color = 0xFF217Eff_rgbaf;
 
   auto entity = reg.create();
   auto &dmc = reg.emplace<DebugMeshComponent>(

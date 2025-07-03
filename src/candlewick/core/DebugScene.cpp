@@ -27,7 +27,7 @@ DebugScene::DebugScene(DebugScene &&other)
 std::tuple<entt::entity, DebugMeshComponent &>
 DebugScene::addTriad(const Float3 &scale) {
   auto triad_datas = loadTriadSolid();
-  std::vector<GpuVec4> triad_colors(3);
+  std::vector<Float4> triad_colors(3);
   Mesh triad = createMeshFromBatch(device(), triad_datas, true);
   for (size_t i = 0; i < 3; i++) {
     triad_colors[i] = triad_datas[i].material.baseColor;
@@ -49,8 +49,7 @@ DebugScene::addLineGrid(const Float4 &color) {
   setupPipelines(grid.layout());
   auto entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::LINE, std::move(grid),
-      std::vector<GpuVec4>{color});
+      entity, DebugPipelines::LINE, std::move(grid), std::vector{color});
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }

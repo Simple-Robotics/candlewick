@@ -32,7 +32,7 @@ struct IDebugSubSystem {
 struct DebugMeshComponent {
   DebugPipelines pipeline_type;
   Mesh mesh;
-  std::vector<GpuVec4> colors;
+  std::vector<Float4> colors;
   bool enable = true;
   Float3 scale = Float3::Ones();
 };
