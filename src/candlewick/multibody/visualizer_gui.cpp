@@ -59,10 +59,10 @@ void Visualizer::defaultGuiCallback() {
               renderer.window.pixelDensity(), renderer.window.displayScale());
   ImGui::Text("Device driver: %s", renderer.device.driverName());
 
-  ImGui::SeparatorText("Lights and camera controls");
-
-  guiAddLightControls(robotScene.directionalLight, robotScene.numLights());
-  guiAddCameraParams(controller, cameraParams);
+  if (ImGui::CollapsingHeader("Lights and camera controls")) {
+    guiAddLightControls(robotScene.directionalLight, robotScene.numLights());
+    guiAddCameraParams(controller, cameraParams);
+  }
 
   auto addDebugCheckbox = [this](const char *title,
                                  entt::entity ent) -> auto & {
