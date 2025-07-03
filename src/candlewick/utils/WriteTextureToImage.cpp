@@ -5,6 +5,8 @@
 #include "../third-party/fpng.h"
 #include "../utils/PixelFormatConversion.h"
 
+#include <algorithm>
+
 namespace candlewick {
 namespace media {
 
