@@ -42,7 +42,7 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
   const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
   ImVec2 outer_size{0.0f, TEXT_BASE_HEIGHT * float(table_height_lines)};
 
-  ImGui::Text("Frames");
+  ImGui::SeparatorText("Frames");
   ImGui::Spacing();
 
   if (ImGui::BeginTable("pin_frames_table", 3, flags, outer_size)) {
@@ -65,7 +65,7 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
     ImGui::EndTable();
   }
 
-  ImGui::Text("Geometry model");
+  ImGui::SeparatorText("Geometry model");
   ImGui::Spacing();
   ImGui::Text("No. of geometries: %zu", geom_model.ngeoms);
 
