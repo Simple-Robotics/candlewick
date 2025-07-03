@@ -49,7 +49,8 @@ DebugScene::addLineGrid(const Float4 &color) {
   setupPipelines(grid.layout());
   auto entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::LINE, std::move(grid), std::vector{color});
+      entity, DebugPipelines::TRIANGLE_LINE, std::move(grid),
+      std::vector{color});
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
@@ -123,7 +124,7 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
     case DebugPipelines::TRIANGLE_FILL:
       SDL_BindGPUGraphicsPipeline(render_pass, m_trianglePipeline);
       break;
-    case DebugPipelines::LINE:
+    case DebugPipelines::TRIANGLE_LINE:
       SDL_BindGPUGraphicsPipeline(render_pass, m_linePipeline);
       break;
     }

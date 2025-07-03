@@ -12,7 +12,7 @@ namespace candlewick {
 
 enum class DebugPipelines {
   TRIANGLE_FILL,
-  LINE,
+  TRIANGLE_LINE,
 };
 
 class DebugScene;
