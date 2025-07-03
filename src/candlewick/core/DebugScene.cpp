@@ -42,15 +42,15 @@ DebugScene::addTriad(const Float3 &scale) {
 }
 
 std::tuple<entt::entity, DebugMeshComponent &>
-DebugScene::addLineGrid(std::optional<Float4> color) {
+DebugScene::addLineGrid(const Float4 &color) {
   auto grid_data = loadGrid(20);
   Mesh grid = createMesh(device(), grid_data, true);
-  GpuVec4 grid_color = color.value_or(grid_data.material.baseColor);
 
   setupPipelines(grid.layout());
   auto entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::LINE, std::move(grid), std::vector{grid_color});
+      entity, DebugPipelines::LINE, std::move(grid),
+      std::vector<GpuVec4>{color});
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }

@@ -5,7 +5,6 @@
 #include "RenderContext.h"
 #include "math_types.h"
 
-#include <optional>
 #include <entt/entity/registry.hpp>
 #include <entt/signal/sigh.hpp>
 
@@ -41,12 +40,17 @@ struct DebugMeshComponent {
 /// \brief %Scene for organizing debug entities and render systems.
 ///
 /// This implements a basic render system for DebugMeshComponent.
+///
+/// This scene and all subsystems are assumed to use the same shaders and
+/// pipelines.
 class DebugScene {
   entt::registry &m_registry;
   const RenderContext &m_renderer;
   SDL_GPUGraphicsPipeline *m_trianglePipeline{nullptr};
   SDL_GPUGraphicsPipeline *m_linePipeline{nullptr};
   std::vector<std::unique_ptr<IDebugSubSystem>> m_subsystems;
+
+  void setupPipelines(const MeshLayout &layout);
 
 public:
   enum { TRANSFORM_SLOT = 0 };
@@ -70,15 +74,14 @@ public:
     return static_cast<System &>(*p);
   }
 
-  /// \brief Setup pipelines; this will only have an effect **ONCE**.
-  void setupPipelines(const MeshLayout &layout);
-
   /// \brief Just the basic 3D triad.
   std::tuple<entt::entity, DebugMeshComponent &>
   addTriad(const Float3 &scale = Float3::Ones());
+
   /// \brief Add a basic line grid.
+  /// \param color Grid color.
   std::tuple<entt::entity, DebugMeshComponent &>
-  addLineGrid(std::optional<Float4> color = std::nullopt);
+  addLineGrid(const Float4 &color = Float4::Ones());
 
   void update() {
     for (auto &system : m_subsystems) {
