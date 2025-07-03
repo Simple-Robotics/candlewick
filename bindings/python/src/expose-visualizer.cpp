@@ -8,12 +8,20 @@
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/geometry.hpp>
 
+using namespace candlewick;
 using namespace candlewick::multibody;
 
 #define DEF_PROP_PROXY(name)                                                   \
   add_property(#name, bp::make_function(                                       \
                           +[](Visualizer &v) -> auto & { return v.name(); },   \
                           bp::return_internal_reference<>()))
+
+static auto visualizer_get_frame_debugs(Visualizer &viz) {
+  auto view = viz.registry.view<DebugMeshComponent, const PinFrameComponent>();
+  bp::list out;
+  view.each([&](auto &dmc, auto) { out.append(boost::ref(dmc)); });
+  return out;
+}
 
 void exposeVisualizer() {
   using pinocchio::python::VisualizerPythonVisitor;
@@ -34,9 +42,7 @@ void exposeVisualizer() {
       .def(VisualizerPythonVisitor<Visualizer>{})
       .def_readonly("renderer", &Visualizer::renderer)
       .def_readwrite("worldSceneBounds", &Visualizer::worldSceneBounds)
-      .add_property("device",
-                    bp::make_function(&Visualizer::device,
-                                      bp::return_internal_reference<>()))
+      .DEF_PROP_PROXY(device)
       .def(
           "takeScreenshot",
           +[](Visualizer &viz, const std::string &filename) {
@@ -69,6 +75,9 @@ void exposeVisualizer() {
            "by ID.")
       .def("removeFramesViz", &Visualizer::removeFramesViz, ("self"_a),
            "Remove visualization for all frames.")
+      .def("getDebugFrames", &visualizer_get_frame_debugs, ("self"_a),
+           "Get the DebugMeshComponent objects associated with the current "
+           "debug frames.")
 // fix for Pinocchio 3.5.0
 #if PINOCCHIO_VERSION_AT_MOST(3, 5, 0)
       .DEF_PROP_PROXY(model)
