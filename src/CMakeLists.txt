@@ -11,7 +11,7 @@ add_library(
   candlewick/core/Device.cpp
   candlewick/core/math_util.cpp
   candlewick/core/errors.cpp
-  candlewick/core/FileDialogGui.cpp
+  candlewick/core/file_dialog_gui.cpp
   candlewick/core/GuiSystem.cpp
   candlewick/core/Mesh.cpp
   candlewick/core/RenderContext.cpp
