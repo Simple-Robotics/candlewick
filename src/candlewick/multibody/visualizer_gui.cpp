@@ -30,6 +30,30 @@ void guiAddCameraParams(CylindricalCamera &controller,
   }
 }
 
+void guiAddDebugMesh(DebugMeshComponent &dmc,
+                     bool enable_pipeline_switch = true) {
+  ImGui::Checkbox("##enabled", &dmc.enable);
+  Uint32 col_id = 0;
+  ImGuiColorEditFlags color_flags = ImGuiColorEditFlags_NoAlpha |
+                                    ImGuiColorEditFlags_NoSidePreview |
+                                    ImGuiColorEditFlags_NoInputs;
+  char label[32];
+  for (auto &col : dmc.colors) {
+    SDL_snprintf(label, sizeof(label), "##color##%u", col_id);
+    ImGui::SameLine();
+    ImGui::ColorEdit4(label, col.data(), color_flags);
+    col_id++;
+  }
+  if (enable_pipeline_switch) {
+    const char *names[] = {"FILL", "LINE"};
+    static_assert(IM_ARRAYSIZE(names) ==
+                  magic_enum::enum_count<DebugPipelines>());
+    ImGui::SameLine();
+    ImGui::Combo("Mode##pipeline", (int *)&dmc.pipeline_type, names,
+                 IM_ARRAYSIZE(names));
+  }
+}
+
 void Visualizer::defaultGuiCallback() {
 
   // Verify ABI compatibility between caller code and compiled version of Dear
@@ -64,24 +88,25 @@ void Visualizer::defaultGuiCallback() {
     guiAddCameraParams(controller, cameraParams);
   }
 
-  auto addDebugCheckbox = [this](const char *title,
-                                 entt::entity ent) -> auto & {
-    char label[32];
-    SDL_snprintf(label, sizeof(label), "hud.%s", title);
-    auto &dmc = registry.get<DebugMeshComponent>(ent);
-    ImGui::Checkbox(label, &dmc.enable);
-    return dmc;
-  };
-  if (ImGui::CollapsingHeader("Settings (HUD and env)",
-                              ImGuiTreeNodeFlags_DefaultOpen)) {
+  if (ImGui::CollapsingHeader("Settings (HUD and env)")) {
     {
-      auto &dmc = addDebugCheckbox("grid", m_grid);
+      const char *name = "hud.grid";
+      ImGui::PushID(name);
+      ImGui::Text("%s", name);
+      auto &dmc = registry.get<DebugMeshComponent>(m_grid);
       ImGui::SameLine();
-      ImGui::ColorEdit4("hud.grid.color", dmc.colors[0].data(),
-                        ImGuiColorEditFlags_AlphaPreview);
+      guiAddDebugMesh(dmc, false);
+      ImGui::PopID();
     }
-    addDebugCheckbox("triad", m_triad);
-    ImGui::SameLine();
+    {
+      const char *name = "hud.triad";
+      ImGui::PushID(name);
+      ImGui::Text("%s", name);
+      auto &dmc = registry.get<DebugMeshComponent>(m_triad);
+      ImGui::SameLine();
+      guiAddDebugMesh(dmc);
+      ImGui::PopID();
+    }
     ImGui::Checkbox("Ambient occlusion (SSAO)",
                     &robotScene.config().enable_ssao);
   }
