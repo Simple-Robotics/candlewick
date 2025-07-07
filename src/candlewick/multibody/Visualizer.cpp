@@ -240,7 +240,7 @@ void Visualizer::stopRecording() {
 }
 
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
-  assert(robotDebug);
+  assert(m_robotDebug);
   m_debug_frame_pos.push_back(m_robotDebug->addFrameTriad(debugScene, id));
   if (show_velocity)
     m_debug_frame_vel.push_back(
