@@ -35,8 +35,9 @@ struct Device {
 
   /// \brief Release ownership of and return the \c SDL_GPUDevice handle.
   SDL_GPUDevice *release() noexcept {
-    return _device;
+    auto *p = _device;
     _device = nullptr;
+    return p;
   }
   void destroy() noexcept;
 
