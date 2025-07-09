@@ -1,10 +1,12 @@
-#include <zmq.hpp>
-#include <zmq_addon.hpp>
 #include "candlewick/multibody/Multibody.h"
 #include "candlewick/multibody/Visualizer.h"
 
 #include <pinocchio/serialization/model.hpp>
 #include <pinocchio/serialization/geometry.hpp>
+
+#include <zmq.hpp>
+#include <zmq_addon.hpp>
+#include <msgpack.hpp>
 
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>

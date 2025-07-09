@@ -113,10 +113,11 @@ if(BUILD_PINOCCHIO_VISUALIZER)
   )
 
   find_package(cppzmq REQUIRED)
+  find_package(msgpack-cxx REQUIRED)
   add_executable(candlewick_visualizer candlewick/runtime/main.cpp)
   target_link_libraries(
     candlewick_visualizer
-    PRIVATE cppzmq candlewick_multibody
+    PRIVATE cppzmq candlewick_multibody msgpack-cxx
   )
 endif()
 
