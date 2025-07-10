@@ -52,6 +52,9 @@ template <typename MatrixType> auto get_eigen_view_from_spec(ArraySpec &spec) {
 struct ApplicationContext {
   pin::Model model;
   pin::GeometryModel geom_model;
+  zmq::context_t ctx{};
+  zmq::socket_t setup_sock{ctx, zmq::socket_type::rep};
+  zmq::socket_t state_sock{ctx, zmq::socket_type::sub};
 };
 
 /// Handle first incoming message.
@@ -97,19 +100,19 @@ int main(int argc, char **argv) {
 
   CLI11_PARSE(app, argc, argv);
 
-  zmq::context_t ctx;
-  zmq::socket_t setup_sock{ctx, zmq::socket_type::rep};
+  // ===== Runtime application context =====
+  ApplicationContext app_ctx;
+  zmq::socket_t &setup_sock = app_ctx.setup_sock;
+  zmq::socket_t &state_sock = app_ctx.state_sock;
   setup_sock.bind("tcp://127.0.0.1:12000");
-  zmq::socket_t state_sock{ctx, zmq::socket_type::pull};
   state_sock.bind("tcp://127.0.0.1:12002");
+  state_sock.set(zmq::sockopt::subscribe, CMD_SEND_STATE);
+
   std::string endpoint;
   endpoint = setup_sock.get(zmq::sockopt::last_endpoint);
   SDL_Log("ZMQ endpoint (setup): %s", endpoint.c_str());
   endpoint = state_sock.get(zmq::sockopt::last_endpoint);
   SDL_Log("ZMQ endpoint (state): %s", endpoint.c_str());
-
-  // ===== Runtime application context =====
-  ApplicationContext app_ctx;
 
   // Handle first message
   bool loaded_models = handle_first_message(setup_sock, app_ctx);
