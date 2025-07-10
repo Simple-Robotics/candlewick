@@ -3,6 +3,7 @@
 
 #include <pinocchio/serialization/model.hpp>
 #include <pinocchio/serialization/geometry.hpp>
+#include <pinocchio/algorithm/kinematics.hpp>
 
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
@@ -17,7 +18,7 @@ namespace pin = pinocchio;
 using cdw::multibody::Visualizer;
 
 constexpr std::string_view CMD_SEND_MODELS = "send_models";
-constexpr std::string_view CMD_SEND_STATE = "send_state";
+constexpr std::string_view CMD_SEND_STATE = "state_update";
 
 msgpack::object_handle get_handle_from_zmq_msg(zmq::message_t &&msg) {
   if (!msg.empty())
@@ -26,7 +27,7 @@ msgpack::object_handle get_handle_from_zmq_msg(zmq::message_t &&msg) {
     return msgpack::object_handle();
 }
 
-struct ArraySpec {
+struct ArrayMessage {
   std::string dtype;
   std::vector<long> dims;
   std::vector<uint8_t> data;
@@ -36,7 +37,8 @@ struct ArraySpec {
   MSGPACK_DEFINE(dtype, dims, data);
 };
 
-template <typename MatrixType> auto get_eigen_view_from_spec(ArraySpec &spec) {
+template <typename MatrixType>
+auto get_eigen_view_from_spec(ArrayMessage &spec) {
   using Scalar = typename MatrixType::Scalar;
   using MapType = Eigen::Map<MatrixType>;
   Scalar *data = reinterpret_cast<Scalar *>(spec.data.data());
@@ -90,6 +92,37 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
   return false;
 }
 
+void run_main_loop(Visualizer &viz, ApplicationContext &app_ctx) {
+
+  while (!viz.shouldExit()) {
+    std::vector<zmq::message_t> msgs;
+    auto rec =
+        zmq::recv_multipart_n(app_ctx.state_sock, std::back_inserter(msgs), 2,
+                              zmq::recv_flags::dontwait);
+
+    if (rec) {
+      // route through message headers
+      auto header = msgs[0].to_string_view();
+      if (header == CMD_SEND_STATE) {
+        auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
+        auto obj = oh.get();
+        std::tuple<ArrayMessage, std::optional<ArrayMessage>> arrays;
+        obj.convert(arrays);
+        auto [q_msg, v_msg] = arrays;
+        auto q_view = get_eigen_view_from_spec<Eigen::VectorXd>(q_msg);
+        if (!v_msg) {
+          pin::forwardKinematics(viz.model(), viz.data(), q_view);
+        } else {
+          auto v_view = get_eigen_view_from_spec<Eigen::VectorXd>(*v_msg);
+          pin::forwardKinematics(viz.model(), viz.data(), q_view, v_view);
+        }
+      }
+    }
+
+    viz.display();
+  }
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Candlewick visualizer runtime"};
   argv = app.ensure_utf8(argv);
@@ -121,30 +154,12 @@ int main(int argc, char **argv) {
 
   setup_sock.close();
 
-  std::vector<zmq::message_t> msgs;
-  auto ret = zmq::recv_multipart_n(state_sock, std::back_inserter(msgs), 2);
-  assert(ret);
-  Eigen::VectorXd q0;
-  if (msgs[0].to_string_view() == CMD_SEND_STATE) {
-    auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
-    auto obj = oh.get();
-    ArraySpec array_spec = obj.as<ArraySpec>();
-    Eigen::Map mapped_matrix =
-        get_eigen_view_from_spec<Eigen::VectorXd>(array_spec);
-    std::cout << "Mapped matrix:\n" << mapped_matrix.transpose() << std::endl;
-    q0 = mapped_matrix;
-  } else {
-    cdw::terminate_with_message("Wrong message input. Quitting.");
-  }
-
   Visualizer::Config config;
   config.width = window_dims[0];
   config.height = window_dims[1];
   Visualizer viz{config, app_ctx.model, app_ctx.geom_model};
 
-  while (!viz.shouldExit()) {
-    viz.display(q0);
-  }
+  run_main_loop(viz, app_ctx);
 
   return 0;
 }

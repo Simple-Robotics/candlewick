@@ -49,16 +49,18 @@ def send_models(sock: zmq.Socket, model_str, geom_str):
 
 
 def send_state(sock: zmq.Socket, q: np.ndarray, v: np.ndarray | None = None):
-    payload = _encoder.encode(q)
-    sock.send_multipart([b"send_state", payload])
+    payload = _encoder.encode((q, v))
+    sock.send_multipart([b"state_update", payload])
 
 
 if __name__ == "__main__":
+    import time
+
     ctx = zmq.Context.instance()
     sock1: zmq.Socket = ctx.socket(zmq.SocketType.REQ)
     url = f"tcp://127.0.0.1:{PORT}"
     sock1.connect(addr=url)
-    sock2: zmq.Socket = ctx.socket(zmq.SocketType.PUSH)
+    sock2: zmq.Socket = ctx.socket(zmq.SocketType.PUB)
     sock2.connect("tcp://127.0.0.1:12002")
 
     robot: pin.RobotWrapper = erd.load("ur3")
@@ -74,3 +76,21 @@ if __name__ == "__main__":
     # q0 = pin.neutral(model)
     q0 = pin.randomConfiguration(model)
     send_state(sock2, q0)
+    q1 = pin.randomConfiguration(model)
+    _dt = 0.02
+    _v = pin.difference(model, q0, q1) / _dt
+
+    def f(i, vel=False):
+        time.sleep(_dt)
+        t_ = _dt * i
+        freq = 1e-2
+        print("Time:", t_)
+        ph = np.sin(_dt * i * freq)
+        q = pin.interpolate(model, q0, q1, ph)
+        if vel:
+            send_state(sock2, q, _v)
+        else:
+            send_state(sock2, q)
+
+    for i in range(1000):
+        f(i)
