@@ -115,6 +115,10 @@ if(BUILD_PINOCCHIO_VISUALIZER)
   find_package(cppzmq REQUIRED)
   find_package(msgpack-cxx REQUIRED)
   add_executable(candlewick_visualizer candlewick/runtime/main.cpp)
+  set_target_properties(
+    candlewick_visualizer
+    PROPERTIES OUTPUT_NAME "candlewick-visualizer"
+  )
   target_link_libraries(
     candlewick_visualizer
     PRIVATE cppzmq candlewick_multibody msgpack-cxx
