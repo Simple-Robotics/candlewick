@@ -75,11 +75,6 @@ class Visualizer final : public BaseVisualizer {
 public:
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
 
-  struct EnvStatus {
-    bool show_our_about = false;
-    bool show_imgui_about = false;
-  };
-
   using BaseVisualizer::setCameraPose;
   entt::registry registry;
   RenderContext renderer;
@@ -88,7 +83,8 @@ public:
   DebugScene debugScene;
   CylindricalCamera controller;
   CameraControlParams cameraParams;
-  EnvStatus envStatus;
+  bool show_our_about = false;
+  bool show_imgui_about = false;
   AABB worldSceneBounds;
 
   struct Config {

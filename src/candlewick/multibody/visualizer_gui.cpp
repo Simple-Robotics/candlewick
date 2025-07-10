@@ -61,10 +61,10 @@ void Visualizer::defaultGuiCallback() {
   // imgui_demo.cpp.
   IMGUI_CHECKVERSION();
 
-  if (envStatus.show_imgui_about)
-    ImGui::ShowAboutWindow(&envStatus.show_imgui_about);
-  if (envStatus.show_our_about)
-    ::candlewick::showCandlewickAboutWindow(&envStatus.show_our_about);
+  if (show_imgui_about)
+    ImGui::ShowAboutWindow(&show_imgui_about);
+  if (show_our_about)
+    ::candlewick::showCandlewickAboutWindow(&show_our_about);
 
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
@@ -73,8 +73,8 @@ void Visualizer::defaultGuiCallback() {
   ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
   if (ImGui::BeginMenuBar()) {
-    ImGui::MenuItem("About Dear ImGui", NULL, &envStatus.show_imgui_about);
-    ImGui::MenuItem("About Candlewick", NULL, &envStatus.show_our_about);
+    ImGui::MenuItem("About Dear ImGui", NULL, &show_imgui_about);
+    ImGui::MenuItem("About Candlewick", NULL, &show_our_about);
     ImGui::EndMenuBar();
   }
 
