@@ -63,7 +63,6 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
     if (!ret)
       return false;
 
-    sock.send(zmq::str_buffer("ok"));
     auto msg_header = msgs[0].to_string_view();
     if (msg_header == CMD_SEND_MODELS) {
       msgpack::object_handle oh = get_handle_from_zmq_msg(std::move(msgs[1]));
@@ -72,6 +71,12 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
       obj.convert(model_strings);
       app_ctx.model.loadFromString(model_strings[0]);
       app_ctx.geom_model.loadFromString(model_strings[1]);
+      // send response only when models loaded.
+      sock.send(zmq::str_buffer("ok"));
+
+      SDL_Log("Loaded model with %d joints", app_ctx.model.njoints);
+      SDL_Log("Loaded geometry model with %zd gobjs",
+              app_ctx.geom_model.ngeoms);
       return true;
     } else {
       SDL_Log("First message must have header \'%s\', got \'%s\'. Retry.",
@@ -79,9 +84,6 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
       continue;
     }
   }
-
-  SDL_Log("Loaded model with %d joints", app_ctx.model.njoints);
-  SDL_Log("Loaded geometry model with %zd gobjs", app_ctx.geom_model.ngeoms);
   return false;
 }
 
