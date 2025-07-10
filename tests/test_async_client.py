@@ -55,9 +55,11 @@ def send_state(sock: zmq.Socket, q: np.ndarray, v: np.ndarray | None = None):
 
 if __name__ == "__main__":
     ctx = zmq.Context.instance()
-    sock: zmq.Socket = ctx.socket(zmq.SocketType.REQ)
+    sock1: zmq.Socket = ctx.socket(zmq.SocketType.REQ)
     url = f"tcp://127.0.0.1:{PORT}"
-    sock.connect(addr=url)
+    sock1.connect(addr=url)
+    sock2: zmq.Socket = ctx.socket(zmq.SocketType.PUSH)
+    sock2.connect("tcp://127.0.0.1:12002")
 
     robot: pin.RobotWrapper = erd.load("ur3")
     model: pin.Model = robot.model
@@ -65,12 +67,10 @@ if __name__ == "__main__":
 
     model_str = model.saveToString()
     geom_str = geom_model.saveToString()
-    send_models(sock, model_str, geom_str)
-    response = sock.recv().decode()
+    send_models(sock1, model_str, geom_str)
+    response = sock1.recv().decode()
     print(response)
 
     # q0 = pin.neutral(model)
     q0 = pin.randomConfiguration(model)
-    send_state(sock, q0)
-    response = sock.recv().decode()
-    print(response)
+    send_state(sock2, q0)

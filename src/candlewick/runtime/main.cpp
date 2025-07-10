@@ -96,23 +96,29 @@ int main(int argc, char **argv) {
   CLI11_PARSE(app, argc, argv);
 
   zmq::context_t ctx;
-  zmq::socket_t sock{ctx, zmq::socket_type::rep};
-  sock.bind("tcp://127.0.0.1:12000");
-  const std::string endpoint = sock.get(zmq::sockopt::last_endpoint);
-  SDL_Log("ZMQ endpoint: %s", endpoint.c_str());
+  zmq::socket_t setup_sock{ctx, zmq::socket_type::rep};
+  setup_sock.bind("tcp://127.0.0.1:12000");
+  zmq::socket_t state_sock{ctx, zmq::socket_type::pull};
+  state_sock.bind("tcp://127.0.0.1:12002");
+  std::string endpoint;
+  endpoint = setup_sock.get(zmq::sockopt::last_endpoint);
+  SDL_Log("ZMQ endpoint (setup): %s", endpoint.c_str());
+  endpoint = state_sock.get(zmq::sockopt::last_endpoint);
+  SDL_Log("ZMQ endpoint (state): %s", endpoint.c_str());
 
   // ===== Runtime application context =====
   ApplicationContext app_ctx;
 
   // Handle first message
-  bool loaded_models = handle_first_message(sock, app_ctx);
+  bool loaded_models = handle_first_message(setup_sock, app_ctx);
   if (!loaded_models)
     return 1;
 
+  setup_sock.close();
+
   std::vector<zmq::message_t> msgs;
-  auto ret = zmq::recv_multipart_n(sock, std::back_inserter(msgs), 2);
+  auto ret = zmq::recv_multipart_n(state_sock, std::back_inserter(msgs), 2);
   assert(ret);
-  sock.send(zmq::str_buffer("ok2"));
   Eigen::VectorXd q0;
   if (msgs[0].to_string_view() == CMD_SEND_STATE) {
     auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
