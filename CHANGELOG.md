@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added Candlewick visualizer runtime, to be used to (up)load Pinocchio models and submit states to be displayed asynchronously. (https://github.com/Simple-Robotics/candlewick/pull/37)
+- Embed Inter Medium font into the application (https://github.com/Simple-Robotics/candlewick/pull/37)
 
 ### Changed
 
