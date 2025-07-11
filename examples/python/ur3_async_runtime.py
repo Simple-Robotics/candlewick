@@ -1,6 +1,11 @@
+"""
+Demo for the AsyncVisualizer class, e.g. a client which connects to the candlewick visualizer runtime.
+"""
+
 import pinocchio as pin
 import example_robot_data as erd
 import numpy as np
+import warnings
 
 from candlewick.async_visualizer import AsyncVisualizer
 
@@ -13,6 +18,9 @@ if __name__ == "__main__":
     geom_model: pin.GeometryModel = robot.visual_model
 
     client = AsyncVisualizer(model, geom_model)
+    warnings.warn(
+        "You will need to launch the candlewick runtime on the appropriate host and port."
+    )
     client.initViewer()
     client.loadViewerModel()
 
