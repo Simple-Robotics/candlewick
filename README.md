@@ -188,3 +188,13 @@ Here are some of the resources I've looked at:
 * the [Magnum](https://magnum.graphics/) graphics middleware (the design ideas around mesh layouts, how to load geometry primitives, and the type-erased `MeshData` type)
 * [bgfx](https://github.com/bkaradzic/bgfx/)
 * Sascha Willems' Vulkan examples: https://github.com/SaschaWillems/Vulkan/
+
+
+### Font Credit/License
+
+Candlewick embeds the **Inter Medium** font as part of its source code:
+
+**Inter-Medium.ttf**, by Rasmus Andersson.  
+SIL OPEN FONT LICENSE Version 1.1  
+Copyright (c) 2016 The Inter Project Authors  
+https://rsms.me/inter
