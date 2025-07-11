@@ -53,15 +53,29 @@ def send_state(sock: zmq.Socket, q: np.ndarray, v: np.ndarray | None = None):
     sock.send_multipart([b"state_update", payload])
 
 
+def send_cam_pose(sock: zmq.Socket, M: np.ndarray):
+    assert sock.socket_type == zmq.REQ
+    sock.send_multipart([b"send_cam_pose", _encoder.encode(M)])
+    sock.recv()
+
+
+def cmd_clean(sock: zmq.Socket):
+    """Clean the robot from the renderer. Equivalent to `viz.clean()` on the synchronous `Visualizer` class."""
+    assert sock.socket_type == zmq.REQ
+    sock.send_multipart([b"cmd_clean", b""])
+    sock.recv()
+
+
 if __name__ == "__main__":
     import time
 
     ctx = zmq.Context.instance()
     sock1: zmq.Socket = ctx.socket(zmq.SocketType.REQ)
-    url = f"tcp://127.0.0.1:{PORT}"
-    sock1.connect(addr=url)
+    url1 = f"tcp://127.0.0.1:{PORT}"
+    url2 = f"tcp://127.0.0.1:{PORT + 2}"
+    sock1.connect(url1)
     sock2: zmq.Socket = ctx.socket(zmq.SocketType.PUB)
-    sock2.connect("tcp://127.0.0.1:12002")
+    sock2.connect(url2)
 
     robot: pin.RobotWrapper = erd.load("ur3")
     model: pin.Model = robot.model
@@ -92,5 +106,11 @@ if __name__ == "__main__":
         else:
             send_state(sock2, q)
 
-    for i in range(1000):
+    for i in range(400):
         f(i)
+
+    # test setting camera
+    input("[enter] to set camera pose")
+    Mref = np.eye(4)
+    Mref[:3, 3] = (0.05, 0, 2.0)
+    send_cam_pose(sock1, Mref)
