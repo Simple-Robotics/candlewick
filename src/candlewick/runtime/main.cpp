@@ -131,14 +131,19 @@ int main(int argc, char **argv) {
   app.add_option("--dims", window_dims, "Window dimensions.")
       ->capture_default_str();
 
+  std::string hostname = "127.0.0.1";
+  app.add_option("--host", hostname, "Host name.")->capture_default_str();
+  Uint16 port = 12000;
+  app.add_option("-p,--port", port, "Base port")->capture_default_str();
+
   CLI11_PARSE(app, argc, argv);
 
   // ===== Runtime application context =====
   ApplicationContext app_ctx;
   zmq::socket_t &setup_sock = app_ctx.setup_sock;
   zmq::socket_t &state_sock = app_ctx.state_sock;
-  setup_sock.bind("tcp://127.0.0.1:12000");
-  state_sock.bind("tcp://127.0.0.1:12002");
+  setup_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port));
+  state_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port + 2));
   state_sock.set(zmq::sockopt::subscribe, CMD_SEND_STATE);
 
   std::string endpoint;
