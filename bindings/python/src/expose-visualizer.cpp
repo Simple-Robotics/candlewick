@@ -42,6 +42,7 @@ void exposeVisualizer() {
       .def(VisualizerPythonVisitor<Visualizer>{})
       .def_readonly("renderer", &Visualizer::renderer)
       .def_readwrite("worldSceneBounds", &Visualizer::worldSceneBounds)
+      .def("resetCamera", &Visualizer::resetCamera, ("self"_a))
       .DEF_PROP_PROXY(device)
       .def(
           "takeScreenshot",
