@@ -1,6 +1,7 @@
 import pinocchio as pin
 import time
 import numpy as np
+from utils import add_floor_geom
 from candlewick import Visualizer, VisualizerConfig
 
 try:
@@ -14,7 +15,8 @@ except ImportError as import_error:
 robot = erd.load("ur10")
 model: pin.Model = robot.model
 data: pin.Data = robot.data
-visual_model = robot.visual_model
+visual_model: pin.GeometryModel = robot.visual_model
+add_floor_geom(visual_model)
 
 config = VisualizerConfig()
 config.width = 1920
