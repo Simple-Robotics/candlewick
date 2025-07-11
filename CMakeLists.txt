@@ -63,12 +63,11 @@ cmake_dependent_option(
   OFF
 )
 
-option(BUILD_PYTHON_BINDINGS "Build Python bindings." OFF)
 cmake_dependent_option(
   GENERATE_PYTHON_STUBS
   "Generate the Python stubs associated to the Python library"
   OFF
-  BUILD_PYTHON_BINDINGS
+  BUILD_PYTHON_INTERFACE
   OFF
 )
 
@@ -140,7 +139,7 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-if(BUILD_PYTHON_BINDINGS)
+if(BUILD_PYTHON_INTERFACE)
   add_subdirectory(bindings/python)
   # WIP nanobind bindings
   # add_subdirectory(bindings/nanobind)
