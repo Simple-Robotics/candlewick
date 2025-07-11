@@ -51,6 +51,10 @@ ffmpeg = ">=7"
 
 [feature.pinocchio.dependencies]
 pinocchio = ">=3.5"
+cppzmq = ">=4.10.0,<5"
+pyzmq = ">=27.0.0,<28"
+msgspec = ">=0.19.0,<0.20"
+msgpack-cxx = ">=7.0.0,<8"
 
 [feature.pinocchio.activation]
 env = { CANDLEWICK_WITH_PINOCCHIO = "ON" }
