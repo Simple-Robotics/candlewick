@@ -1,5 +1,4 @@
-#include "candlewick/multibody/Visualizer.h"
-#include "candlewick/core/CameraControls.h"
+#include "Visualizer.h"
 
 #include <string>
 
@@ -54,7 +53,7 @@ void guiAddDebugMesh(DebugMeshComponent &dmc,
   }
 }
 
-void Visualizer::defaultGuiCallback() {
+void Visualizer::guiCallbackImpl() {
 
   // Verify ABI compatibility between caller code and compiled version of Dear
   // ImGui. This helps detects some build issues. Check demo code in
@@ -187,15 +186,15 @@ void Visualizer::defaultGuiCallback() {
   ImGui::End();
 }
 
-static void mouse_wheel_handler(CylindricalCamera &controller,
-                                const CameraControlParams &params,
-                                SDL_MouseWheelEvent event) {
+static void mouseWheelHandler(CylindricalCamera &controller,
+                              const CameraControlParams &params,
+                              SDL_MouseWheelEvent event) {
   controller.moveInOut(1.f - params.zoomSensitivity, event.y);
 }
 
-static void mouse_motion_handler(CylindricalCamera &controller,
-                                 const CameraControlParams &params,
-                                 const SDL_MouseMotionEvent &event) {
+static void mouseMotionHandler(CylindricalCamera &controller,
+                               const CameraControlParams &params,
+                               const SDL_MouseMotionEvent &event) {
   Float2 mvt{event.xrel, event.yrel};
   SDL_MouseButtonFlags mb = event.state;
   // check if left mouse pressed
@@ -231,11 +230,11 @@ void Visualizer::processEvents() {
     case SDL_EVENT_MOUSE_MOTION:
       // camera mouse control
       if (m_cameraControl)
-        mouse_motion_handler(this->controller, cameraParams, event.motion);
+        mouseMotionHandler(this->controller, cameraParams, event.motion);
       break;
     case SDL_EVENT_MOUSE_WHEEL:
       if (m_cameraControl)
-        mouse_wheel_handler(this->controller, cameraParams, event.wheel);
+        mouseWheelHandler(this->controller, cameraParams, event.wheel);
       break;
     case SDL_EVENT_KEY_DOWN:
       auto keyEvent = event.key;
