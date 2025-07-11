@@ -1,5 +1,4 @@
-#include "candlewick/multibody/Visualizer.h"
-#include "candlewick/core/CameraControls.h"
+#include "Visualizer.h"
 
 #include <string>
 
@@ -54,17 +53,17 @@ void guiAddDebugMesh(DebugMeshComponent &dmc,
   }
 }
 
-void Visualizer::defaultGuiCallback() {
+void Visualizer::guiCallbackImpl() {
 
   // Verify ABI compatibility between caller code and compiled version of Dear
   // ImGui. This helps detects some build issues. Check demo code in
   // imgui_demo.cpp.
   IMGUI_CHECKVERSION();
 
-  if (envStatus.show_imgui_about)
-    ImGui::ShowAboutWindow(&envStatus.show_imgui_about);
-  if (envStatus.show_our_about)
-    ::candlewick::showCandlewickAboutWindow(&envStatus.show_our_about);
+  if (show_imgui_about)
+    ImGui::ShowAboutWindow(&show_imgui_about);
+  if (show_our_about)
+    ::candlewick::showCandlewickAboutWindow(&show_our_about);
 
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
@@ -73,8 +72,8 @@ void Visualizer::defaultGuiCallback() {
   ImGui::Begin("Renderer info & controls", nullptr, window_flags);
 
   if (ImGui::BeginMenuBar()) {
-    ImGui::MenuItem("About Dear ImGui", NULL, &envStatus.show_imgui_about);
-    ImGui::MenuItem("About Candlewick", NULL, &envStatus.show_our_about);
+    ImGui::MenuItem("About Dear ImGui", NULL, &show_imgui_about);
+    ImGui::MenuItem("About Candlewick", NULL, &show_our_about);
     ImGui::EndMenuBar();
   }
 
@@ -187,28 +186,30 @@ void Visualizer::defaultGuiCallback() {
   ImGui::End();
 }
 
-static void mouse_wheel_handler(CylindricalCamera &controller,
-                                const CameraControlParams &params,
-                                SDL_MouseWheelEvent event) {
-  controller.moveInOut(1.f - params.zoomSensitivity, event.y);
+static void mouseWheelHandler(CylindricalCamera &controller,
+                              const CameraControlParams &params,
+                              SDL_MouseWheelEvent event) {
+  if (params.enabled)
+    controller.moveInOut(1.f - params.zoomSensitivity, event.y);
 }
 
-static void mouse_motion_handler(CylindricalCamera &controller,
-                                 const CameraControlParams &params,
-                                 const SDL_MouseMotionEvent &event) {
+static void mouseMotionHandler(CylindricalCamera &controller,
+                               const CameraControlParams &params,
+                               const SDL_MouseMotionEvent &event) {
   Float2 mvt{event.xrel, event.yrel};
   SDL_MouseButtonFlags mb = event.state;
-  // check if left mouse pressed
-  if (mb & SDL_BUTTON_MASK(params.mouseButtons.rotButton)) {
-    controller.viewportDrag(mvt, params.rotSensitivity, params.panSensitivity,
-                            params.yInvert);
-  }
-  if (mb & SDL_BUTTON_MASK(params.mouseButtons.panButton)) {
-    controller.pan(mvt, params.panSensitivity);
-  }
-  if (mb & SDL_BUTTON_MASK(params.mouseButtons.yRotButton)) {
-    Radf rot_angle = params.localRotSensitivity * mvt.y();
-    camera_util::localRotateXAroundOrigin(controller.camera, rot_angle);
+  if (params.enabled) {
+    if (mb & SDL_BUTTON_MASK(params.mouseButtons.rotButton)) {
+      controller.viewportDrag(mvt, params.rotSensitivity, params.panSensitivity,
+                              params.yInvert);
+    }
+    if (mb & SDL_BUTTON_MASK(params.mouseButtons.panButton)) {
+      controller.pan(mvt, params.panSensitivity);
+    }
+    if (mb & SDL_BUTTON_MASK(params.mouseButtons.yRotButton)) {
+      Radf rot_angle = params.localRotSensitivity * mvt.y();
+      camera_util::localRotateXAroundOrigin(controller.camera, rot_angle);
+    }
   }
 }
 
@@ -229,13 +230,11 @@ void Visualizer::processEvents() {
 
     switch (event.type) {
     case SDL_EVENT_MOUSE_MOTION:
-      // camera mouse control
-      if (m_cameraControl)
-        mouse_motion_handler(this->controller, cameraParams, event.motion);
+      // mouse control
+      mouseMotionHandler(this->controller, cameraParams, event.motion);
       break;
     case SDL_EVENT_MOUSE_WHEEL:
-      if (m_cameraControl)
-        mouse_wheel_handler(this->controller, cameraParams, event.wheel);
+      mouseWheelHandler(this->controller, cameraParams, event.wheel);
       break;
     case SDL_EVENT_KEY_DOWN:
       auto keyEvent = event.key;

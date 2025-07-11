@@ -61,7 +61,7 @@ if(GENERATE_PYTHON_STUBS)
   )
 endif(GENERATE_PYTHON_STUBS)
 
-set(PYTHON_FILES __init__.py video_context.py)
+set(PYTHON_FILES __init__.py async_visualizer.py video_context.py)
 
 foreach(pyfile ${PYTHON_FILES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME} ${pyfile})

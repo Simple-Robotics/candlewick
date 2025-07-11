@@ -37,9 +37,10 @@ configure = { cmd = [
   ".",
   "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
   "-DCMAKE_BUILD_TYPE=$CANDLEWICK_BUILD_TYPE",
-  "-DBUILD_PYTHON_BINDINGS=$CANDLEWICK_WITH_PYTHON",
+  "-DBUILD_PYTHON_INTERFACE=$CANDLEWICK_WITH_PYTHON",
   "-DGENERATE_PYTHON_STUBS=OFF",
   "-DBUILD_PINOCCHIO_VISUALIZER=$CANDLEWICK_WITH_PINOCCHIO",
+  "-DBUILD_VISUALIZER_RUNTIME=$CANDLEWICK_BUILD_VISUALIZER_RUNTIME",
   "-DBUILD_TESTING=$CANDLEWICK_BUILD_TESTS",
 ] }
 build = { cmd = "cmake --build build --target all", depends-on = ["configure"]}
@@ -55,6 +56,16 @@ pinocchio = ">=3.5"
 [feature.pinocchio.activation]
 env = { CANDLEWICK_WITH_PINOCCHIO = "ON" }
 
+[feature.runtime.dependencies]
+cppzmq = ">=4.10.0,<5"
+pyzmq = ">=27.0.0,<28"
+msgspec = ">=0.19.0,<0.20"
+msgpack-cxx = ">=7.0.0,<8"
+cli11 = "<2.5"
+
+[feature.runtime.activation]
+env = { CANDLEWICK_BUILD_VISUALIZER_RUNTIME = "ON" }
+
 [feature.test.dependencies]
 gtest = "*"
 
@@ -65,12 +76,12 @@ env = { CANDLEWICK_BUILD_TESTS = "ON" }
 doxygen = "*"
 
 [environments]
-pinocchio = { features = ["pinocchio", "ffmpeg"] }
+pinocchio = { features = ["pinocchio", "runtime", "ffmpeg"] }
 # test core
 test = { features = ["test"] }
 # test pinocchio, no ffmpeg
 test-no-ffmpeg = { features = ["pinocchio", "test"] }
 # test all (pinocchio + ffmpeg)
-test-all = { features = ["pinocchio", "ffmpeg", "test"]}
+test-all = { features = ["pinocchio", "runtime", "ffmpeg", "test"]}
 # doc environment
 doc = { features = ["doc", "default"] }
