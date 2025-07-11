@@ -189,7 +189,8 @@ void Visualizer::guiCallbackImpl() {
 static void mouseWheelHandler(CylindricalCamera &controller,
                               const CameraControlParams &params,
                               SDL_MouseWheelEvent event) {
-  controller.moveInOut(1.f - params.zoomSensitivity, event.y);
+  if (params.enabled)
+    controller.moveInOut(1.f - params.zoomSensitivity, event.y);
 }
 
 static void mouseMotionHandler(CylindricalCamera &controller,
@@ -197,17 +198,18 @@ static void mouseMotionHandler(CylindricalCamera &controller,
                                const SDL_MouseMotionEvent &event) {
   Float2 mvt{event.xrel, event.yrel};
   SDL_MouseButtonFlags mb = event.state;
-  // check if left mouse pressed
-  if (mb & SDL_BUTTON_MASK(params.mouseButtons.rotButton)) {
-    controller.viewportDrag(mvt, params.rotSensitivity, params.panSensitivity,
-                            params.yInvert);
-  }
-  if (mb & SDL_BUTTON_MASK(params.mouseButtons.panButton)) {
-    controller.pan(mvt, params.panSensitivity);
-  }
-  if (mb & SDL_BUTTON_MASK(params.mouseButtons.yRotButton)) {
-    Radf rot_angle = params.localRotSensitivity * mvt.y();
-    camera_util::localRotateXAroundOrigin(controller.camera, rot_angle);
+  if (params.enabled) {
+    if (mb & SDL_BUTTON_MASK(params.mouseButtons.rotButton)) {
+      controller.viewportDrag(mvt, params.rotSensitivity, params.panSensitivity,
+                              params.yInvert);
+    }
+    if (mb & SDL_BUTTON_MASK(params.mouseButtons.panButton)) {
+      controller.pan(mvt, params.panSensitivity);
+    }
+    if (mb & SDL_BUTTON_MASK(params.mouseButtons.yRotButton)) {
+      Radf rot_angle = params.localRotSensitivity * mvt.y();
+      camera_util::localRotateXAroundOrigin(controller.camera, rot_angle);
+    }
   }
 }
 
@@ -228,13 +230,11 @@ void Visualizer::processEvents() {
 
     switch (event.type) {
     case SDL_EVENT_MOUSE_MOTION:
-      // camera mouse control
-      if (m_cameraControl)
-        mouseMotionHandler(this->controller, cameraParams, event.motion);
+      // mouse control
+      mouseMotionHandler(this->controller, cameraParams, event.motion);
       break;
     case SDL_EVENT_MOUSE_WHEEL:
-      if (m_cameraControl)
-        mouseWheelHandler(this->controller, cameraParams, event.wheel);
+      mouseWheelHandler(this->controller, cameraParams, event.wheel);
       break;
     case SDL_EVENT_KEY_DOWN:
       auto keyEvent = event.key;

@@ -34,6 +34,7 @@ struct CameraControlParams {
   float zoomSensitivity = 0.05f;
   float localRotSensitivity = 0.01f;
   bool yInvert = false;
+  bool enabled = true;
 
   // Mouse button modifiers
   struct MouseConfig {
@@ -52,7 +53,6 @@ void guiAddCameraParams(CylindricalCamera &controller,
 /// This visualizer is synchronous. The window is only updated when `display()`
 /// is called.
 class Visualizer final : public BaseVisualizer {
-  bool m_cameraControl = true;
   bool m_showGui = true;
   bool m_shouldExit = false;
   entt::entity m_grid, m_triad;
@@ -124,7 +124,7 @@ public:
 
   void setCameraPose(const Eigen::Ref<const Matrix4> &pose) override;
 
-  void enableCameraControl(bool v) override { m_cameraControl = v; }
+  void enableCameraControl(bool v) override { cameraParams.enabled = v; }
 
   void processEvents();
 
