@@ -158,12 +158,7 @@ public:
   void addFrameViz(pin::FrameIndex id, bool show_velocity = true);
 
   /// \brief Remove all frame visualizations.
-  void removeFramesViz() {
-    registry.destroy(m_debug_frame_pos.begin(), m_debug_frame_pos.end());
-    registry.destroy(m_debug_frame_vel.begin(), m_debug_frame_vel.end());
-    m_debug_frame_pos.clear();
-    m_debug_frame_vel.clear();
-  }
+  void removeFramesViz();
 
   /// \brief Clear objects
   void clean() override {

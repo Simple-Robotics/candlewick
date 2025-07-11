@@ -247,4 +247,11 @@ void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
         m_robotDebug->addFrameVelocityArrow(debugScene, id));
 }
 
+void Visualizer::removeFramesViz() {
+  registry.destroy(m_debug_frame_pos.begin(), m_debug_frame_pos.end());
+  registry.destroy(m_debug_frame_vel.begin(), m_debug_frame_vel.end());
+  m_debug_frame_pos.clear();
+  m_debug_frame_vel.clear();
+}
+
 } // namespace candlewick::multibody
