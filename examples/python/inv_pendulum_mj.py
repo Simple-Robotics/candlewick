@@ -4,7 +4,12 @@ from candlewick import Visualizer, VisualizerConfig
 
 
 filename = "inv_pendulum.xml"
-model, geom_model, visual_model = pin.buildModelsFromMJCF(filename)
+rets = pin.buildModelsFromMJCF(filename)
+if len(rets) == 3:
+    model, _, visual_model = rets
+else:
+    model, _, visual_model, _ = rets
+
 
 config = VisualizerConfig()
 config.width = 1280
