@@ -1,8 +1,15 @@
-import example_robot_data as erd
 import pinocchio as pin
 import time
 import numpy as np
 from candlewick import Visualizer, VisualizerConfig
+
+try:
+    import example_robot_data as erd
+except ImportError as import_error:
+    raise ImportError(
+        "example-robot-data package not found. Please install "
+        "it (from e.g. pip or conda)."
+    ) from import_error
 
 robot = erd.load("ur10")
 model: pin.Model = robot.model

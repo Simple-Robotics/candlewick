@@ -1,13 +1,21 @@
 """
-Demo for the AsyncVisualizer class, e.g. a client which connects to the candlewick visualizer runtime.
+Demo for the AsyncVisualizer class, e.g. a client which connects
+to the candlewick visualizer runtime.
 """
 
 import pinocchio as pin
-import example_robot_data as erd
 import numpy as np
 import warnings
 
 from candlewick.async_visualizer import AsyncVisualizer
+
+try:
+    import example_robot_data as erd
+except ImportError as import_error:
+    raise ImportError(
+        "example-robot-data package not found. Please install "
+        "it (from e.g. pip or conda)."
+    ) from import_error
 
 
 if __name__ == "__main__":
