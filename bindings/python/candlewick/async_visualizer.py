@@ -85,8 +85,12 @@ class AsyncVisualizer(BaseVisualizer):
         self.visual_model: pin.GeometryModel
 
     def initViewer(self, loadModel=False, /, hostname="127.0.0.1", port=DEFAULT_PORT):
-        self.sync_sock.connect(addr=f"tcp://{hostname}:{port}")
-        self.publisher.connect(addr=f"tcp://{hostname}:{port + 2}")
+        url1 = f"tcp://{hostname}:{port}"
+        url2 = f"tcp://{hostname}:{port + 2}"
+        self.sync_sock.connect(addr=url1)
+        self.publisher.connect(addr=url2)
+        print(f"Connected sync socket {self.sync_sock.socket_type} to {url1}")
+        print(f"Connected state publisher {self.publisher.socket_type} to {url2}")
 
         if loadModel:
             self.loadViewerModel()
