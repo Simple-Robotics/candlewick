@@ -1,16 +1,15 @@
 import candlewick as cdw
+import tqdm
+
 from candlewick import Visualizer, VisualizerConfig
 
 try:
     import go2_description as go2d
-except ImportError:
-    import warnings
-
-    warnings.warn(
-        "This example requires the go2_description package, which was not found. Download it at: https://github.com/inria-paris-robotics-lab/go2_description"
-    )
-    raise
-import tqdm
+except ImportError as import_error:
+    raise ImportError(
+        "This example requires the go2_description package, which was not found. "
+        "Download it at: https://github.com/inria-paris-robotics-lab/go2_description"
+    ) from import_error
 
 
 print(f"Current shader directory: {cdw.currentShaderDirectory()}")
