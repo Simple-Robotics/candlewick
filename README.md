@@ -155,7 +155,7 @@ cmake -S . -B build/ \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_PINOCCHIO_VISUALIZER:BOOL=ON \  # For Pinocchio support
   -DBUILD_VISUALIZER_RUNTIME:BOOL=ON \  # Async visualizer runtime
-  -DBUILD_PYTHON_BINDINGS:BOOL=ON \  # For Python bindings
+  -DBUILD_PYTHON_INTERFACE:BOOL=ON \  # For Python bindings
   -DGENERATE_PYTHON_STUBS:BOOL=ON \  # Python binding type stubs
   -GNinja \ # or -G"Unix Makefiles" to use Make
   -DBUILD_TESTING=OFF \  # or ON not build the tests
@@ -172,11 +172,11 @@ cmake --install .
 
 | Build Option | Default | Description | Additional Dependencies | Requires |
 |-------------|---------|-------------|------------------------|----------|
-| `BUILD_PYTHON_BINDINGS` | `ON` | Build Python bindings | eigenpy | - |
+| `BUILD_PYTHON_INTERFACE` | `ON` | Build Python bindings | eigenpy | - |
 | `BUILD_PINOCCHIO_VISUALIZER` | `ON` | Enable Pinocchio robot visualization | pinocchio >= 3.5 | - |
 | `BUILD_VISUALIZER_RUNTIME` | `OFF` | Build `candlewick-visualizer` executable | cppzmq, msgpack-cxx | `BUILD_PINOCCHIO_VISUALIZER=ON` |
 | `BUILD_WITH_FFMPEG_SUPPORT` | `OFF` | Enable video recording capabilities | FFmpeg | - |
-| `GENERATE_PYTHON_STUBS` | `OFF` | Generate Python type stubs | *(handled by cmake submodule)* | `BUILD_PYTHON_BINDINGS=ON` |
+| `GENERATE_PYTHON_STUBS` | `OFF` | Generate Python type stubs | *(handled by cmake submodule)* | `BUILD_PYTHON_INTERFACE=ON` |
 
 
 ## Credits
