@@ -68,9 +68,7 @@ class Visualizer final : public BaseVisualizer {
 
   void displayImpl() override;
 
-  GuiSystem::GuiBehavior getDefaultCallback() {
-    return [this](auto &) { this->defaultGuiCallback(); };
-  }
+  void guiCallbackImpl();
 
 public:
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
@@ -93,10 +91,6 @@ public:
     SDL_GPUTextureFormat depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
   };
 
-  /// \brief Default GUI callback for the Visualizer; provide your own callback
-  /// to the Visualizer constructor to change this behaviour.
-  void defaultGuiCallback();
-
   void resetCamera();
 
   void loadViewerModel() override;
@@ -111,13 +105,14 @@ public:
 
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model)
-      : Visualizer(config, model, visual_model, getDefaultCallback()) {}
+      : Visualizer(config, model, visual_model,
+                   [this](auto &) { this->guiCallbackImpl(); }) {}
 
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model, pin::Data &data,
              pin::GeometryData &visual_data)
       : Visualizer(config, model, visual_model, data, visual_data,
-                   getDefaultCallback()) {}
+                   [this](auto &) { this->guiCallbackImpl(); }) {}
 
   ~Visualizer() override;
 
