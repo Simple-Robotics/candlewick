@@ -25,7 +25,7 @@ bool GuiSystem::init(const RenderContext &renderer) {
 
   ImGuiIO &io = ImGui::GetIO();
   ImFont *inter = io.Fonts->AddFontFromMemoryCompressedTTF(
-      InterMedium_compressed_data, InterMedium_compressed_size);
+      InterMedium_compressed_data, InterMedium_compressed_size, 13.0f);
   SDL_assert(inter);
 
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
