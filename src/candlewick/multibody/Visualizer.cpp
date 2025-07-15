@@ -32,6 +32,7 @@ static RenderContext _create_renderer(const Visualizer::Config &config) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     terminate_with_message("Failed to init video: {:s}", SDL_GetError());
   }
+  SDL_Log("Video driver: %s", SDL_GetCurrentVideoDriver());
 
   return RenderContext{Device{auto_detect_shader_format_subset()},
                        Window{"Candlewick Pinocchio visualizer",
