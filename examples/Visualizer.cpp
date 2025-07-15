@@ -10,14 +10,13 @@
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
 
-namespace cdw = candlewick;
 using namespace candlewick::multibody;
 using std::chrono::steady_clock;
 
 int main(int argc, char **argv) {
   CLI::App app{"Visualizer example"};
   argv = app.ensure_utf8(argv);
-  std::vector<Uint32> window_dims{1920u, 1080u};
+  std::array<Uint32, 2> window_dims{1920u, 1080u};
   double fps;
 
   app.add_option("--dims", window_dims, "Window dimensions.")
@@ -26,10 +25,6 @@ int main(int argc, char **argv) {
       ->default_val(60);
 
   CLI11_PARSE(app, argc, argv);
-
-  if (window_dims.size() != 2) {
-    cdw::terminate_with_message("Expected only two values for argument --dims");
-  }
 
   pin::Model model;
   pin::GeometryModel geom_model;

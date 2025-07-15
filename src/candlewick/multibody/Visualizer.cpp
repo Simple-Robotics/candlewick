@@ -30,8 +30,9 @@ namespace candlewick::multibody {
 
 static RenderContext _create_renderer(const Visualizer::Config &config) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-    terminate_with_message("Failed to init video: %s", SDL_GetError());
+    terminate_with_message("Failed to init video: {:s}", SDL_GetError());
   }
+  SDL_Log("Video driver: %s", SDL_GetCurrentVideoDriver());
 
   return RenderContext{Device{auto_detect_shader_format_subset()},
                        Window{"Candlewick Pinocchio visualizer",
@@ -245,6 +246,13 @@ void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
   if (show_velocity)
     m_debug_frame_vel.push_back(
         m_robotDebug->addFrameVelocityArrow(debugScene, id));
+}
+
+void Visualizer::removeFramesViz() {
+  registry.destroy(m_debug_frame_pos.begin(), m_debug_frame_pos.end());
+  registry.destroy(m_debug_frame_vel.begin(), m_debug_frame_vel.end());
+  m_debug_frame_pos.clear();
+  m_debug_frame_vel.clear();
 }
 
 } // namespace candlewick::multibody

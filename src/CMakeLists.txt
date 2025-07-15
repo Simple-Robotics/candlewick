@@ -111,6 +111,27 @@ if(BUILD_PINOCCHIO_VISUALIZER)
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
+
+  if(BUILD_VISUALIZER_RUNTIME)
+    find_package(cppzmq REQUIRED CONFIG)
+    find_package(msgpack-cxx REQUIRED)
+    add_executable(candlewick_visualizer candlewick/runtime/main.cpp)
+    set_target_properties(
+      candlewick_visualizer
+      PROPERTIES
+        OUTPUT_NAME "candlewick-visualizer"
+        INSTALL_RPATH_USE_LINK_PATH True
+    )
+    target_link_libraries(
+      candlewick_visualizer
+      PRIVATE cppzmq candlewick_multibody msgpack-cxx
+    )
+    install(
+      TARGETS candlewick_visualizer
+      EXPORT ${TARGETS_EXPORT_NAME}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+  endif()
 endif()
 
 # install headers

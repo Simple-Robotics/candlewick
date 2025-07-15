@@ -55,13 +55,19 @@ set(AWESOME_CSS_DIR ${PROJECT_SOURCE_DIR}/doc/doxygen-awesome-css)
 
 option(BUILD_EXAMPLES "Build examples." OFF)
 option(BUILD_PINOCCHIO_VISUALIZER "Build the Pinocchio visualizer." ON)
+cmake_dependent_option(
+  BUILD_VISUALIZER_RUNTIME
+  "Build the visualizer runtime which is used to have a persistent visualizer (e.g. for async clients)."
+  OFF
+  BUILD_PINOCCHIO_VISUALIZER
+  OFF
+)
 
-option(BUILD_PYTHON_BINDINGS "Build Python bindings." OFF)
 cmake_dependent_option(
   GENERATE_PYTHON_STUBS
   "Generate the Python stubs associated to the Python library"
   OFF
-  BUILD_PYTHON_BINDINGS
+  BUILD_PYTHON_INTERFACE
   OFF
 )
 
@@ -133,7 +139,7 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-if(BUILD_PYTHON_BINDINGS)
+if(BUILD_PYTHON_INTERFACE)
   add_subdirectory(bindings/python)
   # WIP nanobind bindings
   # add_subdirectory(bindings/nanobind)
