@@ -61,13 +61,6 @@ def send_cam_pose(sock: zmq.Socket, M: np.ndarray):
     return sock.recv()
 
 
-def cmd_clean(sock: zmq.Socket):
-    """Clean the robot from the renderer. Equivalent to `viz.clean()` on the synchronous `Visualizer` class."""
-    assert sock.socket_type == zmq.REQ
-    sock.send_multipart([b"cmd_clean", b""])
-    return sock.recv()
-
-
 class AsyncVisualizer(BaseVisualizer):
     """A visualizer-like client for the candlewick runtime."""
 
@@ -111,6 +104,11 @@ class AsyncVisualizer(BaseVisualizer):
     def setCameraPose(self, pose: np.ndarray):
         send_cam_pose(self.sync_sock, pose)
 
+    def resetCamera(self):
+        self.sync_sock.send_multipart([b"reset_camera", b""])
+        response = self.sync_sock.recv().decode()
+        assert response == "ok"
+
     def display(self, q: np.ndarray, v: Optional[np.ndarray] = None):
         """Publish the robot state."""
         assert q.size == self.model.nq
@@ -119,7 +117,10 @@ class AsyncVisualizer(BaseVisualizer):
         send_state(self.publisher, q, v)
 
     def clean(self):
-        cmd_clean(self.sync_sock)
+        """Clean the robot from the renderer. Equivalent to `viz.clean()` on the synchronous `Visualizer` class."""
+        self.sync_sock.send_multipart([b"cmd_clean", b""])
+        response = self.sync_sock.recv().decode()
+        assert response == "ok"
 
     def close(self):
         self.clean()
@@ -155,3 +156,19 @@ class AsyncVisualizer(BaseVisualizer):
 
     def drawFrameVelocities(self, *args, **kwargs):
         raise NotImplementedError()
+
+    def startRecording(self, filename: str):
+        """Open a recording to a given file."""
+        self.sync_sock.send_multipart([b"start_recording", filename.encode("utf-8")])
+        response = self.sync_sock.recv().decode("utf-8")
+        if response != "ok":
+            print(f"Visualizer runtime error: {response}")
+
+    def stopRecording(self):
+        """
+        Stop the recording if it's running.
+
+        :returns: Whether a recording was actually stopped.
+        """
+        self.sync_sock.send_multipart([b"stop_recording", b""])
+        return bool(self.sync_sock.recv())

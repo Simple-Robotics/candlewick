@@ -7,6 +7,7 @@ import pinocchio as pin
 import numpy as np
 import warnings
 
+from candlewick import create_recorder_context
 from candlewick.async_visualizer import AsyncVisualizer
 
 try:
@@ -47,11 +48,15 @@ if __name__ == "__main__":
         q = pin.interpolate(model, q0, q1, ph)
         client.display(q, _v if vel else None)
 
-    for i in range(400):
-        f(i)
+    with create_recorder_context(client, "async_record.mp4"):
+        for i in range(400):
+            f(i)
 
     # test setting camera
     input("[enter] to set camera pose")
     Mref = np.eye(4)
     Mref[:3, 3] = (0.05, 0, 2.0)
     client.setCameraPose(pose=Mref)
+
+    input("[enter] to reset camera")
+    client.resetCamera()

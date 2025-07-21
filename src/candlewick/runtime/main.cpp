@@ -25,6 +25,9 @@ using cdw::multibody::Visualizer;
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_models);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(state_update);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_cam_pose);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(reset_camera);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(start_recording);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(stop_recording);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(clean);
 
 using RowMat4d = Eigen::Matrix<pin::context::Scalar, 4, 4, Eigen::RowMajor>;
@@ -83,12 +86,27 @@ void pull_socket_router(Visualizer &viz, std::span<zmq::message_t, 2> msgs,
     auto M = get_eigen_view_from_spec<RowMat4d>(M_msg);
     viz.setCameraPose(M);
     sync_sock.send(zmq::str_buffer("ok"));
+  } else if (header == CMD_reset_camera) {
+    viz.resetCamera();
+    sync_sock.send(zmq::str_buffer("ok"));
   } else if (header == CMD_clean) {
     viz.clean();
     sync_sock.send(zmq::str_buffer("ok"));
   } else if (header == CMD_send_models) {
     sync_sock.send(
         zmq::str_buffer("error: visualizer already has models open."));
+  } else if (header == CMD_start_recording) {
+    auto filename = msgs[1].to_string_view();
+    try {
+      viz.startRecording(filename);
+      sync_sock.send(zmq::str_buffer("ok"));
+    } catch (const std::runtime_error &err) {
+      std::string err_msg{err.what()};
+      sync_sock.send(zmq::message_t(err_msg));
+    }
+  } else if (header == CMD_stop_recording) {
+    char data{viz.stopRecording()};
+    sync_sock.send(zmq::buffer(&data, 1));
   }
 }
 

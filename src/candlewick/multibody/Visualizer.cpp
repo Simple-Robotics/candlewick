@@ -230,13 +230,16 @@ void Visualizer::startRecording([[maybe_unused]] std::string_view filename) {
 #endif
 }
 
-void Visualizer::stopRecording() {
+bool Visualizer::stopRecording() {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   if (!m_videoRecorder.isRecording())
-    return;
+    return false;
   m_currentVideoFilename.clear();
   SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
   m_videoRecorder.close();
+  return true;
+#else
+  return false;
 #endif
 }
 

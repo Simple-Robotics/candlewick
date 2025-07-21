@@ -134,7 +134,9 @@ public:
 
   void startRecording(std::string_view filename);
 
-  void stopRecording();
+  /// \brief Stop recording the window.
+  /// \returns Whether a recording was actually stopped.
+  bool stopRecording();
 
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   auto &videoSettings() { return m_videoSettings; }
