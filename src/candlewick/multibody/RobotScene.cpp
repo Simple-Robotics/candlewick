@@ -87,8 +87,8 @@ auto RobotScene::pinGeomToPipeline(const coal::CollisionGeometry &geom)
   }
 }
 
-static void add_pipeline_tag_component(entt::registry &reg, entt::entity ent,
-                                       RobotScene::PipelineType type) {
+static void addPipelineTagComponent(entt::registry &reg, entt::entity ent,
+                                    RobotScene::PipelineType type) {
   magic_enum::enum_switch(
       [&reg, ent](auto pt) { reg.emplace<RobotScene::pipeline_tag<pt>>(ent); },
       type);
@@ -107,7 +107,7 @@ entt::entity RobotScene::addEnvironmentObject(MeshData &&data, Mat4f placement,
   const auto &mmc = m_registry.emplace<MeshMaterialComponent>(
       entity, std::move(mesh), std::vector{std::move(data.material)});
   updateTransparencyClassification(m_registry, entity, mmc);
-  add_pipeline_tag_component(m_registry, entity, pipe_type);
+  addPipelineTagComponent(m_registry, entity, pipe_type);
   return entity;
 }
 
@@ -239,8 +239,8 @@ void RobotScene::initCompositePipeline(const MeshLayout &layout) {
       },
   };
 
-  pipelines.wboitComposite = SDL_CreateGPUGraphicsPipeline(device(), &desc);
-  if (!pipelines.wboitComposite) {
+  m_pipelines.wboitComposite = SDL_CreateGPUGraphicsPipeline(device(), &desc);
+  if (!m_pipelines.wboitComposite) {
     terminate_with_message("Failed to create WBOIT pipeline: {:s}",
                            SDL_GetError());
   }
@@ -264,7 +264,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
     auto meshDatas = loadGeometryObject(geom_obj);
     PipelineType pipeline_type = pinGeomToPipeline(*geom_obj.geometry);
     Mesh mesh = createMeshFromBatch(device(), meshDatas, true);
-    SDL_assert(validateMesh(mesh));
+    assert(validateMesh(mesh));
 
     const auto layout = mesh.layout();
 
@@ -274,15 +274,17 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
     m_registry.emplace<TransformComponent>(entity);
     if (pipeline_type != PIPELINE_POINTCLOUD)
       m_registry.emplace<Opaque>(entity);
-    const auto &mmc = m_registry.emplace<MeshMaterialComponent>(
-        entity, std::move(mesh), extractMaterials(meshDatas));
+    const MeshMaterialComponent &mmc =
+        m_registry.emplace<MeshMaterialComponent>(entity, std::move(mesh),
+                                                  extractMaterials(meshDatas));
     bool is_transparent =
         updateTransparencyClassification(m_registry, entity, mmc);
-    if (!getPipeline(pipeline_type, is_transparent)) {
-      createPipeline(layout, m_renderer.getSwapchainTextureFormat(),
-                     m_renderer.depthFormat(), pipeline_type, is_transparent);
+    if (!routePipeline(pipeline_type, is_transparent)) {
+      createRenderPipeline(layout, m_renderer.getSwapchainTextureFormat(),
+                           m_renderer.depthFormat(), pipeline_type,
+                           is_transparent);
     }
-    add_pipeline_tag_component(m_registry, entity, pipeline_type);
+    addPipelineTagComponent(m_registry, entity, pipeline_type);
 
     if (pipeline_type == PIPELINE_TRIANGLEMESH) {
       if (!ssaoPass.pipeline) {
@@ -294,7 +296,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
                                    m_config.shadow_config);
         shadows_configured = true;
       }
-      if (!pipelines.wboitComposite)
+      if (!m_pipelines.wboitComposite)
         this->initCompositePipeline(layout);
     }
   }
@@ -302,7 +304,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
 }
 
 void RobotScene::updateTransforms() {
-  updateRobotTransforms(m_registry, geomModel(), geomData());
+  updateRobotTransforms(registry(), geomModel(), geomData());
 }
 
 void RobotScene::collectOpaqueCastables() {
@@ -402,19 +404,19 @@ getTransparentRenderPass(const RenderContext &renderer,
 
 void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
   // transparent triangle pipeline required
-  if (!pipelines.triangleMesh.transparent || !pipelines.wboitComposite)
+  if (!m_pipelines.triangleMeshTransparent || !m_pipelines.wboitComposite)
     return;
 
   SDL_GPUColorTargetInfo target;
   SDL_zero(target);
   target.texture = m_renderer.swapchain;
-  // op is LOAD - we want to keep opaque results
+  // op is LOAD - we want to keep results from opaque pass
   target.load_op = SDL_GPU_LOADOP_LOAD;
   target.store_op = SDL_GPU_STOREOP_STORE;
 
   SDL_GPURenderPass *render_pass =
       SDL_BeginGPURenderPass(command_buffer, &target, 1, nullptr);
-  SDL_BindGPUGraphicsPipeline(render_pass, pipelines.wboitComposite);
+  SDL_BindGPUGraphicsPipeline(render_pass, m_pipelines.wboitComposite);
 
   // Bind accumulation and revealage textures
   rend::bindFragmentSamplers(
@@ -434,7 +436,7 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                            const Camera &camera,
                                            bool transparent) {
 
-  auto *pipeline = getPipeline(PIPELINE_TRIANGLEMESH, transparent);
+  auto *pipeline = routePipeline(PIPELINE_TRIANGLEMESH, transparent);
   if (!pipeline) {
     return;
   }
@@ -526,11 +528,10 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   };
 
   if (transparent) {
-    auto join = view | m_registry.view<entt::entity>(entt::exclude<Opaque>);
-    join.each(process_entities);
+    (view | m_registry.view<entt::entity>(entt::exclude<Opaque>))
+        .each(process_entities);
   } else {
-    auto join = view | m_registry.view<Opaque>();
-    join.each(process_entities);
+    (view | m_registry.view<Opaque>()).each(process_entities);
   }
 
   SDL_EndGPURenderPass(render_pass);
@@ -549,7 +550,7 @@ void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
     if (current_pipeline_type == PIPELINE_TRIANGLEMESH)
       return;
 
-    auto *pipeline = getPipeline(current_pipeline_type);
+    auto *pipeline = routePipeline(current_pipeline_type);
     if (!pipeline)
       return;
     SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
@@ -580,9 +581,9 @@ void RobotScene::release() {
 
   // release pipelines
   for (auto **pipe :
-       {&pipelines.triangleMesh.opaque, &pipelines.triangleMesh.transparent,
-        &pipelines.heightfield, &pipelines.pointcloud,
-        &pipelines.wboitComposite}) {
+       {&m_pipelines.triangleMeshOpaque, &m_pipelines.triangleMeshTransparent,
+        &m_pipelines.heightfield, &m_pipelines.pointcloud,
+        &m_pipelines.wboitComposite}) {
     if (*pipe)
       SDL_ReleaseGPUGraphicsPipeline(device(), *pipe);
     *pipe = nullptr;
@@ -614,11 +615,11 @@ get_pipeline_config(const RobotScene::Config &cfg,
   }
 }
 
-void RobotScene::createPipeline(const MeshLayout &layout,
-                                SDL_GPUTextureFormat render_target_format,
-                                SDL_GPUTextureFormat depth_stencil_format,
-                                PipelineType type, bool transparent) {
-  SDL_assert(validateMeshLayout(layout));
+void RobotScene::createRenderPipeline(const MeshLayout &layout,
+                                      SDL_GPUTextureFormat render_target_format,
+                                      SDL_GPUTextureFormat depth_stencil_format,
+                                      PipelineType type, bool transparent) {
+  assert(validateMeshLayout(layout));
 
   SDL_Log("Building pipeline for type %s", magic_enum::enum_name(type).data());
 
@@ -707,7 +708,7 @@ void RobotScene::createPipeline(const MeshLayout &layout,
   }
   desc.rasterizer_state.cull_mode = pipe_config.cull_mode;
   desc.rasterizer_state.fill_mode = pipe_config.fill_mode;
-  *routePipeline(type, transparent) =
+  routePipeline(type, transparent) =
       SDL_CreateGPUGraphicsPipeline(device(), &desc);
 }
 
