@@ -1,6 +1,6 @@
 #include "candlewick/multibody/Multibody.h"
 #include "candlewick/multibody/Visualizer.h"
-#include "candlewick/multibody/RobotLoader.h"
+#include "Messages.h"
 
 #include <pinocchio/serialization/model.hpp>
 #include <pinocchio/serialization/geometry.hpp>
@@ -16,6 +16,7 @@
 
 namespace cdw = candlewick;
 namespace pin = pinocchio;
+using namespace cdw::runtime;
 using cdw::multibody::Visualizer;
 
 #define CANDLEWICK_RUNTIME_DEFINE_COMMAND(name)                                \
@@ -27,57 +28,6 @@ CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_cam_pose);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(clean);
 
 using RowMat4d = Eigen::Matrix<pin::context::Scalar, 4, 4, Eigen::RowMajor>;
-
-msgpack::object_handle get_handle_from_zmq_msg(zmq::message_t &&msg) {
-  if (!msg.empty())
-    return msgpack::unpack(static_cast<const char *>(msg.data()), msg.size());
-  else
-    return msgpack::object_handle();
-}
-
-struct ArrayMessage {
-  std::string dtype;
-  std::vector<long> dims;
-  std::vector<uint8_t> data;
-
-  size_t ndim() const noexcept { return dims.size(); }
-
-  MSGPACK_DEFINE(dtype, dims, data);
-};
-
-namespace detail {
-template <typename MapType, typename P>
-auto get_eigen_view_msg_impl(const ArrayMessage &spec, P *data) {
-  using PlainObject = typename MapType::PlainObject;
-  const Eigen::Index rows = spec.dims[0];
-  if constexpr (PlainObject::IsVectorAtCompileTime) {
-    return MapType{data, rows};
-  } else {
-    const Eigen::Index cols = spec.ndim() == 2
-                                  ? spec.dims[1]
-                                  : 1; // assume runtime vector if ndim wrong
-    return MapType{data, rows, cols};
-  }
-}
-} // namespace detail
-
-/// \brief Convert ArrayMessage to a mutable Eigen::Matrix view.
-template <typename MatrixType>
-auto get_eigen_view_from_spec(ArrayMessage &spec) {
-  using Scalar = typename MatrixType::Scalar;
-  using MapType = Eigen::Map<MatrixType>;
-  Scalar *data = reinterpret_cast<Scalar *>(spec.data.data());
-  return detail::get_eigen_view_msg_impl<MapType>(spec, data);
-}
-
-/// \copydoc get_eigen_view_from_spec()
-template <typename MatrixType>
-auto get_eigen_view_from_spec(const ArrayMessage &spec) {
-  using Scalar = typename MatrixType::Scalar;
-  using MapType = Eigen::Map<const MatrixType>;
-  const Scalar *data = reinterpret_cast<const Scalar *>(spec.data.data());
-  return detail::get_eigen_view_msg_impl<MapType>(spec, data);
-}
 
 struct ApplicationContext {
   pin::Model model;
