@@ -41,7 +41,7 @@ struct RobotSpec {
   }
 };
 
-inline std::vector<std::string> get_package_dirs(const RobotSpec &spec) {
+inline std::vector<std::string> getPackageDirs(const RobotSpec &spec) {
   if (spec.relative_package_path.is_absolute()) {
     terminate_with_message(
         "robot spec relative package path ({:s}) isn't relative.",
@@ -83,7 +83,7 @@ inline void loadModels(const RobotSpec &spec, pin::Model &model,
                        pin::GeometryModel *collision_model,
                        bool verbose = false) {
   loadModel(spec, model, verbose);
-  auto package_dirs = get_package_dirs(spec);
+  auto package_dirs = getPackageDirs(spec);
 
   if (visual_model)
     pin::urdf::buildGeom(model, spec.urdf_path, pin::VISUAL, *visual_model,

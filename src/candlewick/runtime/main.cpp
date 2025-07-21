@@ -1,5 +1,6 @@
 #include "candlewick/multibody/Multibody.h"
 #include "candlewick/multibody/Visualizer.h"
+#include "candlewick/multibody/RobotLoader.h"
 
 #include <pinocchio/serialization/model.hpp>
 #include <pinocchio/serialization/geometry.hpp>
@@ -80,7 +81,7 @@ auto get_eigen_view_from_spec(const ArrayMessage &spec) {
 
 struct ApplicationContext {
   pin::Model model;
-  pin::GeometryModel geom_model;
+  pin::GeometryModel visual_model;
   zmq::context_t ctx{};
   zmq::socket_t sync_sock{ctx, zmq::socket_type::rep};
   zmq::socket_t state_sock{ctx, zmq::socket_type::sub};
@@ -102,13 +103,13 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
       std::array<std::string, 2> model_strings;
       obj.convert(model_strings);
       app_ctx.model.loadFromString(model_strings[0]);
-      app_ctx.geom_model.loadFromString(model_strings[1]);
+      app_ctx.visual_model.loadFromString(model_strings[1]);
       // send response only when models loaded.
       sock.send(zmq::str_buffer("ok"));
 
       SDL_Log("Loaded model with %d joints", app_ctx.model.njoints);
       SDL_Log("Loaded geometry model with %zd gobjs",
-              app_ctx.geom_model.ngeoms);
+              app_ctx.visual_model.ngeoms);
       return true;
     } else {
       SDL_Log("First message must have header \'%s\', got \'%s\'. Retry.",
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
   Visualizer::Config config;
   config.width = window_dims[0];
   config.height = window_dims[1];
-  Visualizer viz{config, app_ctx.model, app_ctx.geom_model};
+  Visualizer viz{config, app_ctx.model, app_ctx.visual_model};
 
   run_main_loop(viz, app_ctx);
 

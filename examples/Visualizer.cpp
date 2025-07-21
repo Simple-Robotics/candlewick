@@ -1,6 +1,5 @@
 #include "candlewick/multibody/Visualizer.h"
-
-#include <robot_descriptions_cpp/robot_spec.hpp>
+#include "candlewick/multibody/RobotLoader.h"
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/geometry.hpp>
@@ -12,6 +11,16 @@
 
 using namespace candlewick::multibody;
 using std::chrono::steady_clock;
+namespace fs = std::filesystem;
+
+static const RobotSpec ur_robot_spec =
+    RobotSpec{
+        "urdf/ur5_gripper.urdf",
+        "srdf/ur5_gripper.srdf",
+        fs::path(EXAMPLE_ROBOT_DATA_MODEL_DIR).parent_path(),
+        "robots/ur_description",
+    }
+        .ensure_absolute_filepaths();
 
 int main(int argc, char **argv) {
   CLI::App app{"Visualizer example"};
@@ -28,8 +37,7 @@ int main(int argc, char **argv) {
 
   pin::Model model;
   pin::GeometryModel geom_model;
-  robot_descriptions::loadModelsFromToml("ur.toml", "ur5_gripper", model,
-                                         &geom_model, NULL);
+  loadModels(ur_robot_spec, model, &geom_model, NULL);
 
   Visualizer visualizer{{window_dims[0], window_dims[1]}, model, geom_model};
   assert(!visualizer.hasExternalData());

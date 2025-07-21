@@ -13,6 +13,7 @@
 
 #include "candlewick/multibody/RobotScene.h"
 #include "candlewick/multibody/RobotDebug.h"
+#include "candlewick/multibody/RobotLoader.h"
 #include "candlewick/primitives/Primitives.h"
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
 #include "candlewick/utils/VideoRecorder.h"
@@ -21,8 +22,6 @@
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
-
-#include <robot_descriptions_cpp/robot_spec.hpp>
 
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/data.hpp>
@@ -51,6 +50,7 @@
 namespace pin = pinocchio;
 using namespace candlewick;
 using multibody::RobotScene;
+using multibody::RobotSpec;
 
 /// Application constants
 
@@ -218,6 +218,15 @@ static void screenshot_button_callback(RenderContext &renderer,
                            wHeight, filename);
 }
 
+static const RobotSpec ur_robot_spec =
+    RobotSpec{
+        "urdf/ur5_gripper.urdf",
+        "srdf/ur5_gripper.srdf",
+        std::filesystem::path(EXAMPLE_ROBOT_DATA_MODEL_DIR).parent_path(),
+        "robots/ur_description",
+    }
+        .ensure_absolute_filepaths();
+
 int main(int argc, char **argv) {
   CLI::App app{"Ur5 example"};
   bool performRecording{false};
@@ -244,8 +253,7 @@ int main(int argc, char **argv) {
   // Load robot
   pin::Model model;
   pin::GeometryModel geom_model;
-  robot_descriptions::loadModelsFromToml("ur.toml", "ur5_gripper", model,
-                                         &geom_model, NULL, true);
+  loadModels(ur_robot_spec, model, &geom_model, NULL, true);
   // ADD HEIGHTFIELD GEOM
   // {
   //   auto hfield = generatePerlinNoiseHeightfield(40, 10u, 6.f);
