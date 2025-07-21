@@ -23,7 +23,7 @@ using cdw::multibody::Visualizer;
   constexpr std::string_view CMD_##name = #name
 
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_models);
-CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_state);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(state_update);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_cam_pose);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(clean);
 
@@ -32,13 +32,16 @@ using RowMat4d = Eigen::Matrix<pin::context::Scalar, 4, 4, Eigen::RowMajor>;
 struct ApplicationContext {
   pin::Model model;
   pin::GeometryModel visual_model;
+  pin::GeometryModel collision_model;
   zmq::context_t ctx{};
   zmq::socket_t sync_sock{ctx, zmq::socket_type::rep};
   zmq::socket_t state_sock{ctx, zmq::socket_type::sub};
 };
 
 /// Handle first incoming message.
-bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
+bool handle_first_message(ApplicationContext &app_ctx) {
+  zmq::socket_t &sock = app_ctx.sync_sock;
+
   while (true) {
     std::array<zmq::message_t, 2> msgs;
 
@@ -70,17 +73,38 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
   return false;
 }
 
+void pull_socket_router(Visualizer &viz, std::span<zmq::message_t, 2> msgs,
+                        zmq::socket_ref sync_sock) {
+  auto header = msgs[0].to_string_view();
+  if (header == CMD_send_cam_pose) {
+    auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
+    msgpack::object obj = oh.get();
+    ArrayMessage M_msg = obj.as<ArrayMessage>();
+    auto M = get_eigen_view_from_spec<RowMat4d>(M_msg);
+    viz.setCameraPose(M);
+    sync_sock.send(zmq::str_buffer("ok"));
+  } else if (header == CMD_clean) {
+    viz.clean();
+    sync_sock.send(zmq::str_buffer("ok"));
+  } else if (header == CMD_send_models) {
+    sync_sock.send(
+        zmq::str_buffer("error: visualizer already has models open."));
+  }
+}
+
 void run_main_loop(Visualizer &viz, ApplicationContext &app_ctx) {
 
   while (!viz.shouldExit()) {
     std::array<zmq::message_t, 2> msgs;
+
+    // route subscriber socket
     auto rec = zmq::recv_multipart_n(app_ctx.state_sock, msgs.begin(), 2,
                                      zmq::recv_flags::dontwait);
 
     if (rec) {
       // route through message headers
       auto header = msgs[0].to_string_view();
-      if (header == CMD_send_state) {
+      if (header == CMD_state_update) {
         auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
         msgpack::object obj = oh.get();
         std::tuple<ArrayMessage, std::optional<ArrayMessage>> arrays;
@@ -96,21 +120,12 @@ void run_main_loop(Visualizer &viz, ApplicationContext &app_ctx) {
       }
     }
 
+    // route synchronous socket
+    // reuse our buffer for messages.
     rec = zmq::recv_multipart_n(app_ctx.sync_sock, msgs.begin(), 2,
                                 zmq::recv_flags::dontwait);
     if (rec) {
-      auto header = msgs[0].to_string_view();
-      if (header == CMD_send_cam_pose) {
-        auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
-        msgpack::object obj = oh.get();
-        ArrayMessage M_msg = obj.as<ArrayMessage>();
-        auto M = get_eigen_view_from_spec<RowMat4d>(M_msg);
-        viz.setCameraPose(M);
-        app_ctx.sync_sock.send(zmq::str_buffer("ok"));
-      } else if (header == CMD_clean) {
-        viz.clean();
-        app_ctx.sync_sock.send(zmq::str_buffer("ok"));
-      }
+      pull_socket_router(viz, msgs, app_ctx.sync_sock);
     }
 
     viz.display();
@@ -138,7 +153,7 @@ int main(int argc, char **argv) {
   zmq::socket_t &state_sock = app_ctx.state_sock;
   sync_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port));
   state_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port + 2));
-  state_sock.set(zmq::sockopt::subscribe, CMD_send_state);
+  state_sock.set(zmq::sockopt::subscribe, CMD_state_update);
 
   std::string endpoint;
   endpoint = sync_sock.get(zmq::sockopt::last_endpoint);
@@ -147,7 +162,7 @@ int main(int argc, char **argv) {
   SDL_Log("ZMQ endpoint (state): %s", endpoint.c_str());
 
   // Handle first message
-  bool loaded_models = handle_first_message(sync_sock, app_ctx);
+  bool loaded_models = handle_first_message(app_ctx);
   if (!loaded_models)
     return 1;
 
