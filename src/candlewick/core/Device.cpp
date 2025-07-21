@@ -2,7 +2,6 @@
 #include "errors.h"
 
 #include <SDL3/SDL_log.h>
-#include <format>
 
 namespace candlewick {
 

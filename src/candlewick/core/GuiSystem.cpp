@@ -6,6 +6,8 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlgpu3.h"
 
+#include "../../fonts/inter-medium.cpp"
+
 namespace candlewick {
 
 GuiSystem::GuiSystem(const RenderContext &renderer, GuiBehavior behav)
@@ -22,6 +24,10 @@ bool GuiSystem::init(const RenderContext &renderer) {
   ImGui::CreateContext();
 
   ImGuiIO &io = ImGui::GetIO();
+  ImFont *inter = io.Fonts->AddFontFromMemoryCompressedTTF(
+      InterMedium_compressed_data, InterMedium_compressed_size, 13.0f);
+  SDL_assert(inter);
+
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
   io.IniFilename = nullptr;

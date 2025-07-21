@@ -34,6 +34,7 @@ struct CameraControlParams {
   float zoomSensitivity = 0.05f;
   float localRotSensitivity = 0.01f;
   bool yInvert = false;
+  bool enabled = true;
 
   // Mouse button modifiers
   struct MouseConfig {
@@ -52,7 +53,6 @@ void guiAddCameraParams(CylindricalCamera &controller,
 /// This visualizer is synchronous. The window is only updated when `display()`
 /// is called.
 class Visualizer final : public BaseVisualizer {
-  bool m_cameraControl = true;
   bool m_showGui = true;
   bool m_shouldExit = false;
   entt::entity m_grid, m_triad;
@@ -68,17 +68,10 @@ class Visualizer final : public BaseVisualizer {
 
   void displayImpl() override;
 
-  GuiSystem::GuiBehavior getDefaultCallback() {
-    return [this](auto &) { this->defaultGuiCallback(); };
-  }
+  void guiCallbackImpl();
 
 public:
   static constexpr Radf DEFAULT_FOV = 55.0_degf;
-
-  struct EnvStatus {
-    bool show_our_about = false;
-    bool show_imgui_about = false;
-  };
 
   using BaseVisualizer::setCameraPose;
   entt::registry registry;
@@ -88,7 +81,8 @@ public:
   DebugScene debugScene;
   CylindricalCamera controller;
   CameraControlParams cameraParams;
-  EnvStatus envStatus;
+  bool show_our_about = false;
+  bool show_imgui_about = false;
   AABB worldSceneBounds;
 
   struct Config {
@@ -96,10 +90,6 @@ public:
     Uint32 height;
     SDL_GPUTextureFormat depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
   };
-
-  /// \brief Default GUI callback for the Visualizer; provide your own callback
-  /// to the Visualizer constructor to change this behaviour.
-  void defaultGuiCallback();
 
   void resetCamera();
 
@@ -115,13 +105,14 @@ public:
 
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model)
-      : Visualizer(config, model, visual_model, getDefaultCallback()) {}
+      : Visualizer(config, model, visual_model,
+                   [this](auto &) { this->guiCallbackImpl(); }) {}
 
   Visualizer(const Config &config, const pin::Model &model,
              const pin::GeometryModel &visual_model, pin::Data &data,
              pin::GeometryData &visual_data)
       : Visualizer(config, model, visual_model, data, visual_data,
-                   getDefaultCallback()) {}
+                   [this](auto &) { this->guiCallbackImpl(); }) {}
 
   ~Visualizer() override;
 
@@ -133,7 +124,7 @@ public:
 
   void setCameraPose(const Eigen::Ref<const Matrix4> &pose) override;
 
-  void enableCameraControl(bool v) override { m_cameraControl = v; }
+  void enableCameraControl(bool v) override { cameraParams.enabled = v; }
 
   void processEvents();
 
@@ -143,7 +134,9 @@ public:
 
   void startRecording(std::string_view filename);
 
-  void stopRecording();
+  /// \brief Stop recording the window.
+  /// \returns Whether a recording was actually stopped.
+  bool stopRecording();
 
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   auto &videoSettings() { return m_videoSettings; }
@@ -162,12 +155,7 @@ public:
   void addFrameViz(pin::FrameIndex id, bool show_velocity = true);
 
   /// \brief Remove all frame visualizations.
-  void removeFramesViz() {
-    registry.destroy(m_debug_frame_pos.begin(), m_debug_frame_pos.end());
-    registry.destroy(m_debug_frame_vel.begin(), m_debug_frame_vel.end());
-    m_debug_frame_pos.clear();
-    m_debug_frame_vel.clear();
-  }
+  void removeFramesViz();
 
   /// \brief Clear objects
   void clean() override {

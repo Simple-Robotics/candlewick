@@ -1,16 +1,17 @@
+import pinocchio as pin
 import candlewick as cdw
+import tqdm
+
 from candlewick import Visualizer, VisualizerConfig
+from utils import add_floor_geom
 
 try:
     import go2_description as go2d
-except ImportError:
-    import warnings
-
-    warnings.warn(
-        "This example requires the go2_description package, which was not found. Download it at: https://github.com/inria-paris-robotics-lab/go2_description"
-    )
-    raise
-import tqdm
+except ImportError as import_error:
+    raise ImportError(
+        "This example requires the go2_description package, which was not found. "
+        "Download it at: https://github.com/inria-paris-robotics-lab/go2_description"
+    ) from import_error
 
 
 print(f"Current shader directory: {cdw.currentShaderDirectory()}")
@@ -19,14 +20,15 @@ robot = go2d.loadGo2()
 
 rmodel = robot.model
 rdata = robot.data
-visual_model = robot.visual_model
-visual_data = robot.visual_data
+visual_model: pin.GeometryModel = robot.visual_model
+add_floor_geom(visual_model)
+visual_data = visual_model.createData()
 
 q0 = rmodel.referenceConfigurations["standing"]
 dt = 0.01
 
 config = VisualizerConfig()
-config.width = 1600
+config.width = 2400
 config.height = 900
 viz = Visualizer(config, rmodel, visual_model, data=rdata, visual_data=visual_data)
 assert viz.hasExternalData()

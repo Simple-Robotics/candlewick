@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added tools for loading models from a given description struct `RobotSpec` (https://github.com/Simple-Robotics/candlewick/pull/37)
+- Added Candlewick visualizer runtime, to be used to (up)load Pinocchio models and submit states to be displayed asynchronously. (https://github.com/Simple-Robotics/candlewick/pull/37)
+- Embed Inter Medium font into the application (https://github.com/Simple-Robotics/candlewick/pull/37)
+
+### Changed
+
+- CMake : sync jrl-cmakemodules to new release 1.0.0 (https://github.com/Simple-Robotics/candlewick/pull/37)
+- CMake : change option `BUILD_PYTHON_BINDINGS` to `BUILD_PYTHON_INTERFACE` (https://github.com/Simple-Robotics/candlewick/pull/37)
+- multibody/Visualizer : `stopRecording()` now returns a flag (https://github.com/Simple-Robotics/candlewick/pull/37)
+
+### Fixed
+
+- `core/Device.h` : fix release() function
+- Python examples : wrap some import statements in try/except statements (https://github.com/Simple-Robotics/candlewick/pull/37)
+
+### Removed
+
+- Remove dependency on `robot_descriptions_cpp` (https://github.com/Simple-Robotics/candlewick/pull/37)
+
 ## [0.7.0] - 2025-07-04
 
 ### Added

@@ -1,6 +1,5 @@
 #include "candlewick/multibody/Visualizer.h"
-
-#include <robot_descriptions_cpp/robot_spec.hpp>
+#include "candlewick/multibody/RobotLoader.h"
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/algorithm/geometry.hpp>
@@ -10,14 +9,23 @@
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
 
-namespace cdw = candlewick;
 using namespace candlewick::multibody;
 using std::chrono::steady_clock;
+namespace fs = std::filesystem;
+
+static const RobotSpec ur_robot_spec =
+    RobotSpec{
+        "urdf/ur5_gripper.urdf",
+        "srdf/ur5_gripper.srdf",
+        fs::path(EXAMPLE_ROBOT_DATA_MODEL_DIR).parent_path(),
+        "robots/ur_description",
+    }
+        .ensure_absolute_filepaths();
 
 int main(int argc, char **argv) {
   CLI::App app{"Visualizer example"};
   argv = app.ensure_utf8(argv);
-  std::vector<Uint32> window_dims{1920u, 1080u};
+  std::array<Uint32, 2> window_dims{1920u, 1080u};
   double fps;
 
   app.add_option("--dims", window_dims, "Window dimensions.")
@@ -27,14 +35,9 @@ int main(int argc, char **argv) {
 
   CLI11_PARSE(app, argc, argv);
 
-  if (window_dims.size() != 2) {
-    cdw::terminate_with_message("Expected only two values for argument --dims");
-  }
-
   pin::Model model;
   pin::GeometryModel geom_model;
-  robot_descriptions::loadModelsFromToml("ur.toml", "ur5_gripper", model,
-                                         &geom_model, NULL);
+  loadModels(ur_robot_spec, model, &geom_model, NULL);
 
   Visualizer visualizer{{window_dims[0], window_dims[1]}, model, geom_model};
   assert(!visualizer.hasExternalData());
