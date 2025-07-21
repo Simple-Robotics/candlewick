@@ -17,10 +17,14 @@ namespace cdw = candlewick;
 namespace pin = pinocchio;
 using cdw::multibody::Visualizer;
 
-constexpr std::string_view CMD_SEND_MODELS = "send_models";
-constexpr std::string_view CMD_SEND_STATE = "state_update";
-constexpr std::string_view CMD_SEND_CAM_POSE = "send_cam_pose";
-constexpr std::string_view CMD_CLEAN = "cmd_clean";
+#define CANDLEWICK_RUNTIME_DEFINE_COMMAND(name)                                \
+  constexpr std::string_view CMD_##name = #name
+
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_models);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_state);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(send_cam_pose);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(clean);
+
 using RowMat4d = Eigen::Matrix<pin::context::Scalar, 4, 4, Eigen::RowMajor>;
 
 msgpack::object_handle get_handle_from_zmq_msg(zmq::message_t &&msg) {
@@ -92,7 +96,7 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
       return false;
 
     auto msg_header = msgs[0].to_string_view();
-    if (msg_header == CMD_SEND_MODELS) {
+    if (msg_header == CMD_send_models) {
       msgpack::object_handle oh = get_handle_from_zmq_msg(std::move(msgs[1]));
       auto obj = oh.get();
       std::array<std::string, 2> model_strings;
@@ -108,7 +112,7 @@ bool handle_first_message(zmq::socket_ref sock, ApplicationContext &app_ctx) {
       return true;
     } else {
       SDL_Log("First message must have header \'%s\', got \'%s\'. Retry.",
-              CMD_SEND_MODELS.data(), msg_header.data());
+              CMD_send_models.data(), msg_header.data());
       continue;
     }
   }
@@ -125,7 +129,7 @@ void run_main_loop(Visualizer &viz, ApplicationContext &app_ctx) {
     if (rec) {
       // route through message headers
       auto header = msgs[0].to_string_view();
-      if (header == CMD_SEND_STATE) {
+      if (header == CMD_send_state) {
         auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
         msgpack::object obj = oh.get();
         std::tuple<ArrayMessage, std::optional<ArrayMessage>> arrays;
@@ -145,14 +149,14 @@ void run_main_loop(Visualizer &viz, ApplicationContext &app_ctx) {
                                 zmq::recv_flags::dontwait);
     if (rec) {
       auto header = msgs[0].to_string_view();
-      if (header == CMD_SEND_CAM_POSE) {
+      if (header == CMD_send_cam_pose) {
         auto oh = get_handle_from_zmq_msg(std::move(msgs[1]));
         msgpack::object obj = oh.get();
         ArrayMessage M_msg = obj.as<ArrayMessage>();
         auto M = get_eigen_view_from_spec<RowMat4d>(M_msg);
         viz.setCameraPose(M);
         app_ctx.sync_sock.send(zmq::str_buffer("ok"));
-      } else if (header == CMD_CLEAN) {
+      } else if (header == CMD_clean) {
         viz.clean();
         app_ctx.sync_sock.send(zmq::str_buffer("ok"));
       }
@@ -183,7 +187,7 @@ int main(int argc, char **argv) {
   zmq::socket_t &state_sock = app_ctx.state_sock;
   sync_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port));
   state_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port + 2));
-  state_sock.set(zmq::sockopt::subscribe, CMD_SEND_STATE);
+  state_sock.set(zmq::sockopt::subscribe, CMD_send_state);
 
   std::string endpoint;
   endpoint = sync_sock.get(zmq::sockopt::last_endpoint);
