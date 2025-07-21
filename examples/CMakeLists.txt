@@ -1,6 +1,12 @@
 find_package(CLI11 CONFIG REQUIRED)
 
-add_library(ExamplesCommon STATIC lib/Common.cpp lib/PerlinNoise.cpp)
+add_library(
+  ExamplesCommon
+  STATIC
+  lib/Common.cpp
+  lib/PerlinNoise.cpp
+  lib/GenHeightfield.cpp
+)
 target_link_libraries(ExamplesCommon PUBLIC candlewick_core imgui_headers)
 target_include_directories(
   ExamplesCommon
@@ -9,7 +15,6 @@ target_include_directories(
 
 if(BUILD_PINOCCHIO_VISUALIZER)
   find_package(example-robot-data REQUIRED)
-  target_sources(ExamplesCommon PRIVATE lib/GenHeightfield.cpp)
   target_link_libraries(
     ExamplesCommon
     PUBLIC
