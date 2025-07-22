@@ -18,6 +18,30 @@ inline bool operator==(const SDL_GPUVertexAttribute &lhs,
 #undef _c
 }
 
+inline std::strong_ordering
+operator<=>(const SDL_GPUVertexAttribute &lhs,
+            const SDL_GPUVertexAttribute &rhs) noexcept {
+  if (auto cmp = lhs.location <=> rhs.location; cmp != 0)
+    return cmp;
+  if (auto cmp = lhs.buffer_slot <=> rhs.buffer_slot; cmp != 0)
+    return cmp;
+  if (auto cmp = lhs.format <=> rhs.format; cmp != 0)
+    return cmp;
+  return lhs.offset <=> rhs.offset;
+}
+
+inline std::strong_ordering
+operator<=>(const SDL_GPUVertexBufferDescription &lhs,
+            const SDL_GPUVertexBufferDescription &rhs) noexcept {
+  if (auto cmp = lhs.slot <=> rhs.slot; cmp != 0)
+    return cmp;
+  if (auto cmp = lhs.pitch <=> rhs.pitch; cmp != 0)
+    return cmp;
+  if (auto cmp = lhs.input_rate <=> rhs.input_rate; cmp != 0)
+    return cmp;
+  return lhs.instance_step_rate <=> rhs.instance_step_rate;
+}
+
 namespace candlewick {
 
 constexpr Uint64 vertexElementSize(SDL_GPUVertexElementFormat format) {
@@ -157,25 +181,9 @@ public:
     return toVertexInputState();
   }
 
-  bool operator==(const MeshLayout &other) const noexcept {
-    if (numBuffers() != other.numBuffers() &&
-        numAttributes() != other.numAttributes())
-      return false;
+  std::strong_ordering operator<=>(const MeshLayout &other) const noexcept;
 
-    // for (Uint16 i = 0; i < numBuffers(); i++) {
-    //   if (m_bufferDescs[i] != other.m_bufferDescs[i])
-    //     return false;
-    // }
-    if (m_bufferDescs != other.m_bufferDescs)
-      return false;
-    // for (Uint16 i = 0; i < numAttributes(); i++) {
-    //   if (m_attrs[i] != other.m_attrs[i])
-    //     return false;
-    // }
-    if (m_attrs != other.m_attrs)
-      return false;
-    return true;
-  }
+  bool operator==(const MeshLayout &other) const noexcept = default;
 
   /// \brief Number of vertex buffers.
   Uint32 numBuffers() const { return Uint32(m_bufferDescs.size()); }
@@ -193,6 +201,17 @@ public:
 private:
   Uint32 m_totalVertexSize;
 };
+
+inline std::strong_ordering
+MeshLayout::operator<=>(const MeshLayout &other) const noexcept {
+  if (auto cmp = numBuffers() <=> other.numBuffers(); cmp != 0)
+    return cmp;
+  if (auto cmp = numAttributes() <=> other.numAttributes(); cmp != 0)
+    return cmp;
+  if (auto cmp = m_bufferDescs <=> other.m_bufferDescs; cmp != 0)
+    return cmp;
+  return m_attrs <=> other.m_attrs;
+}
 
 /// \brief Validation function. Checks if a MeshLayout produces invalid data for
 /// a Mesh.
