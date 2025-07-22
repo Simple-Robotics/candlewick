@@ -57,7 +57,7 @@ public:
       return tmp;
     }
 
-    bool operator<=>(const iterator &) const = default;
+    auto operator<=>(const iterator &) const noexcept = default;
   };
   static_assert(std::forward_iterator<iterator>);
 

@@ -11,14 +11,14 @@ namespace candlewick::multibody {
 /// refer to an existing pinocchio::Data object at all times.
 struct RobotDebugSystem final : IDebugSubSystem {
 
-  RobotDebugSystem(const pin::Model &model, const pin::Data &data)
-      : IDebugSubSystem(), m_robotModel(model), m_robotData(data) {}
+  RobotDebugSystem(DebugScene &scene, const pin::Model &model,
+                   const pin::Data &data)
+      : IDebugSubSystem(scene), m_robotModel(&model), m_robotData(&data) {}
 
-  entt::entity addFrameTriad(DebugScene &scene, pin::FrameIndex frame_id,
+  entt::entity addFrameTriad(pin::FrameIndex frame_id,
                              const Float3 &scale = Float3::Constant(0.3333f));
 
-  entt::entity addFrameVelocityArrow(DebugScene &scene,
-                                     pin::FrameIndex frame_id,
+  entt::entity addFrameVelocityArrow(pin::FrameIndex frame_id,
                                      float scale = 0.5f);
 
   /// \brief Update the transform components for the debug visual entities,
@@ -26,11 +26,25 @@ struct RobotDebugSystem final : IDebugSubSystem {
   ///
   /// \warning We expect pinocchio::updateFramePlacements() or
   /// pinocchio::framesForwardKinematics() to be called first!
-  void update(DebugScene &scene);
+  void update() override;
+
+  void destroyEntities();
+
+  ~RobotDebugSystem() {
+    this->destroyEntities();
+    this->m_robotModel = nullptr;
+    this->m_robotData = nullptr;
+  }
+
+  void reload(const pin::Model &model, const pin::Data &data) {
+    this->destroyEntities();
+    this->m_robotModel = &model;
+    this->m_robotData = &data;
+  }
 
 private:
-  const pin::Model &m_robotModel;
-  const pin::Data &m_robotData;
+  pin::Model const *m_robotModel;
+  pin::Data const *m_robotData;
 };
 
 } // namespace candlewick::multibody

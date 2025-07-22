@@ -1,8 +1,6 @@
 #include "Shader.h"
 #include "Device.h"
 #include "errors.h"
-#include <SDL3/SDL_assert.h>
-#include <SDL3/SDL_log.h>
 
 #define JSON_NO_IO
 #define JSON_USE_IMPLICIT_CONVERSIONS 0
@@ -22,7 +20,6 @@ SDL_GPUShaderStage detect_shader_stage(const char *filename) {
   else if (SDL_strstr(filename, ".frag"))
     stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
   else {
-    SDL_Log("Failed to detect Shader stage.");
     stage = SDL_GPUShaderStage(-1);
   }
   return stage;
@@ -43,9 +40,6 @@ ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
   char shader_path[256];
   SDL_snprintf(shader_path, sizeof(shader_path), "%s/%s.%s",
                g_shader_dir.c_str(), filename, shader_ext);
-#ifndef NDEBUG
-  SDL_Log("Loading shader file %s", shader_path);
-#endif
 
   size_t code_size;
   void *code = SDL_LoadFile(shader_path, &code_size);
@@ -58,6 +52,9 @@ ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
 Shader::Shader(const Device &device, const char *filename, const Config &config)
     : _shader(nullptr), _device(device) {
   _stage = detect_shader_stage(filename);
+  if (_stage < 0)
+    terminate_with_message("Failed to infer shader stage for filename {:s}",
+                           filename);
 
   SDL_GPUShaderFormat supported_formats = device.shaderFormats();
   SDL_GPUShaderFormat target_format = SDL_GPU_SHADERFORMAT_INVALID;

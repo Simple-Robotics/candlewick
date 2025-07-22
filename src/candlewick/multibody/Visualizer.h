@@ -57,8 +57,6 @@ class Visualizer final : public BaseVisualizer {
   bool m_shouldExit = false;
   entt::entity m_grid, m_triad;
   RobotDebugSystem *m_robotDebug = nullptr;
-  std::vector<entt::entity> m_debug_frame_pos;
-  std::vector<entt::entity> m_debug_frame_vel;
 
   void initialize();
 

@@ -80,11 +80,6 @@ void Visualizer::initialize() {
   rconfig.enable_shadows = true;
   rconfig.enable_normal_target = true;
   robotScene.setConfig(rconfig);
-  robotScene.loadModels(visualModel(), visualData());
-
-  m_robotDebug = &debugScene.addSystem<RobotDebugSystem>(this->model(), data());
-  std::tie(m_triad, std::ignore) = debugScene.addTriad();
-  std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
 
   robotScene.directionalLight = {
       DirectionalLight{
@@ -102,6 +97,7 @@ void Visualizer::initialize() {
   worldSceneBounds.update({-1., -1., 0.}, {+1., +1., 1.});
 
   this->resetCamera();
+  this->loadViewerModel();
 
   SDL_Log("┌───────Controls────────");
   SDL_Log("│ Toggle GUI:      [%s]", "H");
@@ -127,7 +123,18 @@ void Visualizer::resetCamera() {
       perspectiveFromFov(DEFAULT_FOV, aspectRatio, 0.01f, 100.f);
 }
 
-void Visualizer::loadViewerModel() {}
+void Visualizer::loadViewerModel() {
+  robotScene.loadModels(visualModel(), visualData());
+
+  if (m_robotDebug) {
+    m_robotDebug->reload(this->model(), this->data());
+  } else {
+    m_robotDebug =
+        &debugScene.addSystem<RobotDebugSystem>(this->model(), this->data());
+    std::tie(m_triad, std::ignore) = debugScene.addTriad();
+    std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
+  }
+}
 
 void Visualizer::setCameraTarget(const Eigen::Ref<const Vector3> &target) {
   controller.lookAt1(target.cast<float>());
@@ -245,17 +252,14 @@ bool Visualizer::stopRecording() {
 
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
   assert(m_robotDebug);
-  m_debug_frame_pos.push_back(m_robotDebug->addFrameTriad(debugScene, id));
+  m_robotDebug->addFrameTriad(id);
   if (show_velocity)
-    m_debug_frame_vel.push_back(
-        m_robotDebug->addFrameVelocityArrow(debugScene, id));
+    m_robotDebug->addFrameVelocityArrow(id);
 }
 
 void Visualizer::removeFramesViz() {
-  registry.destroy(m_debug_frame_pos.begin(), m_debug_frame_pos.end());
-  registry.destroy(m_debug_frame_vel.begin(), m_debug_frame_vel.end());
-  m_debug_frame_pos.clear();
-  m_debug_frame_vel.clear();
+  assert(m_robotDebug);
+  m_robotDebug->destroyEntities();
 }
 
 } // namespace candlewick::multibody

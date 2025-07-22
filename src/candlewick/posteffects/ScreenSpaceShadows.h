@@ -3,9 +3,9 @@
 #include "../core/Core.h"
 #include "../core/Tags.h"
 #include "../core/LightUniforms.h"
+#include "../core/DepthAndShadowPass.h"
 
 #include <SDL3/SDL_gpu.h>
-#include <span>
 
 namespace candlewick {
 namespace effects {

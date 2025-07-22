@@ -29,10 +29,16 @@
 #include "math_types.h"
 #include "LightUniforms.h"
 
-#include <SDL3/SDL_gpu.h>
 #include <span>
 
 namespace candlewick {
+
+/// \brief Intermediary argument type for shadow-casting or opaque objects. For
+/// use in depth or light pre-passes.
+using OpaqueCastable = std::tuple<const Mesh &, Mat4f>;
+
+/// \brief Maximum number of lights.
+static constexpr size_t kNumLights = 4;
 
 /// \ingroup depth_pass
 /// \brief Helper struct for depth or light pre-passes.
@@ -95,8 +101,6 @@ public:
   ~DepthPass() noexcept { this->release(); }
 };
 
-static constexpr size_t kNumLights = 4;
-
 /// \ingroup depth_pass
 struct ShadowPassConfig {
   // default is 2k x 2k texture
@@ -151,6 +155,10 @@ public:
   ShadowMapPass &operator=(const ShadowMapPass &) = delete;
   ShadowMapPass(ShadowMapPass &&other) noexcept;
   ShadowMapPass &operator=(ShadowMapPass &&other) noexcept;
+
+  bool initialized() const {
+    return (pipeline != nullptr) && (sampler != nullptr);
+  }
 
   void render(CommandBuffer &cmdBuf, std::span<const OpaqueCastable> castables);
 

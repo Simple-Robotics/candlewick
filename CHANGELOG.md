@@ -12,12 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added tools for loading models from a given description struct `RobotSpec` (https://github.com/Simple-Robotics/candlewick/pull/37)
 - Added Candlewick visualizer runtime, to be used to (up)load Pinocchio models and submit states to be displayed asynchronously. (https://github.com/Simple-Robotics/candlewick/pull/37)
 - Embed Inter Medium font into the application (https://github.com/Simple-Robotics/candlewick/pull/37)
+- Add `RobotDebugSystem::reload()` function to switch out models
 
 ### Changed
 
 - CMake : sync jrl-cmakemodules to new release 1.0.0 (https://github.com/Simple-Robotics/candlewick/pull/37)
 - CMake : change option `BUILD_PYTHON_BINDINGS` to `BUILD_PYTHON_INTERFACE` (https://github.com/Simple-Robotics/candlewick/pull/37)
 - multibody/Visualizer : `stopRecording()` now returns a flag (https://github.com/Simple-Robotics/candlewick/pull/37)
+- core/Components : add `MeshMaterialComponent::hasTransparency()`
+- multibody/RobotScene : allow reloading models, decouple model loading from render pipeline creation
+- core/DepthAndShadowPass : add `ShadowMapPass::initialized()`
+- core | multibody : rework of debug subsystem API, allow reloading RobotDebugSystem
+- multibody/Visualizer : implement `loadViewerModel()`, allow it to actually reload models
 
 ### Fixed
 

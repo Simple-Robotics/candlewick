@@ -40,7 +40,7 @@ bool operator==(const CustomVertex &lhs, const CustomVertex &rhs) {
 
 GTEST_TEST(TestErasedBlob, default_vertex) {
   auto layout = meshLayoutFor<DefaultVertex>();
-  EXPECT_TRUE(layout == layout);
+  EXPECT_EQ(layout, layout);
   std::vector<DefaultVertex> vertexData;
   const Uint64 size = 10;
   for (Uint64 i = 0; i < size; i++) {
@@ -74,8 +74,7 @@ GTEST_TEST(TestErasedBlob, default_vertex) {
 
 GTEST_TEST(TestErasedBlob, custom_vertex) {
   auto layout = meshLayoutFor<CustomVertex>();
-  EXPECT_TRUE(layout == layout);
-  EXPECT_TRUE(layout != meshLayoutFor<DefaultVertex>());
+  EXPECT_NE(layout, meshLayoutFor<DefaultVertex>());
   EXPECT_EQ(sizeof(CustomVertex), layout.vertexSize());
 
   std::vector<CustomVertex> vertexData;

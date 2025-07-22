@@ -325,8 +325,8 @@ int main(int argc, char **argv) {
   auto [triad_id, triad] = debug_scene.addTriad();
   auto [grid_id, grid] = debug_scene.addLineGrid(0xE0A236ff_rgbaf);
   pin::FrameIndex ee_frame_id = model.getFrameId("ee_link");
-  robot_debug.addFrameTriad(debug_scene, ee_frame_id);
-  robot_debug.addFrameVelocityArrow(debug_scene, ee_frame_id);
+  robot_debug.addFrameTriad(ee_frame_id);
+  robot_debug.addFrameVelocityArrow(ee_frame_id);
 
   DepthPass depthPass(renderer.device, plane_obj.mesh.layout(),
                       renderer.depth_texture,

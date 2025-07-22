@@ -28,6 +28,8 @@ struct MeshMaterialComponent {
       : mesh(std::move(mesh)), materials(std::move(materials)) {
     assert(mesh.numViews() == materials.size());
   }
+
+  bool hasTransparency() const;
 };
 
 /// \brief Updates (adds or removes) the Opaque tag component for a given

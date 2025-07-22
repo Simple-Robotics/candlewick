@@ -22,8 +22,12 @@ class DebugScene;
 /// Provides methods for updating debug entities.
 /// \sa DebugScene
 struct IDebugSubSystem {
-  virtual void update(DebugScene & /*scene*/) = 0;
+  virtual void update() = 0;
   virtual ~IDebugSubSystem() = default;
+
+protected:
+  DebugScene &m_scene;
+  explicit IDebugSubSystem(DebugScene &scene) : m_scene(scene) {}
 };
 
 /// \brief Component for simple mesh with colors.
@@ -69,7 +73,7 @@ public:
   /// \brief Add a subsystem (IDebugSubSystem) to the scene.
   template <std::derived_from<IDebugSubSystem> System, typename... Args>
   System &addSystem(Args &&...args) {
-    auto sys = std::make_unique<System>(std::forward<Args>(args)...);
+    auto sys = std::make_unique<System>(*this, std::forward<Args>(args)...);
     auto &p = m_subsystems.emplace_back(std::move(sys));
     return static_cast<System &>(*p);
   }
@@ -85,7 +89,7 @@ public:
 
   void update() {
     for (auto &system : m_subsystems) {
-      system->update(*this);
+      system->update();
     }
   }
 
