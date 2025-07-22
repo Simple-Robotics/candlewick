@@ -258,6 +258,10 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
   const bool enable_shadows = m_config.enable_shadows;
   bool shadows_configured = false;
 
+  // Phase 1. Load robot geometries and collect parameters for creating the
+  // required render pipelines.
+  std::set<std::tuple<MeshLayout, PipelineType, bool>> required_pipelines;
+
   for (pin::GeomIndex geom_id = 0; geom_id < geom_model.ngeoms; geom_id++) {
 
     const auto &geom_obj = geom_model.geometryObjects[geom_id];
@@ -266,25 +270,34 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
     Mesh mesh = createMeshFromBatch(device(), meshDatas, true);
     assert(validateMesh(mesh));
 
-    const auto layout = mesh.layout();
-
     // add entity for this geometry
     entt::entity entity = m_registry.create();
     m_registry.emplace<PinGeomObjComponent>(entity, geom_id);
     m_registry.emplace<TransformComponent>(entity);
-    if (pipeline_type != PIPELINE_POINTCLOUD)
-      m_registry.emplace<Opaque>(entity);
     const MeshMaterialComponent &mmc =
         m_registry.emplace<MeshMaterialComponent>(entity, std::move(mesh),
                                                   extractMaterials(meshDatas));
+    if (pipeline_type != PIPELINE_POINTCLOUD)
+      m_registry.emplace<Opaque>(entity);
     bool is_transparent =
         updateTransparencyClassification(m_registry, entity, mmc);
-    if (!routePipeline(pipeline_type, is_transparent)) {
+    addPipelineTagComponent(m_registry, entity, pipeline_type);
+
+    auto &layout = mmc.mesh.layout();
+    required_pipelines.insert({layout, pipeline_type, is_transparent});
+  }
+
+  // Phase 2. Init our render pipelines.
+  for (auto &[layout, pipeline_type, transparent] : required_pipelines) {
+    // We only route wrt pipeline type and opacity status.
+    // If for some reason the set contains two entries for e.g. opaque triangle
+    // pipeline with different mesh layouts, then the first entry wins because
+    // it gets to create the pipeline.
+    if (!routePipeline(pipeline_type, transparent)) {
       createRenderPipeline(layout, m_renderer.getSwapchainTextureFormat(),
                            m_renderer.depthFormat(), pipeline_type,
-                           is_transparent);
+                           transparent);
     }
-    addPipelineTagComponent(m_registry, entity, pipeline_type);
 
     if (pipeline_type == PIPELINE_TRIANGLEMESH) {
       if (!ssaoPass.pipeline) {
