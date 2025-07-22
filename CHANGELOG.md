@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - multibody/RobotScene : allow reloading models, decouple model loading from render pipeline creation
 - core/DepthAndShadowPass : add `ShadowMapPass::initialized()`
 - core | multibody : rework of debug subsystem API, allow reloading RobotDebugSystem
+- multibody/Visualizer : implement `loadViewerModel()`, allow it to actually reload models
 
 ### Fixed
 

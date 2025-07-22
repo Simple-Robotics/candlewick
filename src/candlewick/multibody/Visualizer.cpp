@@ -80,11 +80,6 @@ void Visualizer::initialize() {
   rconfig.enable_shadows = true;
   rconfig.enable_normal_target = true;
   robotScene.setConfig(rconfig);
-  robotScene.loadModels(visualModel(), visualData());
-
-  m_robotDebug = &debugScene.addSystem<RobotDebugSystem>(this->model(), data());
-  std::tie(m_triad, std::ignore) = debugScene.addTriad();
-  std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
 
   robotScene.directionalLight = {
       DirectionalLight{
@@ -102,6 +97,7 @@ void Visualizer::initialize() {
   worldSceneBounds.update({-1., -1., 0.}, {+1., +1., 1.});
 
   this->resetCamera();
+  this->loadViewerModel();
 
   SDL_Log("┌───────Controls────────");
   SDL_Log("│ Toggle GUI:      [%s]", "H");
@@ -127,7 +123,18 @@ void Visualizer::resetCamera() {
       perspectiveFromFov(DEFAULT_FOV, aspectRatio, 0.01f, 100.f);
 }
 
-void Visualizer::loadViewerModel() {}
+void Visualizer::loadViewerModel() {
+  robotScene.loadModels(visualModel(), visualData());
+
+  if (m_robotDebug) {
+    m_robotDebug->reload(this->model(), this->data());
+  } else {
+    m_robotDebug =
+        &debugScene.addSystem<RobotDebugSystem>(this->model(), this->data());
+    std::tie(m_triad, std::ignore) = debugScene.addTriad();
+    std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
+  }
+}
 
 void Visualizer::setCameraTarget(const Eigen::Ref<const Vector3> &target) {
   controller.lookAt1(target.cast<float>());
