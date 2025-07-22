@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CMake : sync jrl-cmakemodules to new release 1.0.0 (https://github.com/Simple-Robotics/candlewick/pull/37)
 - CMake : change option `BUILD_PYTHON_BINDINGS` to `BUILD_PYTHON_INTERFACE` (https://github.com/Simple-Robotics/candlewick/pull/37)
 - multibody/Visualizer : `stopRecording()` now returns a flag (https://github.com/Simple-Robotics/candlewick/pull/37)
+- core/Components : add `MeshMaterialComponent::hasTransparency()`
 
 ### Fixed
 
