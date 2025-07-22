@@ -140,6 +140,8 @@ RobotScene::RobotScene(entt::registry &registry, const RenderContext &renderer,
                        const pin::GeometryData &geom_data, Config config)
     : RobotScene(registry, renderer) {
   m_config = config;
+
+  this->initGBuffer();
   this->loadModels(geom_model, geom_data);
 }
 
@@ -251,8 +253,6 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
   assert(!(m_initialized || hasInternalPointers()));
   m_geomModel = &geom_model;
   m_geomData = &geom_data;
-
-  this->initGBuffer();
 
   // initialize render target for GBuffer
   const bool enable_shadows = m_config.enable_shadows;
