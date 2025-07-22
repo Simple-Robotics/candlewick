@@ -156,6 +156,10 @@ public:
   ShadowMapPass(ShadowMapPass &&other) noexcept;
   ShadowMapPass &operator=(ShadowMapPass &&other) noexcept;
 
+  bool initialized() const {
+    return (pipeline != nullptr) && (sampler != nullptr);
+  }
+
   void render(CommandBuffer &cmdBuf, std::span<const OpaqueCastable> castables);
 
   void release() noexcept;

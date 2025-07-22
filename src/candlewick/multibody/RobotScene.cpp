@@ -139,9 +139,8 @@ RobotScene::RobotScene(entt::registry &registry, const RenderContext &renderer,
                        const pin::GeometryModel &geom_model,
                        const pin::GeometryData &geom_data, Config config)
     : RobotScene(registry, renderer) {
-  m_config = config;
 
-  this->initGBuffer();
+  this->setConfig(config);
   this->loadModels(geom_model, geom_data);
 }
 
@@ -248,15 +247,48 @@ void RobotScene::initCompositePipeline(const MeshLayout &layout) {
   }
 }
 
+void RobotScene::ensurePipelinesExist(
+    const std::set<std::tuple<MeshLayout, PipelineType, bool>>
+        &required_pipelines) {
+  if (!gBuffer.initialized()) {
+    this->initGBuffer();
+  }
+
+  const bool enable_shadows = m_config.enable_shadows;
+
+  for (auto &[layout, pipeline_type, transparent] : required_pipelines) {
+    // We only route wrt pipeline type and opacity status.
+    // If for some reason the set contains two entries for e.g. opaque triangle
+    // pipeline with different mesh layouts, then the first entry wins because
+    // it gets to create the pipeline.
+    if (!routePipeline(pipeline_type, transparent)) {
+      createRenderPipeline(layout, m_renderer.getSwapchainTextureFormat(),
+                           m_renderer.depthFormat(), pipeline_type,
+                           transparent);
+    }
+
+    if (pipeline_type == PIPELINE_TRIANGLEMESH) {
+      if (!ssaoPass.pipeline) {
+        ssaoPass = ssao::SsaoPass(m_renderer, gBuffer.normalMap);
+      }
+      // configure shadow pass
+      if (enable_shadows && !shadowPass.initialized()) {
+        shadowPass = ShadowMapPass(device(), layout, m_renderer.depthFormat(),
+                                   m_config.shadow_config);
+      }
+      if (!m_pipelines.wboitComposite)
+        this->initCompositePipeline(layout);
+    }
+  }
+}
+
 void RobotScene::loadModels(const pin::GeometryModel &geom_model,
                             const pin::GeometryData &geom_data) {
-  assert(!(m_initialized || hasInternalPointers()));
+  if (hasInternalPointers())
+    this->clearRobotGeometries();
+
   m_geomModel = &geom_model;
   m_geomData = &geom_data;
-
-  // initialize render target for GBuffer
-  const bool enable_shadows = m_config.enable_shadows;
-  bool shadows_configured = false;
 
   // Phase 1. Load robot geometries and collect parameters for creating the
   // required render pipelines.
@@ -288,31 +320,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
   }
 
   // Phase 2. Init our render pipelines.
-  for (auto &[layout, pipeline_type, transparent] : required_pipelines) {
-    // We only route wrt pipeline type and opacity status.
-    // If for some reason the set contains two entries for e.g. opaque triangle
-    // pipeline with different mesh layouts, then the first entry wins because
-    // it gets to create the pipeline.
-    if (!routePipeline(pipeline_type, transparent)) {
-      createRenderPipeline(layout, m_renderer.getSwapchainTextureFormat(),
-                           m_renderer.depthFormat(), pipeline_type,
-                           transparent);
-    }
-
-    if (pipeline_type == PIPELINE_TRIANGLEMESH) {
-      if (!ssaoPass.pipeline) {
-        ssaoPass = ssao::SsaoPass(m_renderer, gBuffer.normalMap);
-      }
-      // configure shadow pass
-      if (enable_shadows && !shadows_configured) {
-        shadowPass = ShadowMapPass(device(), layout, m_renderer.depthFormat(),
-                                   m_config.shadow_config);
-        shadows_configured = true;
-      }
-      if (!m_pipelines.wboitComposite)
-        this->initCompositePipeline(layout);
-    }
-  }
+  this->ensurePipelinesExist(required_pipelines);
   m_initialized = true;
 }
 

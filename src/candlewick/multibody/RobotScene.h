@@ -18,6 +18,7 @@
 #include <entt/entity/fwd.hpp>
 #include <coal/fwd.hh>
 #include <pinocchio/multibody/fwd.hpp>
+#include <set>
 
 namespace candlewick {
 
@@ -141,6 +142,11 @@ namespace multibody {
       Texture accumTexture{NoInit};
       Texture revealTexture{NoInit};
       SDL_GPUSampler *sampler = nullptr; // composite pass
+
+      bool initialized() const {
+        return (sampler != nullptr) && normalMap && accumTexture &&
+               revealTexture;
+      }
     } gBuffer;
     ShadowMapPass shadowPass{NoInit};
 
@@ -212,6 +218,12 @@ namespace multibody {
     const Config &config() const { return m_config; }
     inline bool pbrHasPrepass() const { return m_config.triangle_has_prepass; }
     inline bool shadowsEnabled() const { return m_config.enable_shadows; }
+
+    /// \brief Ensure the render pipelines were properly created following the
+    /// provided requirements.
+    void ensurePipelinesExist(
+        const std::set<std::tuple<MeshLayout, PipelineType, bool>>
+            &required_pipelines);
 
     /// \brief Getter for the pinocchio GeometryModel object.
     const pin::GeometryModel &geomModel() const { return *m_geomModel; }
