@@ -12,7 +12,7 @@ namespace candlewick::multibody {
 struct RobotDebugSystem final : IDebugSubSystem {
 
   RobotDebugSystem(const pin::Model &model, const pin::Data &data)
-      : IDebugSubSystem(), m_robotModel(model), m_robotData(data) {}
+      : IDebugSubSystem(), m_robotModel(&model), m_robotData(&data) {}
 
   entt::entity addFrameTriad(DebugScene &scene, pin::FrameIndex frame_id,
                              const Float3 &scale = Float3::Constant(0.3333f));
@@ -29,8 +29,8 @@ struct RobotDebugSystem final : IDebugSubSystem {
   void update(DebugScene &scene);
 
 private:
-  const pin::Model &m_robotModel;
-  const pin::Data &m_robotData;
+  pin::Model const *m_robotModel;
+  pin::Data const *m_robotData;
 };
 
 } // namespace candlewick::multibody

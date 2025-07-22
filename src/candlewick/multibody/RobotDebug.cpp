@@ -39,32 +39,34 @@ void RobotDebugSystem::update(DebugScene &scene) {
     auto view = reg.view<const PinFrameComponent, const DebugMeshComponent,
                          TransformComponent>();
     for (auto &&[ent, frame_id, dmc, tr] : view.each()) {
-      Mat4f pose{m_robotData.oMf[frame_id].cast<float>()};
+      Mat4f pose{m_robotData->oMf[frame_id].cast<float>()};
       auto D = dmc.scale.homogeneous().asDiagonal();
       tr.noalias() = pose * D;
     }
   }
 
-  auto view_vel = reg.view<const PinFrameVelocityComponent,
-                           const DebugMeshComponent, TransformComponent>();
-  for (auto &&[ent, fvc, dmc, tr] : view_vel.each()) {
-    Motionf vel =
-        pin::getFrameVelocity(m_robotModel, m_robotData, fvc, pin::LOCAL)
-            .cast<float>();
+  {
+    auto view = reg.view<const PinFrameVelocityComponent,
+                         const DebugMeshComponent, TransformComponent>();
+    for (auto &&[ent, fvc, dmc, tr] : view.each()) {
+      Motionf vel =
+          pin::getFrameVelocity(*m_robotModel, *m_robotData, fvc, pin::LOCAL)
+              .cast<float>();
 
-    const SE3f pose = m_robotData.oMf[fvc].cast<float>();
-    Eigen::Quaternionf quatf;
-    tr = pose.toHomogeneousMatrix();
-    Float3 scale = dmc.scale;
-    scale.z() *= vel.linear().norm();
+      const SE3f pose = m_robotData->oMf[fvc].cast<float>();
+      Eigen::Quaternionf quatf;
+      tr = pose.toHomogeneousMatrix();
+      Float3 scale = dmc.scale;
+      scale.z() *= vel.linear().norm();
 
-    // the arrow mesh is posed z-up by default.
-    // we need to rotate towards where the velocity is pointing,
-    // then transform to the frame space.
-    quatf.setFromTwoVectors(Float3::UnitZ(), vel.linear());
-    auto R = tr.topLeftCorner<3, 3>();
-    Mat3f R2 = quatf.toRotationMatrix() * scale.asDiagonal();
-    R.applyOnTheRight(R2);
+      // the arrow mesh is posed z-up by default.
+      // we need to rotate towards where the velocity is pointing,
+      // then transform to the frame space.
+      quatf.setFromTwoVectors(Float3::UnitZ(), vel.linear());
+      auto R = tr.topLeftCorner<3, 3>();
+      Mat3f R2 = quatf.toRotationMatrix() * scale.asDiagonal();
+      R.applyOnTheRight(R2);
+    }
   }
 }
 
