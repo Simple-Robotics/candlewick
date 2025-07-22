@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added tools for loading models from a given description struct `RobotSpec` (https://github.com/Simple-Robotics/candlewick/pull/37)
 - Added Candlewick visualizer runtime, to be used to (up)load Pinocchio models and submit states to be displayed asynchronously. (https://github.com/Simple-Robotics/candlewick/pull/37)
 - Embed Inter Medium font into the application (https://github.com/Simple-Robotics/candlewick/pull/37)
+- Add `RobotDebugSystem::reload()` function to switch out models
 
 ### Changed
 
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core/Components : add `MeshMaterialComponent::hasTransparency()`
 - multibody/RobotScene : allow reloading models, decouple model loading from render pipeline creation
 - core/DepthAndShadowPass : add `ShadowMapPass::initialized()`
+- core | multibody : rework of debug subsystem API, allow reloading RobotDebugSystem
 
 ### Fixed
 

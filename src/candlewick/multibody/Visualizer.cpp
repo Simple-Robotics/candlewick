@@ -245,17 +245,14 @@ bool Visualizer::stopRecording() {
 
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
   assert(m_robotDebug);
-  m_debug_frame_pos.push_back(m_robotDebug->addFrameTriad(debugScene, id));
+  m_robotDebug->addFrameTriad(id);
   if (show_velocity)
-    m_debug_frame_vel.push_back(
-        m_robotDebug->addFrameVelocityArrow(debugScene, id));
+    m_robotDebug->addFrameVelocityArrow(id);
 }
 
 void Visualizer::removeFramesViz() {
-  registry.destroy(m_debug_frame_pos.begin(), m_debug_frame_pos.end());
-  registry.destroy(m_debug_frame_vel.begin(), m_debug_frame_vel.end());
-  m_debug_frame_pos.clear();
-  m_debug_frame_vel.clear();
+  assert(m_robotDebug);
+  m_robotDebug->destroyEntities();
 }
 
 } // namespace candlewick::multibody

@@ -6,21 +6,19 @@
 #include <pinocchio/algorithm/frames.hpp>
 
 namespace candlewick::multibody {
-entt::entity RobotDebugSystem::addFrameTriad(DebugScene &scene,
-                                             pin::FrameIndex frame_id,
+entt::entity RobotDebugSystem::addFrameTriad(pin::FrameIndex frame_id,
                                              const Float3 &scale) {
-  entt::registry &reg = scene.registry();
-  auto [ent, triad] = scene.addTriad(scale);
+  entt::registry &reg = m_scene.registry();
+  auto [ent, triad] = m_scene.addTriad(scale);
   reg.emplace<PinFrameComponent>(ent, frame_id);
   return ent;
 }
 
-entt::entity RobotDebugSystem::addFrameVelocityArrow(DebugScene &scene,
-                                                     pin::FrameIndex frame_id,
+entt::entity RobotDebugSystem::addFrameVelocityArrow(pin::FrameIndex frame_id,
                                                      float scale) {
-  entt::registry &reg = scene.registry();
+  entt::registry &reg = m_scene.registry();
   MeshData arrow_data = loadArrowSolid(false);
-  Mesh mesh = createMesh(scene.device(), arrow_data, true);
+  Mesh mesh = createMesh(m_scene.device(), arrow_data, true);
   Float4 color = 0xFF217Eff_rgbaf;
 
   auto entity = reg.create();
@@ -33,8 +31,8 @@ entt::entity RobotDebugSystem::addFrameVelocityArrow(DebugScene &scene,
   return entity;
 }
 
-void RobotDebugSystem::update(DebugScene &scene) {
-  auto &reg = scene.registry();
+void RobotDebugSystem::update() {
+  auto &reg = m_scene.registry();
   {
     auto view = reg.view<const PinFrameComponent, const DebugMeshComponent,
                          TransformComponent>();
@@ -68,6 +66,21 @@ void RobotDebugSystem::update(DebugScene &scene) {
       R.applyOnTheRight(R2);
     }
   }
+}
+
+template <class... Ts>
+void destroy_debug_entities_from_types(entt::registry &reg) {
+  auto f = []<typename U>(entt::registry &reg, U *) {
+    auto view = reg.view<const DebugMeshComponent, const U>();
+    reg.destroy(view.begin(), view.end());
+  };
+  (f(reg, (Ts *)nullptr), ...);
+}
+
+void RobotDebugSystem::destroyEntities() {
+  destroy_debug_entities_from_types<const PinFrameComponent,
+                                    const PinFrameVelocityComponent>(
+      m_scene.registry());
 }
 
 } // namespace candlewick::multibody
