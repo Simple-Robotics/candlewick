@@ -19,6 +19,7 @@ def create_recorder_context(
     fps: int = _DEFAULT_VIDEO_SETTINGS["fps"],
     bitRate: int = _DEFAULT_VIDEO_SETTINGS["bitRate"],
 ):
+    filename = str(filename)
     if not hasFfmpegSupport():
         warnings.warn(
             "This context will do nothing, as Candlewick was built without video recording support."
