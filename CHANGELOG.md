@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-07-25
+
 ### Added
 
 - Added tools for loading models from a given description struct `RobotSpec` (https://github.com/Simple-Robotics/candlewick/pull/37)
@@ -232,7 +234,8 @@ This is the first release to use a changelog.
 - Visual bug (uninitialized data) when disabling SSAO
 
 
-[Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Simple-Robotics/candlewick/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Simple-Robotics/candlewick/compare/v0.5.0...v0.5.0
