@@ -9,10 +9,10 @@ license-file = "LICENSE"
 
 [build-dependencies]
 cmake = ">=3.26"
-ninja = ">=1.12.1"
-cxx-compiler = ">=1.9.0"
+ninja = ">=1.13.1"
+cxx-compiler = ">=1.11.0"
 pkg-config = ">=0.29.2"
-ccache = ">=4.9.1"
+ccache = ">=4.11.3"
 
 [dependencies]
 sdl3 = ">=3.2.12,<4"
