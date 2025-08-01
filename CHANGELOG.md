@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.0] - 2025-07-25
 
-## [0.8.0] - 2025-07-25
-
 ### Added
 
 - Added tools for loading models from a given description struct `RobotSpec` (https://github.com/Simple-Robotics/candlewick/pull/37)
