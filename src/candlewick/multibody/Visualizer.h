@@ -55,7 +55,7 @@ void guiAddCameraParams(CylindricalCamera &controller,
 class Visualizer final : public BaseVisualizer {
   bool m_showGui = true;
   bool m_shouldExit = false;
-  entt::entity m_grid, m_triad;
+  entt::entity m_grid;
   RobotDebugSystem *m_robotDebug = nullptr;
 
   void initialize();

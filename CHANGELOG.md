@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - core : Add `LambertMaterial`
+- multibody/Visualizer : remove default world triad
+  * user must add it explicitly
 
 ## [0.8.0] - 2025-07-25
 

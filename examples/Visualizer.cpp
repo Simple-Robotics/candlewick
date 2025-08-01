@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
 
   Visualizer visualizer{{window_dims[0], window_dims[1]}, model, geom_model};
   assert(!visualizer.hasExternalData());
+  visualizer.addFrameViz(model.getFrameId("world"), false);
   visualizer.addFrameViz(model.getFrameId("elbow_joint"));
   visualizer.addFrameViz(model.getFrameId("ee_link"));
   pin::Data &data = visualizer.data();
