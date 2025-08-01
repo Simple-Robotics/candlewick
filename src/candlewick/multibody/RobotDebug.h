@@ -10,16 +10,18 @@ namespace candlewick::multibody {
 /// Supports drawing a triad for a frame. Member \ref pinData must
 /// refer to an existing pinocchio::Data object at all times.
 struct RobotDebugSystem final : IDebugSubSystem {
+  inline static Float3 DEFAULT_TRIAD_SCALE = Float3::Constant(0.33333f);
+  inline static float DEFAULT_VEL_SCALE = 0.5f;
 
   RobotDebugSystem(DebugScene &scene, const pin::Model &model,
                    const pin::Data &data)
       : IDebugSubSystem(scene), m_robotModel(&model), m_robotData(&data) {}
 
   entt::entity addFrameTriad(pin::FrameIndex frame_id,
-                             const Float3 &scale = Float3::Constant(0.3333f));
+                             const Float3 &scale = DEFAULT_TRIAD_SCALE);
 
   entt::entity addFrameVelocityArrow(pin::FrameIndex frame_id,
-                                     float scale = 0.5f);
+                                     float scale = DEFAULT_VEL_SCALE);
 
   /// \brief Update the transform components for the debug visual entities,
   /// according to their frame placements and velocities.

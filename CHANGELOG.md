@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core : Add `LambertMaterial`
 - multibody/Visualizer : remove default world triad
   * user must add it explicitly
+- multibody/Visualizer : pass scale to addFrameViz()
 
 ## [0.8.0] - 2025-07-25
 
