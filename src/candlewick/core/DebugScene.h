@@ -17,6 +17,12 @@ enum class DebugPipelines {
 
 class DebugScene;
 
+enum class DebugMeshType {
+  TRIAD,
+  GRID,
+  ARROW,
+};
+
 /// \brief A subsystem for the DebugScene.
 ///
 /// Provides methods for updating debug entities.
@@ -33,13 +39,7 @@ protected:
 /// \brief Component for simple mesh with colors.
 ///
 /// This is meant for the \c Hud3dElement shader.
-struct DebugMeshComponent {
-  DebugPipelines pipeline_type;
-  Mesh mesh;
-  std::vector<Float4> colors;
-  bool enable = true;
-  Float3 scale = Float3::Ones();
-};
+struct DebugMeshComponent;
 
 /// \brief %Scene for organizing debug entities and render systems.
 ///
@@ -53,12 +53,25 @@ class DebugScene {
   SDL_GPUGraphicsPipeline *m_trianglePipeline{nullptr};
   SDL_GPUGraphicsPipeline *m_linePipeline{nullptr};
   std::vector<std::unique_ptr<IDebugSubSystem>> m_subsystems;
+  std::unordered_map<DebugMeshType, Mesh> m_sharedMeshes;
+  inline static const std::array<Float4, 3> m_triadColors = {
+      Float4{1., 0., 0., 1.},
+      Float4{0., 1., 0., 1.},
+      Float4{0., 0., 1., 1.},
+  };
+
+  void initializeSharedMeshes();
 
   void setupPipelines(const MeshLayout &layout);
 
 public:
-  enum { TRANSFORM_SLOT = 0 };
-  enum { COLOR_SLOT = 0 };
+  enum : Uint32 { TRANSFORM_SLOT = 0 };
+  enum : Uint32 { COLOR_SLOT = 0 };
+  using enum DebugMeshType;
+
+  const Mesh &getMesh(DebugMeshType type) const {
+    return m_sharedMeshes.at(type);
+  }
 
   DebugScene(entt::registry &registry, const RenderContext &renderer);
   DebugScene(const DebugScene &) = delete;
@@ -100,5 +113,13 @@ public:
   ~DebugScene() { release(); }
 };
 static_assert(Scene<DebugScene>);
+
+struct DebugMeshComponent {
+  DebugPipelines pipeline_type;
+  DebugMeshType meshType;
+  std::vector<Float4> colors;
+  bool enable = true;
+  Float3 scale = Float3::Ones();
+};
 
 } // namespace candlewick

@@ -1,7 +1,6 @@
 #include "RobotDebug.h"
 
 #include "../core/Components.h"
-#include "../primitives/Arrow.h"
 
 #include <pinocchio/algorithm/frames.hpp>
 
@@ -9,7 +8,7 @@ namespace candlewick::multibody {
 entt::entity RobotDebugSystem::addFrameTriad(pin::FrameIndex frame_id,
                                              const Float3 &scale) {
   entt::registry &reg = m_scene.registry();
-  auto [ent, triad] = m_scene.addTriad(scale);
+  auto [ent, dmc] = m_scene.addTriad(scale);
   reg.emplace<PinFrameComponent>(ent, frame_id);
   return ent;
 }
@@ -17,13 +16,11 @@ entt::entity RobotDebugSystem::addFrameTriad(pin::FrameIndex frame_id,
 entt::entity RobotDebugSystem::addFrameVelocityArrow(pin::FrameIndex frame_id,
                                                      float scale) {
   entt::registry &reg = m_scene.registry();
-  MeshData arrow_data = loadArrowSolid(false);
-  Mesh mesh = createMesh(m_scene.device(), arrow_data, true);
   Float4 color = 0xFF217Eff_rgbaf;
 
   auto entity = reg.create();
   auto &dmc = reg.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::TRIANGLE_FILL, std::move(mesh),
+      entity, DebugPipelines::TRIANGLE_FILL, DebugMeshType::ARROW,
       std::vector{color}, true);
   dmc.scale << 0.333f, 0.333f, scale;
   reg.emplace<PinFrameVelocityComponent>(entity, frame_id);

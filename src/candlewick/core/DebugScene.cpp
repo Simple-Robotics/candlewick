@@ -12,45 +12,55 @@ DebugScene::DebugScene(entt::registry &reg, const RenderContext &renderer)
     : m_registry(reg)
     , m_renderer(renderer)
     , m_trianglePipeline(nullptr)
-    , m_linePipeline(nullptr) {}
+    , m_linePipeline(nullptr)
+    , m_sharedMeshes() {
+  this->initializeSharedMeshes();
+}
 
 DebugScene::DebugScene(DebugScene &&other)
     : m_registry(other.m_registry)
     , m_renderer(other.m_renderer)
     , m_trianglePipeline(other.m_trianglePipeline)
     , m_linePipeline(other.m_linePipeline)
-    , m_subsystems(std::move(other.m_subsystems)) {
+    , m_subsystems(std::move(other.m_subsystems))
+    , m_sharedMeshes(std::move(other.m_sharedMeshes)) {
   other.m_trianglePipeline = nullptr;
   other.m_linePipeline = nullptr;
 }
 
+void DebugScene::initializeSharedMeshes() {
+  {
+    std::array triad_datas = loadTriadSolid();
+    Mesh mesh = createMeshFromBatch(device(), triad_datas, true);
+    setupPipelines(mesh.layout());
+    m_sharedMeshes.emplace(TRIAD, std::move(mesh));
+  }
+  {
+    MeshData grid_data = loadGrid(20);
+    m_sharedMeshes.emplace(GRID, createMesh(device(), grid_data, true));
+  }
+  {
+    MeshData arrow_data = loadArrowSolid(false);
+    m_sharedMeshes.emplace(ARROW, createMesh(device(), arrow_data, true));
+  }
+}
+
 std::tuple<entt::entity, DebugMeshComponent &>
 DebugScene::addTriad(const Float3 &scale) {
-  auto triad_datas = loadTriadSolid();
-  std::vector<Float4> triad_colors(3);
-  Mesh triad = createMeshFromBatch(device(), triad_datas, true);
-  for (size_t i = 0; i < 3; i++) {
-    triad_colors[i] = triad_datas[i].material.baseColor;
-  }
-  setupPipelines(triad.layout());
   entt::entity entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::TRIANGLE_FILL, std::move(triad), triad_colors,
-      true, scale);
+      entity, DebugPipelines::TRIANGLE_FILL, TRIAD,
+      std::vector<Float4>{m_triadColors.begin(), m_triadColors.end()}, true,
+      scale);
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
 
 std::tuple<entt::entity, DebugMeshComponent &>
 DebugScene::addLineGrid(const Float4 &color) {
-  auto grid_data = loadGrid(20);
-  Mesh grid = createMesh(device(), grid_data, true);
-
-  setupPipelines(grid.layout());
   auto entity = m_registry.create();
   auto &item = m_registry.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::TRIANGLE_LINE, std::move(grid),
-      std::vector{color});
+      entity, DebugPipelines::TRIANGLE_LINE, GRID, std::vector{color});
   m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
   return {entity, item};
 }
@@ -116,7 +126,7 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
   auto group =
       m_registry.view<const DebugMeshComponent, const TransformComponent>(
           entt::exclude<Disable>);
-  group.each([&](auto &cmd, auto &tr) {
+  group.each([&](const DebugMeshComponent &cmd, auto &tr) {
     if (!cmd.enable)
       return;
 
@@ -131,11 +141,12 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 
     const GpuMat4 mvp = viewProj * tr;
     cmdBuf.pushVertexUniform(TRANSFORM_SLOT, mvp);
-    rend::bindMesh(render_pass, cmd.mesh);
-    for (size_t i = 0; i < cmd.mesh.numViews(); i++) {
+    auto &mesh = this->getMesh(cmd.meshType);
+    rend::bindMesh(render_pass, mesh);
+    for (size_t i = 0; i < mesh.numViews(); i++) {
       const auto &color = cmd.colors[i];
       cmdBuf.pushFragmentUniform(COLOR_SLOT, color);
-      rend::drawView(render_pass, cmd.mesh.view(i));
+      rend::drawView(render_pass, mesh.view(i));
     }
   });
 
