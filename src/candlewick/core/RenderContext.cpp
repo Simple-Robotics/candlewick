@@ -56,18 +56,6 @@ void RenderContext::createDepthTexture(
   SDL_SetGPUTextureName(device, depth_texture, "Main depth texture");
 }
 
-bool RenderContext::waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
-  assert(SDL_IsMainThread());
-  return SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, window,
-                                               &swapchain, NULL, NULL);
-}
-
-bool RenderContext::acquireSwapchain(CommandBuffer &command_buffer) {
-  assert(SDL_IsMainThread());
-  return SDL_AcquireGPUSwapchainTexture(command_buffer, window, &swapchain,
-                                        NULL, NULL);
-}
-
 RenderContext::~RenderContext() noexcept {
   if (device && window) {
     SDL_ReleaseWindowFromGPUDevice(device, window);
