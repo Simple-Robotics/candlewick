@@ -76,7 +76,7 @@ void exposeVisualizer() {
 #endif
       .def("addFrameViz", &Visualizer::addFrameViz,
            ("self"_a, "frame_id", "show_velocity"_a = true,
-            "scale"_a = std::nullopt),
+            "scale"_a = std::nullopt, "vel_scale"_a = std::nullopt),
            "Add visualization (triad and frame velocity) for the given frame "
            "by ID.")
       .def("removeFramesViz", &Visualizer::removeFramesViz, ("self"_a),

@@ -145,6 +145,7 @@ public:
   /// \param show_velocity Whether to show frame velocity (as an arrow)
   /// \param scale Assign a scale for the triad (optional, a default value will
   /// be assigned instead).
+  /// \param vel_scale Velocity arrow scale.
   /// \note For the velocity to show up, first-order
   /// pinocchio::forwardKinematics() must be called with the joint velocity
   /// passed in.
@@ -153,7 +154,8 @@ public:
   /// first-order forward kinematics, then display() *without*
   /// arguments instead.
   void addFrameViz(pin::FrameIndex id, bool show_velocity = true,
-                   std::optional<Vector3> scale = std::nullopt);
+                   std::optional<Vector3> scale = std::nullopt,
+                   std::optional<float> vel_scale = std::nullopt);
 
   /// \brief Remove all frame visualizations.
   void removeFramesViz();

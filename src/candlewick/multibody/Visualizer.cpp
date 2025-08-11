@@ -262,13 +262,15 @@ auto cast_eigen_optional(const std::optional<D> &xopt) {
 }
 
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity,
-                             std::optional<Vector3> scale_) {
+                             std::optional<Vector3> scale_,
+                             std::optional<float> vel_scale) {
   assert(m_robotDebug);
   auto scale = cast_eigen_optional<float>(scale_).value_or(
       RobotDebugSystem::DEFAULT_TRIAD_SCALE);
   m_robotDebug->addFrameTriad(id, scale);
   if (show_velocity)
-    m_robotDebug->addFrameVelocityArrow(id);
+    m_robotDebug->addFrameVelocityArrow(
+        id, vel_scale.value_or(RobotDebugSystem::DEFAULT_VEL_SCALE));
 }
 
 void Visualizer::removeFramesViz() {
