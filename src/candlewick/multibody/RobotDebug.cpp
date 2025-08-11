@@ -1,7 +1,6 @@
 #include "RobotDebug.h"
 
 #include "../core/Components.h"
-#include "../primitives/Arrow.h"
 
 #include <pinocchio/algorithm/frames.hpp>
 
@@ -9,7 +8,7 @@ namespace candlewick::multibody {
 entt::entity RobotDebugSystem::addFrameTriad(pin::FrameIndex frame_id,
                                              const Float3 &scale) {
   entt::registry &reg = m_scene.registry();
-  auto [ent, triad] = m_scene.addTriad(scale);
+  auto [ent, dmc] = m_scene.addTriad(scale);
   reg.emplace<PinFrameComponent>(ent, frame_id);
   return ent;
 }
@@ -17,13 +16,11 @@ entt::entity RobotDebugSystem::addFrameTriad(pin::FrameIndex frame_id,
 entt::entity RobotDebugSystem::addFrameVelocityArrow(pin::FrameIndex frame_id,
                                                      float scale) {
   entt::registry &reg = m_scene.registry();
-  MeshData arrow_data = loadArrowSolid(false);
-  Mesh mesh = createMesh(m_scene.device(), arrow_data, true);
   Float4 color = 0xFF217Eff_rgbaf;
 
   auto entity = reg.create();
   auto &dmc = reg.emplace<DebugMeshComponent>(
-      entity, DebugPipelines::TRIANGLE_FILL, std::move(mesh),
+      entity, DebugPipelines::TRIANGLE_FILL, DebugMeshType::ARROW,
       std::vector{color}, true);
   dmc.scale << 0.333f, 0.333f, scale;
   reg.emplace<PinFrameVelocityComponent>(entity, frame_id);
@@ -32,6 +29,7 @@ entt::entity RobotDebugSystem::addFrameVelocityArrow(pin::FrameIndex frame_id,
 }
 
 void RobotDebugSystem::update() {
+  using Eigen::Quaternionf;
   auto &reg = m_scene.registry();
   {
     auto view = reg.view<const PinFrameComponent, const DebugMeshComponent,
@@ -52,7 +50,6 @@ void RobotDebugSystem::update() {
               .cast<float>();
 
       const SE3f pose = m_robotData->oMf[fvc].cast<float>();
-      Eigen::Quaternionf quatf;
       tr = pose.toHomogeneousMatrix();
       Float3 scale = dmc.scale;
       scale.z() *= vel.linear().norm();
@@ -60,9 +57,9 @@ void RobotDebugSystem::update() {
       // the arrow mesh is posed z-up by default.
       // we need to rotate towards where the velocity is pointing,
       // then transform to the frame space.
-      quatf.setFromTwoVectors(Float3::UnitZ(), vel.linear());
-      auto R = tr.topLeftCorner<3, 3>();
-      Mat3f R2 = quatf.toRotationMatrix() * scale.asDiagonal();
+      auto quat = Quaternionf::FromTwoVectors(Float3::UnitZ(), vel.linear());
+      Eigen::Ref<Mat3f> R = tr.topLeftCorner<3, 3>();
+      Mat3f R2 = quat.toRotationMatrix() * scale.asDiagonal();
       R.applyOnTheRight(R2);
     }
   }

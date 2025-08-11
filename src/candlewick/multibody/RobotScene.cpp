@@ -96,8 +96,7 @@ static void addPipelineTagComponent(entt::registry &reg, entt::entity ent,
 
 entt::entity RobotScene::addEnvironmentObject(MeshData &&data, Mat4f placement,
                                               PipelineType pipe_type) {
-  Mesh mesh = createMesh(device(), data);
-  uploadMeshToDevice(device(), mesh, data);
+  Mesh mesh = createMesh(device(), data, true);
   entt::entity entity = m_registry.create();
   m_registry.emplace<TransformComponent>(entity, placement);
   if (pipe_type != PIPELINE_POINTCLOUD)

@@ -131,7 +131,6 @@ void Visualizer::loadViewerModel() {
   } else {
     m_robotDebug =
         &debugScene.addSystem<RobotDebugSystem>(this->model(), this->data());
-    std::tie(m_triad, std::ignore) = debugScene.addTriad();
     std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
   }
 }
@@ -250,11 +249,28 @@ bool Visualizer::stopRecording() {
 #endif
 }
 
-void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity) {
+template <typename NewScalar, typename D>
+  requires std::derived_from<D, Eigen::MatrixBase<D>>
+auto cast_eigen_optional(const std::optional<D> &xopt) {
+  using Out_t = decltype(std::declval<D>().template cast<NewScalar>().eval());
+  std::optional<Out_t> out;
+  if (xopt.has_value()) {
+    const D &x = xopt.value();
+    out.emplace(x.template cast<NewScalar>());
+  }
+  return out;
+}
+
+void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity,
+                             std::optional<Vector3> scale_,
+                             std::optional<float> vel_scale) {
   assert(m_robotDebug);
-  m_robotDebug->addFrameTriad(id);
+  auto scale = cast_eigen_optional<float>(scale_).value_or(
+      RobotDebugSystem::DEFAULT_TRIAD_SCALE);
+  m_robotDebug->addFrameTriad(id, scale);
   if (show_velocity)
-    m_robotDebug->addFrameVelocityArrow(id);
+    m_robotDebug->addFrameVelocityArrow(
+        id, vel_scale.value_or(RobotDebugSystem::DEFAULT_VEL_SCALE));
 }
 
 void Visualizer::removeFramesViz() {

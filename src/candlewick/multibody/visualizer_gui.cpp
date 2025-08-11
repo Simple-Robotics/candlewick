@@ -97,15 +97,6 @@ void Visualizer::guiCallbackImpl() {
       guiAddDebugMesh(dmc, false);
       ImGui::PopID();
     }
-    {
-      const char *name = "hud.triad";
-      ImGui::PushID(name);
-      ImGui::Text("%s", name);
-      auto &dmc = registry.get<DebugMeshComponent>(m_triad);
-      ImGui::SameLine();
-      guiAddDebugMesh(dmc);
-      ImGui::PopID();
-    }
     ImGui::Checkbox("Ambient occlusion (SSAO)",
                     &robotScene.config().enable_ssao);
   }
@@ -176,9 +167,9 @@ void Visualizer::guiCallbackImpl() {
       char label[64];
       SDL_snprintf(label, 64, "frame_%d", int(fc));
       ImGui::PushID(label);
-      ImGui::Text("%s", frame_name);
-      ImGui::SameLine();
       guiAddDebugMesh(dmc);
+      ImGui::SameLine();
+      ImGui::Text("%s", frame_name);
       ImGui::PopID();
     }
   }

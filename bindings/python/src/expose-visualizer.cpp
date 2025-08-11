@@ -25,8 +25,12 @@ static auto visualizer_get_frame_debugs(Visualizer &viz) {
 
 void exposeVisualizer() {
   using pinocchio::python::VisualizerPythonVisitor;
+  using pinocchio::visualizers::Vector3;
 
   eigenpy::OptionalConverter<ConstVectorRef, std::optional>::registration();
+  eigenpy::OptionalConverter<Vector3, std::optional>::registration();
+  eigenpy::detail::NoneToPython<std::nullopt_t>::registration();
+
   bp::class_<Visualizer::Config>("VisualizerConfig", bp::init<>("self"_a))
       .def_readwrite("width", &Visualizer::Config::width)
       .def_readwrite("height", &Visualizer::Config::height);
@@ -71,7 +75,8 @@ void exposeVisualizer() {
            bp::return_internal_reference<>())
 #endif
       .def("addFrameViz", &Visualizer::addFrameViz,
-           ("self"_a, "frame_id", "show_velocity"_a = true),
+           ("self"_a, "frame_id", "show_velocity"_a = true,
+            "scale"_a = std::nullopt, "vel_scale"_a = std::nullopt),
            "Add visualization (triad and frame velocity) for the given frame "
            "by ID.")
       .def("removeFramesViz", &Visualizer::removeFramesViz, ("self"_a),

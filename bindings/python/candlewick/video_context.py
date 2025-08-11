@@ -1,7 +1,9 @@
+import warnings
+import os
+
 from contextlib import contextmanager
 from . import Visualizer, hasFfmpegSupport
 from typing import Union, TYPE_CHECKING
-import warnings
 
 if TYPE_CHECKING:
     from .async_visualizer import AsyncVisualizer
@@ -14,7 +16,7 @@ __all__ = ["create_recorder_context"]
 @contextmanager
 def create_recorder_context(
     viz: Union[Visualizer, "AsyncVisualizer"],
-    filename: str,
+    filename: Union[str | os.PathLike],
     /,
     fps: int = _DEFAULT_VIDEO_SETTINGS["fps"],
     bitRate: int = _DEFAULT_VIDEO_SETTINGS["bitRate"],
