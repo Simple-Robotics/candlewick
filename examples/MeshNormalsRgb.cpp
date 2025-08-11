@@ -116,8 +116,6 @@ int main() {
   vertexShader.release();
   fragmentShader.release();
 
-  SDL_GPUTexture *swapchain;
-
   Radf fov = 70.0_degf;
   Mat4f projectionMat = perspectiveFromFov(fov, aspectRatio, 0.1f, 40.0f);
 
@@ -184,17 +182,16 @@ int main() {
         modelView.topLeftCorner<3, 3>().inverse().transpose();
 
     // render pass
-
     SDL_GPURenderPass *render_pass;
 
     CommandBuffer command_buffer(device);
     SDL_Log("Frame [%u]", frameNo);
 
-    if (!SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, window,
-                                               &swapchain, NULL, NULL)) {
+    if (!ctx.waitAndAcquireSwapchain(command_buffer)) {
       SDL_Log("Failed to acquire swapchain: %s", SDL_GetError());
       break;
     } else {
+      auto *swapchain = ctx.swapchain;
 
       SDL_GPUColorTargetInfo ctinfo{
           .texture = swapchain,
@@ -203,24 +200,19 @@ int main() {
           .store_op = SDL_GPU_STOREOP_STORE,
           .cycle = false,
       };
-      SDL_GPUBufferBinding vertex_binding = meshes[0].getVertexBinding(0);
-      SDL_GPUBufferBinding index_binding = meshes[0].getIndexBinding();
       render_pass =
           SDL_BeginGPURenderPass(command_buffer, &ctinfo, 1, &depthTarget);
       SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
-      SDL_BindGPUVertexBuffers(render_pass, 0, &vertex_binding, 1);
-      SDL_BindGPUIndexBuffer(render_pass, &index_binding,
-                             SDL_GPU_INDEXELEMENTSIZE_32BIT);
-
       TransformUniformData cameraUniform{
           projViewMat,
           normalMatrix,
       };
+      command_buffer.pushVertexUniform(0u, cameraUniform);
 
-      SDL_PushGPUVertexUniformData(command_buffer, 0, &cameraUniform,
-                                   sizeof(cameraUniform));
-      SDL_DrawGPUIndexedPrimitives(render_pass, meshes[0].indexCount, 1, 0, 0,
-                                   0);
+      for (auto &mesh : meshes) {
+        rend::bindMesh(render_pass, mesh);
+        rend::draw(render_pass, mesh);
+      }
 
       SDL_EndGPURenderPass(render_pass);
     }

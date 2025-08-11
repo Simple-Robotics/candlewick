@@ -203,14 +203,9 @@ int main() {
           .store_op = SDL_GPU_STOREOP_STORE,
           .cycle = false,
       };
-      SDL_GPUBufferBinding vertex_binding = meshes[0].getVertexBinding(0);
-      SDL_GPUBufferBinding index_binding = meshes[0].getIndexBinding();
       render_pass = SDL_BeginGPURenderPass(command_buffer, &ctinfo, 1,
                                            &depth_target_info);
       SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
-      SDL_BindGPUVertexBuffers(render_pass, 0, &vertex_binding, 1);
-      SDL_BindGPUIndexBuffer(render_pass, &index_binding,
-                             SDL_GPU_INDEXELEMENTSIZE_32BIT);
 
       TransformUniformData cameraUniform{
           .modelView = modelView.matrix(),
@@ -223,16 +218,15 @@ int main() {
           myLight.intensity,
       };
 
+      rend::bindMesh(render_pass, meshes[0]);
+
       auto materialUbo = meshDatas[0].material;
 
-      SDL_PushGPUVertexUniformData(command_buffer, 0, &cameraUniform,
-                                   sizeof(cameraUniform));
-      SDL_PushGPUFragmentUniformData(command_buffer, 0, &materialUbo,
-                                     sizeof(materialUbo));
-      SDL_PushGPUFragmentUniformData(command_buffer, 1, &lightUbo,
-                                     sizeof(lightUbo));
-      SDL_DrawGPUIndexedPrimitives(render_pass, meshes[0].indexCount, 1, 0, 0,
-                                   0);
+      command_buffer.pushVertexUniform(0u, cameraUniform)
+          .pushFragmentUniform(0u, materialUbo)
+          .pushFragmentUniform(1u, lightUbo);
+
+      rend::draw(render_pass, meshes[0]);
 
       SDL_EndGPURenderPass(render_pass);
     }
