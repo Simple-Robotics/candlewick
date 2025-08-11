@@ -29,6 +29,7 @@ entt::entity RobotDebugSystem::addFrameVelocityArrow(pin::FrameIndex frame_id,
 }
 
 void RobotDebugSystem::update() {
+  using Eigen::Quaternionf;
   auto &reg = m_scene.registry();
   {
     auto view = reg.view<const PinFrameComponent, const DebugMeshComponent,
@@ -49,7 +50,6 @@ void RobotDebugSystem::update() {
               .cast<float>();
 
       const SE3f pose = m_robotData->oMf[fvc].cast<float>();
-      Eigen::Quaternionf quatf;
       tr = pose.toHomogeneousMatrix();
       Float3 scale = dmc.scale;
       scale.z() *= vel.linear().norm();
@@ -57,9 +57,9 @@ void RobotDebugSystem::update() {
       // the arrow mesh is posed z-up by default.
       // we need to rotate towards where the velocity is pointing,
       // then transform to the frame space.
-      quatf.setFromTwoVectors(Float3::UnitZ(), vel.linear());
-      auto R = tr.topLeftCorner<3, 3>();
-      Mat3f R2 = quatf.toRotationMatrix() * scale.asDiagonal();
+      auto quat = Quaternionf::FromTwoVectors(Float3::UnitZ(), vel.linear());
+      Eigen::Ref<Mat3f> R = tr.topLeftCorner<3, 3>();
+      Mat3f R2 = quat.toRotationMatrix() * scale.asDiagonal();
       R.applyOnTheRight(R2);
     }
   }
