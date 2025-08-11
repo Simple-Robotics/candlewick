@@ -71,8 +71,7 @@ int main() {
 
   std::vector<Mesh> meshes;
   for (std::size_t j = 0; j < meshDatas.size(); j++) {
-    Mesh mesh = createMesh(device, meshDatas[j]);
-    uploadMeshToDevice(device, mesh, meshDatas[j]);
+    Mesh mesh = createMesh(device, meshDatas[j], true);
     meshes.push_back(std::move(mesh));
   }
   SDL_assert(meshDatas[0].numIndices() == meshes[0].indexCount);

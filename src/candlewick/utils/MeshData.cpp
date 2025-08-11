@@ -57,7 +57,9 @@ Mesh createMesh(const Device &device, const MeshData &meshData,
 Mesh createMeshFromBatch(const Device &device,
                          std::span<const MeshData> meshDatas, bool upload) {
   // index type size, in bytes
-  assert(meshDatas.size() > 0);
+  if (meshDatas.empty()) {
+    terminate_with_message("Passed list of meshDatas is empty.");
+  }
   auto &layout = meshDatas[0].layout;
 
   Uint32 numVertices = 0, numIndices = 0;
@@ -65,12 +67,11 @@ Mesh createMeshFromBatch(const Device &device,
     numVertices += data.numVertices();
     numIndices += data.numIndices();
   }
-  Mesh mesh{device, meshDatas[0].layout};
+  Mesh mesh{device, layout};
   assert(mesh.numVertexBuffers() == 1);
 
   SDL_GPUBufferCreateInfo vtxInfo{.usage = SDL_GPU_BUFFERUSAGE_VERTEX,
-                                  .size =
-                                      Uint32(layout.vertexSize() * numVertices),
+                                  .size = layout.vertexSize() * numVertices,
                                   .props = 0};
 
   SDL_GPUBufferCreateInfo idxInfo;
