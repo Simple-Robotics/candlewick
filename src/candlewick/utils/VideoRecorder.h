@@ -40,7 +40,9 @@ namespace media {
     ///
     /// \param width Input data width.
     /// \param height Input data height.
-    /// \param filename Filename to open the outut stream at.
+    /// \param filename Filename to open the output stream at.
+    ///
+    /// \note The filename *must* end with the `.mp4` extension!
     void open(Uint32 width, Uint32 height, std::string_view filename,
               Settings settings);
 
@@ -51,10 +53,12 @@ namespace media {
     ///
     /// \param width Input data width.
     /// \param height Input data height.
+    /// \param filename Filename to open the output stream at.
     /// \param settings Video recording settings (fps, bitrate, output file
     /// width and height).
     ///
-    /// \note If the settings' output dimensions are not set, they will
+    /// \note The filename *must* end with the `.mp4` extension!
+    /// If the settings' output dimensions are not set, they will
     /// automatically be set to be the input's dimensions.
     /// \sa open()
     VideoRecorder(Uint32 width, Uint32 height, std::string_view filename,

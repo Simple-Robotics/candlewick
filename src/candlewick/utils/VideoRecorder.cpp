@@ -5,6 +5,7 @@
 
 #include <SDL3/SDL_filesystem.h>
 #include <magic_enum/magic_enum.hpp>
+#include <filesystem>
 
 extern "C" {
 #include <libavutil/pixfmt.h>
@@ -266,8 +267,16 @@ namespace media {
 
   void VideoRecorder::open(Uint32 width, Uint32 height,
                            std::string_view filename, Settings settings) {
-    if (m_impl)
+    std::filesystem::path pt{filename};
+    auto ext = pt.extension();
+    if (ext.empty() || (ext != ".mp4")) {
+      terminate_with_message(
+          "Filename {:s} does not end with extension \'.mp4\'.", filename);
+    }
+
+    if (m_impl) {
       terminate_with_message("Recording stream already open.");
+    }
 
     SDL_Log("[VideoRecorder] Opening stream at %s", filename.data());
     m_width = width;

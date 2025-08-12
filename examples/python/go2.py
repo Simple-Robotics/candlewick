@@ -6,7 +6,7 @@ from candlewick import Visualizer, VisualizerConfig
 from utils import add_floor_geom
 
 try:
-    import go2_description as go2d
+    from go2_description.loader import loadGo2
 except ImportError as import_error:
     raise ImportError(
         "This example requires the go2_description package, which was not found. "
@@ -16,10 +16,10 @@ except ImportError as import_error:
 
 print(f"Current shader directory: {cdw.currentShaderDirectory()}")
 
-robot = go2d.loadGo2()
+robot = loadGo2()
 
-rmodel = robot.model
-rdata = robot.data
+rmodel: pin.Model = robot.model
+rdata: pin.Data = robot.data
 visual_model: pin.GeometryModel = robot.visual_model
 add_floor_geom(visual_model)
 visual_data = visual_model.createData()
