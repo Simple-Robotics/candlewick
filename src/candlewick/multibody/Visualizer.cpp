@@ -6,6 +6,7 @@
 
 #include <pinocchio/algorithm/frames.hpp>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_hints.h>
 
 namespace candlewick {
 using namespace entt::literals;
@@ -31,6 +32,8 @@ const char *sdlMouseButtonToString(Uint8 button) {
 namespace candlewick::multibody {
 
 static RenderContext _create_renderer(const Visualizer::Config &config) {
+  SDL_SetHint(SDL_HINT_VIDEO_WAYLAND_SCALE_TO_DISPLAY, "1");
+
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     terminate_with_message("Failed to init video: {:s}", SDL_GetError());
   }
