@@ -65,6 +65,16 @@ DebugScene::addLineGrid(const Float4 &color) {
   return {entity, item};
 }
 
+entt::entity DebugScene::addArrow(const Float4 &color) {
+  auto entity = m_registry.create();
+  auto &dmc = m_registry.emplace<DebugMeshComponent>(
+      entity, DebugPipelines::TRIANGLE_FILL, DebugMeshType::ARROW,
+      std::vector{color}, true);
+  dmc.scale << 0.333f, 0.333f, 1.0f;
+  m_registry.emplace<TransformComponent>(entity, Mat4f::Identity());
+  return entity;
+}
+
 void DebugScene::setupPipelines(const MeshLayout &layout) {
   if (m_linePipeline && m_trianglePipeline)
     return;

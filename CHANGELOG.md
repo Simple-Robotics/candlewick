@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- core/DebugScene : add function to add arrow entities (https://github.com/Simple-Robotics/candlewick/pull/93)
 - core : Add `LambertMaterial` (https://github.com/Simple-Robotics/candlewick/pull/92)
 - multibody/Visualizer : remove default world triad (https://github.com/Simple-Robotics/candlewick/pull/92)
   * (user must add it explicitly)

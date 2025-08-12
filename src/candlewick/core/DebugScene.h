@@ -100,6 +100,9 @@ public:
   std::tuple<entt::entity, DebugMeshComponent &>
   addLineGrid(const Float4 &color = Float4::Ones());
 
+  /// \brief Add an arrow debug entity.
+  entt::entity addArrow(const Float4 &color = 0xf351ff_rgbaf);
+
   void update() {
     for (auto &system : m_subsystems) {
       system->update();
