@@ -165,5 +165,6 @@ void DebugScene::release() {
   // clean up all DebugMeshComponent objects.
   auto view = m_registry.view<DebugMeshComponent>();
   m_registry.destroy(view.begin(), view.end());
+  m_sharedMeshes.clear();
 }
 } // namespace candlewick
