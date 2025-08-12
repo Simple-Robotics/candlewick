@@ -56,7 +56,6 @@ class Visualizer final : public BaseVisualizer {
   bool m_showGui = true;
   bool m_shouldExit = false;
   entt::entity m_grid;
-  RobotDebugSystem *m_robotDebug = nullptr;
 
   void initialize();
 

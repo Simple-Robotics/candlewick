@@ -8,6 +8,8 @@
 #include <SDL3/SDL_init.h>
 
 namespace candlewick {
+using namespace entt::literals;
+
 const char *sdlMouseButtonToString(Uint8 button) {
   switch (button) {
   case SDL_BUTTON_LEFT:
@@ -126,11 +128,11 @@ void Visualizer::resetCamera() {
 void Visualizer::loadViewerModel() {
   robotScene.loadModels(visualModel(), visualData());
 
-  if (m_robotDebug) {
-    m_robotDebug->reload(this->model(), this->data());
+  if (auto *robotDebug = debugScene.getSystem<RobotDebugSystem>("robot"_hs)) {
+    robotDebug->reload(this->model(), this->data());
   } else {
-    m_robotDebug =
-        &debugScene.addSystem<RobotDebugSystem>(this->model(), this->data());
+    debugScene.addSystem<RobotDebugSystem>("robot"_hs, this->model(),
+                                           this->data());
     std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
   }
 }
@@ -264,12 +266,12 @@ auto cast_eigen_optional(const std::optional<D> &xopt) {
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity,
                              std::optional<Vector3> scale_,
                              std::optional<float> vel_scale) {
-  assert(m_robotDebug);
   auto scale = cast_eigen_optional<float>(scale_).value_or(
       RobotDebugSystem::DEFAULT_TRIAD_SCALE);
-  m_robotDebug->addFrameTriad(id, scale);
+  auto &robotDebug = debugScene.tryGetSystem<RobotDebugSystem>("robot"_hs);
+  robotDebug.addFrameTriad(id, scale);
   if (show_velocity)
-    m_robotDebug->addFrameVelocityArrow(
+    robotDebug.addFrameVelocityArrow(
         id, vel_scale.value_or(RobotDebugSystem::DEFAULT_VEL_SCALE));
 }
 
@@ -297,8 +299,8 @@ void Visualizer::setFrameExternalForce(pin::FrameIndex frame_id,
 }
 
 void Visualizer::removeFramesViz() {
-  assert(m_robotDebug);
-  m_robotDebug->destroyEntities();
+  if (auto *p = debugScene.getSystem<RobotDebugSystem>("robot"_hs))
+    p->destroyEntities();
 }
 
 } // namespace candlewick::multibody

@@ -49,6 +49,7 @@
 
 namespace pin = pinocchio;
 using namespace candlewick;
+using multibody::RobotDebugSystem;
 using multibody::RobotScene;
 using multibody::RobotSpec;
 
@@ -319,9 +320,10 @@ int main(int argc, char **argv) {
 
   // DEBUG SYSTEM
 
+  using namespace entt::literals;
   DebugScene debug_scene{registry, renderer};
   auto &robot_debug =
-      debug_scene.addSystem<multibody::RobotDebugSystem>(model, pin_data);
+      debug_scene.addSystem<RobotDebugSystem>("robot"_hs, model, pin_data);
   auto [triad_id, triad] = debug_scene.addTriad();
   auto [grid_id, grid] = debug_scene.addLineGrid(0xE0A236ff_rgbaf);
   pin::FrameIndex ee_frame_id = model.getFrameId("ee_link");
