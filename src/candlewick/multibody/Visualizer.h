@@ -157,6 +157,14 @@ public:
                    std::optional<Vector3> scale = std::nullopt,
                    std::optional<float> vel_scale = std::nullopt);
 
+  /// \brief Add visualization for the body forces expressed at the local frame
+  /// of a joint.
+  /// \param frame_id Model frame index.
+  /// \param force Force value.
+  /// \param lifetime Force arrow lifetime.
+  void setFrameExternalForce(pin::FrameIndex frame_id, const pin::Force &force,
+                             Uint32 lifetime = 5u);
+
   /// \brief Remove all frame visualizations.
   void removeFramesViz();
 

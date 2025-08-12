@@ -29,6 +29,7 @@ void exposeVisualizer() {
 
   eigenpy::OptionalConverter<ConstVectorRef, std::optional>::registration();
   eigenpy::OptionalConverter<Vector3, std::optional>::registration();
+  eigenpy::OptionalConverter<float, std::optional>::registration();
   eigenpy::detail::NoneToPython<std::nullopt_t>::registration();
 
   bp::class_<Visualizer::Config>("VisualizerConfig", bp::init<>("self"_a))
@@ -79,6 +80,9 @@ void exposeVisualizer() {
             "scale"_a = std::nullopt, "vel_scale"_a = std::nullopt),
            "Add visualization (triad and frame velocity) for the given frame "
            "by ID.")
+      .def("setFrameExternalForce", &Visualizer::setFrameExternalForce,
+           ("self"_a, "frame_id", "force", "lifetime"_a = 5u),
+           "Add visualization of the body forces at a frame.")
       .def("removeFramesViz", &Visualizer::removeFramesViz, ("self"_a),
            "Remove visualization for all frames.")
       .def("getDebugFrames", &visualizer_get_frame_debugs, ("self"_a),

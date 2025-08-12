@@ -2,10 +2,19 @@
 
 #include "Multibody.h"
 #include "../core/DebugScene.h"
+#include <pinocchio/spatial/force.hpp>
 
 namespace candlewick::multibody {
 
-/// \brief A debug system for use with Pinocchio geometries.
+/// \brief Display an external force using an arrow.
+/// This is a transient component which has its own lifetime.
+struct ExternalForceComponent {
+  pin::FrameIndex frame_id;     //< Frame at which the force applies
+  Forcef force{Forcef::Zero()}; //< Force value
+  int lifetime = 1;             //< Arrow lifetime
+};
+
+/// \brief A debug system for use with Pinocchio models and geometries.
 ///
 /// Supports drawing a triad for a frame. Member \ref pinData must
 /// refer to an existing pinocchio::Data object at all times.

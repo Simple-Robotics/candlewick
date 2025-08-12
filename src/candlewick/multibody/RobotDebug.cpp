@@ -35,9 +35,9 @@ void RobotDebugSystem::update() {
     auto view = reg.view<const PinFrameComponent, const DebugMeshComponent,
                          TransformComponent>();
     for (auto &&[ent, frame_id, dmc, tr] : view.each()) {
-      Mat4f pose{m_robotData->oMf[frame_id].cast<float>()};
+      const SE3f pose = m_robotData->oMf[frame_id].cast<float>();
       auto D = dmc.scale.homogeneous().asDiagonal();
-      tr.noalias() = pose * D;
+      tr.noalias() = pose.toHomogeneousMatrix() * D;
     }
   }
 
@@ -63,6 +63,41 @@ void RobotDebugSystem::update() {
       R.applyOnTheRight(R2);
     }
   }
+
+  {
+    auto view = reg.view<const ExternalForceComponent, const DebugMeshComponent,
+                         TransformComponent>();
+    for (auto &&[ent, arrow, dmc, tr] : view.each()) {
+      pin::FrameIndex frame_id = arrow.frame_id;
+      const SE3f pose = m_robotData->oMf[frame_id].cast<float>();
+      tr = pose.toHomogeneousMatrix();
+
+      const auto &f = arrow.force;
+
+      // base scale
+      Float3 scale = dmc.scale;
+      scale.z() *= std::tanh(f.linear().norm());
+
+      auto quat = Quaternionf::FromTwoVectors(Float3::UnitZ(), f.linear());
+      Eigen::Ref<Mat3f> R = tr.topLeftCorner<3, 3>();
+      Mat3f R2 = quat.toRotationMatrix() * scale.asDiagonal();
+      R.applyOnTheRight(R2);
+    }
+  }
+
+  // cleanup expired force arrows
+  {
+    auto view = reg.group<ExternalForceComponent>();
+    for (auto [ent, arrow] : view.each()) {
+      if (--arrow.lifetime <= 0) {
+#ifndef NDEBUG
+        SDL_Log("Force arrow for frame %zu has expired... destroy.",
+                arrow.frame_id);
+#endif
+        reg.destroy(ent);
+      }
+    }
+  }
 }
 
 template <class... Ts>
@@ -76,7 +111,8 @@ void destroy_debug_entities_from_types(entt::registry &reg) {
 
 void RobotDebugSystem::destroyEntities() {
   destroy_debug_entities_from_types<const PinFrameComponent,
-                                    const PinFrameVelocityComponent>(
+                                    const PinFrameVelocityComponent,
+                                    const ExternalForceComponent>(
       m_scene.registry());
 }
 

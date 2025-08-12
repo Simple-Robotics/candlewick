@@ -273,6 +273,29 @@ void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity,
         id, vel_scale.value_or(RobotDebugSystem::DEFAULT_VEL_SCALE));
 }
 
+void Visualizer::setFrameExternalForce(pin::FrameIndex frame_id,
+                                       const pin::Force &force_,
+                                       Uint32 initial_lifetime) {
+  Forcef force = force_.cast<float>();
+  auto view = registry.group<ExternalForceComponent>();
+  for (auto &&[ent, arrow] : view.each()) {
+    if (arrow.frame_id == frame_id) {
+      arrow.force = force;
+      arrow.lifetime++;
+      return;
+    }
+  }
+
+  // otherwise, create the arrow
+#ifndef NDEBUG
+  SDL_Log("Force arrow not found for frame %zu, adding arrow with lifetime %u",
+          frame_id, initial_lifetime);
+#endif
+  auto ent = debugScene.addArrow();
+  registry.emplace<ExternalForceComponent>(ent, frame_id, force,
+                                           initial_lifetime);
+}
+
 void Visualizer::removeFramesViz() {
   assert(m_robotDebug);
   m_robotDebug->destroyEntities();
