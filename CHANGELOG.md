@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- core : Add `LambertMaterial`
-- multibody/Visualizer : remove default world triad
-  * user must add it explicitly
-- multibody/Visualizer : pass scale to addFrameViz()
+- multibody : enable displaying forces applies to frame (with lifetime) (https://github.com/Simple-Robotics/candlewick/pull/93)
+- core/DebugScene : add function to add arrow entities (https://github.com/Simple-Robotics/candlewick/pull/93)
+- core : Add `LambertMaterial` (https://github.com/Simple-Robotics/candlewick/pull/92)
+- multibody/Visualizer : remove default world triad (https://github.com/Simple-Robotics/candlewick/pull/92)
+  * (user must add it explicitly)
+- multibody/Visualizer : pass scale to addFrameViz() (https://github.com/Simple-Robotics/candlewick/pull/92)
+- core/DebugScene : ensure we re-use `Mesh` objects effectively (https://github.com/Simple-Robotics/candlewick/pull/92)
 
 ## [0.8.0] - 2025-07-25
 

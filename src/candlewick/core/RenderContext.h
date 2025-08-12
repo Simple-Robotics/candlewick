@@ -42,20 +42,12 @@ struct RenderContext {
 
   /// \brief Wait until swapchain is available, then acquire it.
   /// \sa acquireSwapchain()
-  bool waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
-    assert(SDL_IsMainThread());
-    return SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, window,
-                                                 &swapchain, NULL, NULL);
-  }
+  bool waitAndAcquireSwapchain(CommandBuffer &command_buffer);
 
   /// \brief Acquire GPU swapchain.
   /// \warning This can only be called from the main thread (see SDL docs for
   /// the meaning of "main thread").
-  bool acquireSwapchain(CommandBuffer &command_buffer) {
-    assert(SDL_IsMainThread());
-    return SDL_AcquireGPUSwapchainTexture(command_buffer, window, &swapchain,
-                                          NULL, NULL);
-  }
+  bool acquireSwapchain(CommandBuffer &command_buffer);
 
   bool waitForSwapchain() { return SDL_WaitForGPUSwapchain(device, window); }
 

@@ -21,6 +21,18 @@ RenderContext::RenderContext(Device &&device_, Window &&window_,
   createDepthTexture(suggested_depth_format);
 }
 
+bool RenderContext::waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
+  assert(SDL_IsMainThread());
+  return SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, window,
+                                               &swapchain, NULL, NULL);
+}
+
+bool RenderContext::acquireSwapchain(CommandBuffer &command_buffer) {
+  assert(SDL_IsMainThread());
+  return SDL_AcquireGPUSwapchainTexture(command_buffer, window, &swapchain,
+                                        NULL, NULL);
+}
+
 void RenderContext::createDepthTexture(
     SDL_GPUTextureFormat suggested_depth_format) {
   auto [width, height] = window.size();
