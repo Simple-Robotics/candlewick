@@ -98,7 +98,7 @@ public:
   /// \brief Add a basic line grid.
   /// \param color Grid color.
   std::tuple<entt::entity, DebugMeshComponent &>
-  addLineGrid(const Float4 &color = Float4::Ones());
+  addLineGrid(const Float4 &color = 0xff9b21ff_rgbaf);
 
   /// \brief Add an arrow debug entity.
   entt::entity addArrow(const Float4 &color = 0xea2502ff_rgbaf);
