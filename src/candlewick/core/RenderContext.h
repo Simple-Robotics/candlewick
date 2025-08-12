@@ -56,7 +56,12 @@ struct RenderContext {
   }
 
   /// \brief Check if a depth texture was created.
-  bool hasDepthTexture() const { return depth_texture.hasValue(); }
+  inline bool hasDepthTexture() const { return depth_texture.hasValue(); }
+
+  inline void setSwapchainParameters(SDL_GPUSwapchainComposition composition,
+                                     SDL_GPUPresentMode present_mode) {
+    SDL_SetGPUSwapchainParameters(device, window, composition, present_mode);
+  }
 
   SDL_GPUTextureFormat depthFormat() const { return depth_texture.format(); }
 
