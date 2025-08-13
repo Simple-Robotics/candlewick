@@ -2,6 +2,7 @@
 #include "../core/Components.h"
 
 #include <pinocchio/algorithm/frames.hpp>
+#include <SDL3/SDL_timer.h>
 
 #include <imgui.h>
 
@@ -119,15 +120,25 @@ void RobotDebugSystem::destroyEntities() {
       m_scene.registry());
 }
 
+Float4 boostLuminance(const Float4 &color, float factor) {
+  // Simple approximation - proper would use HSV conversion
+  Float3 rgb = color.head<3>();
+  float maxComp = rgb.maxCoeff();
+  if (maxComp > 0) {
+    rgb *= std::min(1.0f, factor * maxComp) / maxComp;
+  }
+  return Float4(rgb.x(), rgb.y(), rgb.z(), color.w());
+}
+
 void RobotDebugSystem::renderDebugGui(const char *title) {
   auto &registry = m_scene.registry();
 
   if (ImGui::CollapsingHeader(title)) {
-    ImGui::SeparatorText("frame placements");
+    char label[64];
+    ImGui::SeparatorText("Frame placements");
     auto view = registry.view<DebugMeshComponent, const PinFrameComponent>();
     for (auto [ent, dmc, fc] : view.each()) {
       auto frame_name = m_robotModel->frames[fc].name.c_str();
-      char label[64];
       SDL_snprintf(label, 64, "frame_%d", int(fc));
       ImGui::PushID(label);
       core_gui::addDebugMesh(dmc);
@@ -136,18 +147,47 @@ void RobotDebugSystem::renderDebugGui(const char *title) {
       ImGui::PopID();
     }
 
-    ImGui::SeparatorText("frame vels.");
+    ImGui::SeparatorText("Frame vels.");
     auto view2 =
         registry.view<DebugMeshComponent, const PinFrameVelocityComponent>();
     for (auto [ent, dmc, fvc] : view2.each()) {
       auto frame_name = m_robotModel->frames[fvc].name.c_str();
-      char label[64];
       SDL_snprintf(label, 64, "frame_vel_%d", int(fvc));
       ImGui::PushID(label);
       core_gui::addDebugMesh(dmc);
       ImGui::SameLine();
       ImGui::Text("%s", frame_name);
       ImGui::PopID();
+    }
+
+    ImGui::SeparatorText("External forces");
+    auto view3 =
+        registry.view<DebugMeshComponent, const ExternalForceComponent>();
+    for (auto [ent, dmc, efc] : view3.each()) {
+      pin::FrameIndex fid = efc.frame_id;
+      auto frame_name = m_robotModel->frames[fid].name.c_str();
+      float magnitude = efc.force.linear().norm();
+
+      SDL_snprintf(label, 64, "frame_force_%zu", fid);
+
+      if (ImGui::Selectable(label, false, ImGuiSelectableFlags_AllowOverlap)) {
+      }
+      bool hovered = ImGui::IsItemHovered();
+      ImGui::SameLine();
+      ImGui::Text("frame %s: %.2f", frame_name, magnitude);
+
+      if (hovered) {
+        ImGui::BeginTooltip();
+        ImGui::Text("Frame: %s (ID: %zu)", frame_name, fid);
+        ImGui::Text("Magnitude: %.3f [N]", magnitude);
+        ImGui::Text("Lifetime: %d frames", efc.lifetime);
+        ImGui::EndTooltip();
+        float lum_factor =
+            1.5f + 1.f * std::sin(0.00973f * float(SDL_GetTicks()));
+        dmc.colors[0] = boostLuminance(efc.orig_color, lum_factor);
+      } else {
+        dmc.colors[0] = efc.orig_color;
+      }
     }
   }
 }

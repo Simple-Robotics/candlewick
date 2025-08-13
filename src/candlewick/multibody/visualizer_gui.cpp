@@ -87,6 +87,10 @@ void Visualizer::guiCallbackImpl() {
     gui::addPinocchioModelInfo(registry, m_model, visualModel());
   }
 
+  if (auto robotDebug = debugScene.getSystem<RobotDebugSystem>("robot"_hs)) {
+    robotDebug->renderDebugGui("Robot debug");
+  }
+
   if (ImGui::CollapsingHeader(
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
           "Screenshots/Video recording"
@@ -140,10 +144,6 @@ void Visualizer::guiCallbackImpl() {
     ImGui::EndChild();
 #endif
   };
-
-  if (auto robotDebug = debugScene.getSystem<RobotDebugSystem>("robot"_hs)) {
-    robotDebug->renderDebugGui("Robot debug");
-  }
 
   ImGui::End();
 }

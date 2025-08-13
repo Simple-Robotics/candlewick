@@ -294,9 +294,9 @@ void Visualizer::setFrameExternalForce(pin::FrameIndex frame_id,
   SDL_Log("Force arrow not found for frame %zu, adding arrow with lifetime %u",
           frame_id, initial_lifetime);
 #endif
-  auto ent = debugScene.addArrow();
+  auto [ent, dmc] = debugScene.addArrow();
   registry.emplace<ExternalForceComponent>(ent, frame_id, force,
-                                           initial_lifetime);
+                                           initial_lifetime, dmc.colors[0]);
 }
 
 void Visualizer::removeFramesViz() {

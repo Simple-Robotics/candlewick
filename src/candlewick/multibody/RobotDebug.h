@@ -12,6 +12,7 @@ struct ExternalForceComponent {
   pin::FrameIndex frame_id;     //< Frame at which the force applies
   Forcef force{Forcef::Zero()}; //< Force value
   int lifetime = 1;             //< Arrow lifetime
+  Float4 orig_color;
 };
 
 /// \brief A debug system for use with Pinocchio models and geometries.
