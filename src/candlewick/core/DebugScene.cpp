@@ -6,6 +6,9 @@
 #include "../primitives/Arrow.h"
 #include "../primitives/Grid.h"
 
+#include <imgui.h>
+#include <magic_enum/magic_enum.hpp>
+
 namespace candlewick {
 
 DebugScene::DebugScene(entt::registry &reg, const RenderContext &renderer)
@@ -177,4 +180,30 @@ void DebugScene::release() {
   m_registry.destroy(view.begin(), view.end());
   m_sharedMeshes.clear();
 }
+
+namespace gui {
+  void addDebugMesh(DebugMeshComponent &dmc, bool enable_pipeline_switch) {
+    ImGui::Checkbox("##enabled", &dmc.enable);
+    Uint32 col_id = 0;
+    ImGuiColorEditFlags color_flags = ImGuiColorEditFlags_NoAlpha |
+                                      ImGuiColorEditFlags_NoSidePreview |
+                                      ImGuiColorEditFlags_NoInputs;
+    char label[32];
+    for (auto &col : dmc.colors) {
+      SDL_snprintf(label, sizeof(label), "##color##%u", col_id);
+      ImGui::SameLine();
+      ImGui::ColorEdit4(label, col.data(), color_flags);
+      col_id++;
+    }
+    if (enable_pipeline_switch) {
+      const char *names[] = {"FILL", "LINE"};
+      static_assert(IM_ARRAYSIZE(names) ==
+                    magic_enum::enum_count<DebugPipelines>());
+      ImGui::SameLine();
+      ImGui::Combo("Mode##pipeline", (int *)&dmc.pipeline_type, names,
+                   IM_ARRAYSIZE(names));
+    }
+  }
+} // namespace gui
+
 } // namespace candlewick

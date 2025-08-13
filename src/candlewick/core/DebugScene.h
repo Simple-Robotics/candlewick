@@ -144,4 +144,9 @@ struct DebugMeshComponent {
   Float3 scale = Float3::Ones();
 };
 
+namespace gui {
+  void addDebugMesh(DebugMeshComponent &dmc,
+                    bool enable_pipeline_switch = true);
+}
+
 } // namespace candlewick

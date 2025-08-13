@@ -355,7 +355,7 @@ int main(int argc, char **argv) {
         static bool show_plane_vis = true;
 
         if (show_about_window)
-          showCandlewickAboutWindow(&show_about_window);
+          gui::showCandlewickAboutWindow(&show_about_window);
         if (show_imgui_window)
           ImGui::ShowAboutWindow(&show_imgui_window);
 
@@ -405,8 +405,8 @@ int main(int argc, char **argv) {
         }
 
         ImGui::SeparatorText("Env. status");
-        guiAddDisableCheckbox("Render plane", registry, plane_entity,
-                              show_plane_vis);
+        gui::addDisableCheckbox("Render plane", registry, plane_entity,
+                                show_plane_vis);
         ImGui::Checkbox("Render grid", &grid.enable);
         ImGui::Checkbox("Render triad", &triad.enable);
         ImGui::Checkbox("Render frustum", &showFrustum);
@@ -429,7 +429,8 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Screenshots");
         static std::string scr_filename;
-        guiAddFileDialog(renderer.window, DialogFileType::IMAGES, scr_filename);
+        gui::addFileDialog(renderer.window, DialogFileType::IMAGES,
+                           scr_filename);
         if (ImGui::Button("Take screenshot")) {
           if (scr_filename.empty())
             generateMediaFilenameFromTimestamp("cdw_screenshot", scr_filename);
@@ -438,11 +439,11 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Robot model");
         ImGui::SetItemTooltip("Information about the displayed robot model.");
-        multibody::guiAddPinocchioModelInfo(registry, model, geom_model);
+        multibody::gui::addPinocchioModelInfo(registry, model, geom_model);
 
         ImGui::SeparatorText("Lights");
-        guiAddLightControls(robot_scene.directionalLight,
-                            robot_scene.numLights());
+        gui::addLightControls(robot_scene.directionalLight,
+                              robot_scene.numLights());
 
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),

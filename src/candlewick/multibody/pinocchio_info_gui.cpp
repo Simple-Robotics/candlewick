@@ -10,11 +10,11 @@
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/geometry.hpp>
 
-namespace candlewick::multibody {
+namespace candlewick::multibody::gui {
 
-void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
-                              const pin::GeometryModel &geom_model,
-                              int table_height_lines) {
+void addPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
+                           const pin::GeometryModel &geom_model,
+                           int table_height_lines) {
   ImGuiTableFlags flags = 0;
   flags |= ImGuiTableFlags_SizingStretchProp;
   flags |= ImGuiTableFlags_RowBg;
@@ -134,10 +134,10 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
       char chk_label[32];
       bool enabled = !disabled.contains(ent);
       SDL_snprintf(chk_label, 32, "###enabled%zu", pin::FrameIndex(id));
-      guiAddDisableCheckbox(chk_label, reg, ent, enabled);
+      ::candlewick::gui::addDisableCheckbox(chk_label, reg, ent, enabled);
     }
     ImGui::EndTable();
   }
 }
 
-} // namespace candlewick::multibody
+} // namespace candlewick::multibody::gui

@@ -17,6 +17,8 @@ struct Shader;
 struct RenderContext;
 struct Window;
 
+struct DirectionalLight;
+
 using coal::AABB;
 
 } // namespace candlewick

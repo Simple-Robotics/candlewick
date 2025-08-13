@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - core/DebugScene : add getters for subsystems
+- [gui] Move all GUI functions into "gui" namespaces
 
 ## [0.9.0] - 2025-08-12
 
