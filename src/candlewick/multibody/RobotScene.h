@@ -66,11 +66,12 @@ namespace multibody {
     void initCompositePipeline(const MeshLayout &layout);
 
   public:
-    enum PipelineType {
+    enum class PipelineType {
       PIPELINE_TRIANGLEMESH,
       PIPELINE_HEIGHTFIELD,
       PIPELINE_POINTCLOUD,
     };
+    using enum PipelineType;
     static constexpr size_t kNumPipelineTypes =
         magic_enum::enum_count<PipelineType>();
     enum VertexUniformSlots : Uint32 { TRANSFORM, LIGHT_MATRICES };
@@ -98,7 +99,7 @@ namespace multibody {
       }
     }
 
-    template <PipelineType t> using pipeline_tag = entt::tag<t>;
+    template <PipelineType T> using pipeline_tag = entt::integral_constant<T>;
 
     struct PipelineConfig {
       // shader set
