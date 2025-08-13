@@ -10,6 +10,7 @@ namespace candlewick {
 /// release the resources of the Scene.
 template <typename T>
 concept Scene = requires(T t, CommandBuffer &cmdBuf, const Camera &camera) {
+  { t.update() } -> std::same_as<void>;
   { t.render(cmdBuf, camera) } -> std::same_as<void>;
   { t.release() } -> std::same_as<void>;
 };

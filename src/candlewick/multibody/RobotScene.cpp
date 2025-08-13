@@ -323,7 +323,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
   m_initialized = true;
 }
 
-void RobotScene::updateTransforms() {
+void RobotScene::update() {
   updateRobotTransforms(registry(), geomModel(), geomData());
 }
 

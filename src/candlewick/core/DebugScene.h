@@ -103,6 +103,7 @@ public:
     return nullptr;
   }
 
+  /// \sa getSystem().
   template <std::derived_from<IDebugSubSystem> T>
   T &tryGetSystem(entt::hashed_string::hash_type name) {
     auto *p = m_subsystems.at(name).get();
@@ -116,10 +117,10 @@ public:
   /// \brief Add a basic line grid.
   /// \param color Grid color.
   std::tuple<entt::entity, DebugMeshComponent &>
-  addLineGrid(const Float4 &color = 0xE0A236ff_rgbaf);
+  addLineGrid(const Float4 &color = 0xE0A236FF_rgbaf);
 
   /// \brief Add an arrow debug entity.
-  entt::entity addArrow(const Float4 &color = 0xea2502ff_rgbaf);
+  entt::entity addArrow(const Float4 &color = 0xEA2502FF_rgbaf);
 
   void update() {
     for (auto [hash, system] : m_subsystems) {

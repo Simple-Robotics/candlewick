@@ -497,8 +497,8 @@ int main(int argc, char **argv) {
     pin::updateFramePlacements(model, pin_data);
     pin::updateGeometryPlacements(model, pin_data, geom_model, geom_data);
     q = qn;
+    robot_scene.update();
     debug_scene.update();
-    robot_scene.updateTransforms();
 
     // acquire command buffer and swapchain
     CommandBuffer command_buffer = renderer.acquireCommandBuffer();

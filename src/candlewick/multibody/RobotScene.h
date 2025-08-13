@@ -175,7 +175,7 @@ namespace multibody {
                     const pin::GeometryData &geom_data);
 
     /// \brief Update the transform component of the GeometryObject entities.
-    void updateTransforms();
+    void update();
 
     void collectOpaqueCastables();
     const std::vector<OpaqueCastable> &castables() const { return m_castables; }

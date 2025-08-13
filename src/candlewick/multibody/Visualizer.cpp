@@ -173,8 +173,8 @@ void Visualizer::displayImpl() {
 
   this->processEvents();
 
+  robotScene.update();
   debugScene.update();
-  robotScene.updateTransforms();
   this->render();
 
   if (m_shouldScreenshot) {
