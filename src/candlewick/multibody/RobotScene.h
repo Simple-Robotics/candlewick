@@ -106,7 +106,6 @@ namespace multibody {
       const char *vertex_shader_path;
       const char *fragment_shader_path;
       SDL_GPUCullMode cull_mode = SDL_GPU_CULLMODE_BACK;
-      SDL_GPUFillMode fill_mode = SDL_GPU_FILLMODE_FILL;
     };
     struct Config {
       struct TrianglePipelineConfig {
@@ -220,11 +219,11 @@ namespace multibody {
     inline bool pbrHasPrepass() const { return m_config.triangle_has_prepass; }
     inline bool shadowsEnabled() const { return m_config.enable_shadows; }
 
+    using pipeline_req_t = std::tuple<MeshLayout, PipelineType, bool>;
     /// \brief Ensure the render pipelines were properly created following the
     /// provided requirements.
-    void ensurePipelinesExist(
-        const std::set<std::tuple<MeshLayout, PipelineType, bool>>
-            &required_pipelines);
+    void
+    ensurePipelinesExist(const std::set<pipeline_req_t> &required_pipelines);
 
     /// \brief Getter for the pinocchio GeometryModel object.
     const pin::GeometryModel &geomModel() const { return *m_geomModel; }
@@ -247,17 +246,22 @@ namespace multibody {
     struct {
       SDL_GPUGraphicsPipeline *triangleMeshOpaque = nullptr;
       SDL_GPUGraphicsPipeline *triangleMeshTransparent = nullptr;
+      SDL_GPUGraphicsPipeline *triangleMeshWireframe = nullptr;
       SDL_GPUGraphicsPipeline *heightfield = nullptr;
       SDL_GPUGraphicsPipeline *pointcloud = nullptr;
       SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
     } m_pipelines;
 
-    SDL_GPUGraphicsPipeline *&routePipeline(PipelineType type,
-                                            bool transparent = false) {
+    SDL_GPUGraphicsPipeline *&routePipeline(PipelineType type, bool transparent,
+                                            bool wireframe = false) {
       switch (type) {
       case PIPELINE_TRIANGLEMESH:
-        return transparent ? m_pipelines.triangleMeshTransparent
-                           : m_pipelines.triangleMeshOpaque;
+        if (transparent)
+          return m_pipelines.triangleMeshTransparent;
+        else if (wireframe)
+          return m_pipelines.triangleMeshWireframe;
+        else
+          return m_pipelines.triangleMeshOpaque;
       case PIPELINE_HEIGHTFIELD:
         return m_pipelines.heightfield;
       case PIPELINE_POINTCLOUD:

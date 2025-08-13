@@ -247,8 +247,7 @@ void RobotScene::initCompositePipeline(const MeshLayout &layout) {
 }
 
 void RobotScene::ensurePipelinesExist(
-    const std::set<std::tuple<MeshLayout, PipelineType, bool>>
-        &required_pipelines) {
+    const std::set<pipeline_req_t> &required_pipelines) {
   if (!gBuffer.initialized()) {
     this->initGBuffer();
   }
@@ -291,7 +290,7 @@ void RobotScene::loadModels(const pin::GeometryModel &geom_model,
 
   // Phase 1. Load robot geometries and collect parameters for creating the
   // required render pipelines.
-  std::set<std::tuple<MeshLayout, PipelineType, bool>> required_pipelines;
+  std::set<pipeline_req_t> required_pipelines;
 
   for (pin::GeomIndex geom_id = 0; geom_id < geom_model.ngeoms; geom_id++) {
 
@@ -570,7 +569,7 @@ void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
     if (current_pipeline_type == PIPELINE_TRIANGLEMESH)
       return;
 
-    auto *pipeline = routePipeline(current_pipeline_type);
+    auto *pipeline = routePipeline(current_pipeline_type, false);
     if (!pipeline)
       return;
     SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
@@ -600,10 +599,14 @@ void RobotScene::release() {
   clearRobotGeometries();
 
   // release pipelines
-  for (auto **pipe :
-       {&m_pipelines.triangleMeshOpaque, &m_pipelines.triangleMeshTransparent,
-        &m_pipelines.heightfield, &m_pipelines.pointcloud,
-        &m_pipelines.wboitComposite}) {
+  for (auto **pipe : {
+           &m_pipelines.triangleMeshOpaque,
+           &m_pipelines.triangleMeshTransparent,
+           &m_pipelines.triangleMeshWireframe,
+           &m_pipelines.heightfield,
+           &m_pipelines.pointcloud,
+           &m_pipelines.wboitComposite,
+       }) {
     if (*pipe)
       SDL_ReleaseGPUGraphicsPipeline(device(), *pipe);
     *pipe = nullptr;
@@ -621,8 +624,8 @@ void RobotScene::release() {
 }
 
 static RobotScene::PipelineConfig
-get_pipeline_config(const RobotScene::Config &cfg,
-                    RobotScene::PipelineType type, bool transparent) {
+getPipelineConfig(const RobotScene::Config &cfg, RobotScene::PipelineType type,
+                  bool transparent) {
   using enum RobotScene::PipelineType;
   switch (type) {
   case PIPELINE_TRIANGLEMESH:
@@ -643,7 +646,7 @@ void RobotScene::createRenderPipeline(const MeshLayout &layout,
 
   SDL_Log("Building pipeline for type %s", magic_enum::enum_name(type).data());
 
-  PipelineConfig pipe_config = get_pipeline_config(m_config, type, transparent);
+  PipelineConfig pipe_config = getPipelineConfig(m_config, type, transparent);
   auto vertexShader =
       Shader::fromMetadata(device(), pipe_config.vertex_shader_path);
   auto fragmentShader =
@@ -670,6 +673,10 @@ void RobotScene::createRenderPipeline(const MeshLayout &layout,
       .fragment_shader = fragmentShader,
       .vertex_input_state = layout,
       .primitive_type = getPrimitiveTopologyForType(type),
+      .rasterizer_state{
+          .fill_mode = SDL_GPU_FILLMODE_FILL,
+          .cull_mode = pipe_config.cull_mode,
+      },
       .depth_stencil_state{
           .compare_op = depth_compare_op,
           .enable_depth_test = true,
@@ -684,52 +691,59 @@ void RobotScene::createRenderPipeline(const MeshLayout &layout,
       },
   };
 
-  if (type == PIPELINE_TRIANGLEMESH && m_config.enable_normal_target) {
-    color_targets[1].format = gBuffer.normalMap.format();
-    desc.target_info.num_color_targets = 2;
-  }
-
-  if (type == PIPELINE_TRIANGLEMESH && transparent) {
-    // modify color targets
-    SDL_zero(color_targets);
-    // Accumulation target with additive blending
-    color_targets[0].format = gBuffer.accumTexture.format();
-    color_targets[0].blend_state = {
-        .src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-        .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-        .color_blend_op = SDL_GPU_BLENDOP_ADD,
-        .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-        .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-        .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
-        .enable_blend = true,
-    };
-
-    // Revealage target with multiplicative blending
-    color_targets[1].format = gBuffer.revealTexture.format();
-    color_targets[1].blend_state = {
-        .src_color_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
-        .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_COLOR,
-        .color_blend_op = SDL_GPU_BLENDOP_ADD,
-        .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
-        .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
-        .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
-        .enable_blend = true,
-    };
-
-    desc.target_info.num_color_targets = 2;
-    desc.depth_stencil_state.enable_depth_write = false;
-  }
-
   if (type == PIPELINE_TRIANGLEMESH) {
+    if (m_config.enable_normal_target) {
+      color_targets[1].format = gBuffer.normalMap.format();
+      desc.target_info.num_color_targets = 2;
+    }
+
+    if (transparent) {
+      // modify color targets
+      SDL_zero(color_targets);
+      // Accumulation target with additive blending
+      color_targets[0].format = gBuffer.accumTexture.format();
+      color_targets[0].blend_state = {
+          .src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+          .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+          .color_blend_op = SDL_GPU_BLENDOP_ADD,
+          .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+          .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+          .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+          .enable_blend = true,
+      };
+
+      // Revealage target with multiplicative blending
+      color_targets[1].format = gBuffer.revealTexture.format();
+      color_targets[1].blend_state = {
+          .src_color_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
+          .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_COLOR,
+          .color_blend_op = SDL_GPU_BLENDOP_ADD,
+          .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
+          .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+          .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+          .enable_blend = true,
+      };
+
+      desc.target_info.num_color_targets = 2;
+      desc.depth_stencil_state.enable_depth_write = false;
+    }
+
     SDL_Log("  > transparency: %s", transparent ? "true" : "false");
     SDL_Log("  > depth compare op: %s",
             magic_enum::enum_name(depth_compare_op).data());
     SDL_Log("  > prepass: %s", had_prepass ? "true" : "false");
   }
-  desc.rasterizer_state.cull_mode = pipe_config.cull_mode;
-  desc.rasterizer_state.fill_mode = pipe_config.fill_mode;
+
   routePipeline(type, transparent) =
       SDL_CreateGPUGraphicsPipeline(device(), &desc);
+
+  // create wireframe pipeline
+  if (type == PIPELINE_TRIANGLEMESH) {
+    desc.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_LINE;
+    auto &pipe = routePipeline(type, transparent, true);
+    if (!pipe)
+      pipe = SDL_CreateGPUGraphicsPipeline(device(), &desc);
+  }
 }
 
 } // namespace candlewick::multibody
