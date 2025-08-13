@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- multibody : integrate wireframe mode switch in Visualizer GUI
 - multibody/RobotDebug : add external forces to debug elts GUI
 - core/DebugScene : add getters for subsystems
 - [gui] Move all GUI functions into "gui" namespaces

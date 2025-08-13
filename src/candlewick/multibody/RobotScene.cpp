@@ -11,6 +11,7 @@
 #include <pinocchio/multibody/data.hpp>
 #include <pinocchio/multibody/geometry.hpp>
 
+#include <ranges>
 #include <magic_enum/magic_enum_utility.hpp>
 #include <magic_enum/magic_enum_switch.hpp>
 
@@ -455,11 +456,6 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
                                            const Camera &camera,
                                            bool transparent) {
 
-  auto *pipeline = routePipeline(PIPELINE_TRIANGLEMESH, transparent);
-  if (!pipeline) {
-    return;
-  }
-
   const Uint32 numLights = shadowPass.numLights();
   // calculate light ubos
   LightArrayUbo lightUbo;
@@ -511,14 +507,15 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
       .pushFragmentUniform(FragmentUniformSlots::SSAO_FLAG, _useSsao)
       .pushFragmentUniform(FragmentUniformSlots::ATLAS_INFO, shadowAtlasUbo);
 
-  SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
-
   auto view =
       m_registry.view<const TransformComponent, const MeshMaterialComponent,
                       pipeline_tag<PIPELINE_TRIANGLEMESH>>(
           entt::exclude<Disable>);
 
-  auto process_entities = [&](const TransformComponent &tr, const auto &obj) {
+  auto process_entities = [&](entt::entity ent) {
+    auto [tr, obj] =
+        m_registry.get<const TransformComponent, const MeshMaterialComponent>(
+            ent);
     const Mat4f modelView = camera.view * tr;
     const Mesh &mesh = obj.mesh;
     Mat4f mvp = viewProj * tr;
@@ -547,10 +544,35 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   };
 
   if (transparent) {
-    (view | m_registry.view<entt::entity>(entt::exclude<Opaque>))
-        .each(process_entities);
+    auto *pipeline = routePipeline(PIPELINE_TRIANGLEMESH, true);
+    if (!pipeline)
+      return;
+    SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+    for (entt::entity ent :
+         view | m_registry.view<entt::entity>(entt::exclude<Opaque>)) {
+      process_entities(ent);
+    }
   } else {
-    (view | m_registry.view<Opaque>()).each(process_entities);
+
+    auto opaques = view | m_registry.view<Opaque>();
+    auto get_filter = [&reg = this->m_registry](RenderMode ref_mode) {
+      return std::views::filter([&reg, ref_mode](entt::entity ent) {
+        return reg.get<const MeshMaterialComponent>(ent).mode == ref_mode;
+      });
+    };
+
+    SDL_GPUGraphicsPipeline *pipeline;
+    pipeline = routePipeline(PIPELINE_TRIANGLEMESH, false, false);
+    SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+    for (auto ent : opaques | get_filter(RenderMode::FILL)) {
+      process_entities(ent);
+    }
+
+    pipeline = routePipeline(PIPELINE_TRIANGLEMESH, false, true);
+    SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+    for (auto ent : opaques | get_filter(RenderMode::LINE)) {
+      process_entities(ent);
+    }
   }
 
   SDL_EndGPURenderPass(render_pass);
