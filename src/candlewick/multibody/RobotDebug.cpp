@@ -1,10 +1,13 @@
 #include "RobotDebug.h"
-
 #include "../core/Components.h"
 
 #include <pinocchio/algorithm/frames.hpp>
 
+#include <imgui.h>
+
 namespace candlewick::multibody {
+namespace core_gui = ::candlewick::gui;
+
 entt::entity RobotDebugSystem::addFrameTriad(pin::FrameIndex frame_id,
                                              const Float3 &scale) {
   entt::registry &reg = m_scene.registry();
@@ -114,6 +117,39 @@ void RobotDebugSystem::destroyEntities() {
                                     const PinFrameVelocityComponent,
                                     const ExternalForceComponent>(
       m_scene.registry());
+}
+
+void RobotDebugSystem::renderDebugGui(const char *title) {
+  auto &registry = m_scene.registry();
+
+  if (ImGui::CollapsingHeader(title)) {
+    ImGui::SeparatorText("frame placements");
+    auto view = registry.view<DebugMeshComponent, const PinFrameComponent>();
+    for (auto [ent, dmc, fc] : view.each()) {
+      auto frame_name = m_robotModel->frames[fc].name.c_str();
+      char label[64];
+      SDL_snprintf(label, 64, "frame_%d", int(fc));
+      ImGui::PushID(label);
+      core_gui::addDebugMesh(dmc);
+      ImGui::SameLine();
+      ImGui::Text("%s", frame_name);
+      ImGui::PopID();
+    }
+
+    ImGui::SeparatorText("frame vels.");
+    auto view2 =
+        registry.view<DebugMeshComponent, const PinFrameVelocityComponent>();
+    for (auto [ent, dmc, fvc] : view2.each()) {
+      auto frame_name = m_robotModel->frames[fvc].name.c_str();
+      char label[64];
+      SDL_snprintf(label, 64, "frame_vel_%d", int(fvc));
+      ImGui::PushID(label);
+      core_gui::addDebugMesh(dmc);
+      ImGui::SameLine();
+      ImGui::Text("%s", frame_name);
+      ImGui::PopID();
+    }
+  }
 }
 
 } // namespace candlewick::multibody

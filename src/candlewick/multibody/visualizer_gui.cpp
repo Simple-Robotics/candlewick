@@ -1,15 +1,18 @@
 #include "Visualizer.h"
-
-#include <string>
+#include "RobotDebug.h"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_log.h>
+
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <magic_enum/magic_enum_flags.hpp>
 
+#include <string>
+
 namespace candlewick::multibody {
 namespace core_gui = ::candlewick::gui;
+using namespace entt::literals;
 
 void guiAddCameraParams(CylindricalCamera &controller,
                         CameraControlParams &params) {
@@ -138,18 +141,8 @@ void Visualizer::guiCallbackImpl() {
 #endif
   };
 
-  if (ImGui::CollapsingHeader("Robot debug")) {
-    auto view = registry.view<DebugMeshComponent, const PinFrameComponent>();
-    for (auto [ent, dmc, fc] : view.each()) {
-      auto frame_name = model().frames[fc].name.c_str();
-      char label[64];
-      SDL_snprintf(label, 64, "frame_%d", int(fc));
-      ImGui::PushID(label);
-      core_gui::addDebugMesh(dmc);
-      ImGui::SameLine();
-      ImGui::Text("%s", frame_name);
-      ImGui::PopID();
-    }
+  if (auto robotDebug = debugScene.getSystem<RobotDebugSystem>("robot"_hs)) {
+    robotDebug->renderDebugGui("Robot debug");
   }
 
   ImGui::End();

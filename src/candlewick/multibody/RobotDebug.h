@@ -41,6 +41,8 @@ struct RobotDebugSystem final : IDebugSubSystem {
 
   void destroyEntities();
 
+  void renderDebugGui(const char *title);
+
   ~RobotDebugSystem() {
     this->destroyEntities();
     this->m_robotModel = nullptr;
