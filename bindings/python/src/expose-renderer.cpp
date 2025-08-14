@@ -18,6 +18,15 @@ void exposeRenderer() {
           "title", +[](const Window &w) { return w.title().data(); },
           ("self"_a));
 
+#define _c(name) value(#name, SDL_GPUSampleCount::name)
+  bp::enum_<SDL_GPUSampleCount>("SampleCount")
+      ._c(SDL_GPU_SAMPLECOUNT_1)
+      ._c(SDL_GPU_SAMPLECOUNT_2)
+      ._c(SDL_GPU_SAMPLECOUNT_4)
+      ._c(SDL_GPU_SAMPLECOUNT_8)
+#undef _c
+      .export_values();
+
   bp::def("get_num_gpu_drivers", SDL_GetNumGPUDrivers,
           "Get number of available GPU drivers.");
 
@@ -46,5 +55,6 @@ void exposeRenderer() {
       .def_readonly("device", &RenderContext::device)
       .def_readonly("window", &RenderContext::window)
       .add_property("hasDepthTexture", &RenderContext::hasDepthTexture)
+      .def("enableMSAA", &RenderContext::enableMSAA, ("self"_a, "samples"))
       .def("disableMSAA", &RenderContext::disableMSAA, ("self"_a));
 }
