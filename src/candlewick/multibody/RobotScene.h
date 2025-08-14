@@ -278,14 +278,6 @@ namespace multibody {
     const pin::GeometryData *m_geomData;
     std::vector<OpaqueCastable> m_castables;
     bool m_initialized;
-    // struct {
-    //   SDL_GPUGraphicsPipeline *triangleMeshOpaque = nullptr;
-    //   SDL_GPUGraphicsPipeline *triangleMeshTransparent = nullptr;
-    //   SDL_GPUGraphicsPipeline *triangleMeshWireframe = nullptr;
-    //   SDL_GPUGraphicsPipeline *heightfield = nullptr;
-    //   SDL_GPUGraphicsPipeline *pointcloud = nullptr;
-    //   SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
-    // } m_pipelines;
     PipelineManager m_pipelines;
     GraphicsPipeline m_wboitComposite{NoInit};
   };
