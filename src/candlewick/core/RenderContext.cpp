@@ -73,6 +73,33 @@ void RenderContext::createRenderTargets(
           magic_enum::enum_name(depthInfo.format).data(), width, height);
 }
 
+void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {
+  auto [width, height] = window.size();
+
+  SDL_GPUTextureCreateInfo msaaColorInfo{
+      .type = SDL_GPU_TEXTURETYPE_2D,
+      .format = colorBuffer.format(),
+      .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET,
+      .width = Uint32(width),
+      .height = Uint32(height),
+      .layer_count_or_depth = 1,
+      .num_levels = 1,
+      .sample_count = samples,
+      .props = 0,
+  };
+  if (!SDL_GPUTextureSupportsSampleCount(device, colorBuffer.format(),
+                                         samples)) {
+    terminate_with_message("Unsupported sample count for MSAA color target.");
+  }
+  colorMsaa = Texture(device, msaaColorInfo, "MSAA color target");
+
+  SDL_GPUTextureCreateInfo msaaDepthInfo = msaaColorInfo;
+  msaaDepthInfo.format =
+      depthBuffer.format(); // same format as resolved (single-sample) texture
+  msaaDepthInfo.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
+  depthMsaa = Texture(device, msaaDepthInfo, "MSAA depth target");
+}
+
 void RenderContext::resolveMSAA(CommandBuffer &command_buffer) {
   if (!msaaEnabled && !colorMsaa.hasValue())
     return;
