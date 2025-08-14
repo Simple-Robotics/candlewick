@@ -63,7 +63,7 @@ public:
 
   auto primitiveType() const noexcept { return m_primitiveType; }
 
-  void bind(SDL_GPURenderPass *render_pass) noexcept {
+  void bind(SDL_GPURenderPass *render_pass) const noexcept {
     SDL_BindGPUGraphicsPipeline(render_pass, m_pipeline);
   }
 
