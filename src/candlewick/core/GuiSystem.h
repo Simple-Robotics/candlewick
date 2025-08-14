@@ -15,7 +15,7 @@ class GuiSystem {
   bool m_initialized = false;
   std::function<void(const RenderContext &)> m_callback;
 
-  bool init(const RenderContext &renderer);
+  bool init();
 
 public:
   using GuiBehavior = std::function<void(const RenderContext &)>;

@@ -118,7 +118,7 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 
   SDL_GPUColorTargetInfo color_target_info;
   SDL_zero(color_target_info);
-  color_target_info.texture = m_renderer.swapchain;
+  color_target_info.texture = m_renderer.colorTarget();
   color_target_info.load_op = SDL_GPU_LOADOP_LOAD;
   color_target_info.store_op = SDL_GPU_STOREOP_STORE;
   SDL_GPUDepthStencilTargetInfo depth_target_info;
@@ -127,7 +127,7 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
   depth_target_info.store_op = SDL_GPU_STOREOP_STORE;
   depth_target_info.stencil_load_op = SDL_GPU_LOADOP_LOAD;
   depth_target_info.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
-  depth_target_info.texture = m_renderer.depth_texture;
+  depth_target_info.texture = m_renderer.depthTarget();
   depth_target_info.cycle = false;
 
   SDL_GPURenderPass *render_pass =

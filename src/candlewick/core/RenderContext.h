@@ -18,22 +18,65 @@ namespace candlewick {
 /// \sa Device
 /// \sa Mesh
 struct RenderContext {
+private:
+  Texture colorMsaa{NoInit};
+  Texture depthMsaa{NoInit};
+  Texture colorBuffer{NoInit}; // no MSAA
+  Texture depthBuffer{NoInit}; // no MSAA
+  bool msaaEnabled = false;
+  SDL_GPUTexture *swapchain{nullptr};
+
+  // void createMsaaTargets(SDL_GPUSampleCount samples) {}
+  void createRenderTargets(SDL_GPUTextureFormat suggested_depth_format);
+
+public:
   Device device;
   Window window;
-  SDL_GPUTexture *swapchain;
-  Texture depth_texture{NoInit};
 
-  RenderContext(NoInitT)
-      : device(NoInit), window(nullptr), swapchain(nullptr) {}
-  /// \brief Constructor without a depth format.
-  RenderContext(Device &&device, Window &&window);
-  /// \brief Constructor with a depth format. This will create a depth texture.
+  RenderContext(NoInitT) : device(NoInit), window(nullptr) {}
+  /// \brief Constructor.
+  /// The last argument (the depth texture format) is optional. By default, it
+  /// is set to INVALID, and no depth texture is created.
   RenderContext(Device &&device, Window &&window,
-                SDL_GPUTextureFormat suggested_depth_format);
+                SDL_GPUTextureFormat suggested_depth_format =
+                    SDL_GPU_TEXTUREFORMAT_INVALID);
 
-  /// \brief Add a depth texture to the rendering context.
-  /// \see hasDepthTexture()
-  void createDepthTexture(SDL_GPUTextureFormat suggested_depth_format);
+  const Texture &colorTarget() const {
+    return (msaaEnabled && colorMsaa.hasValue()) ? colorMsaa : colorBuffer;
+  }
+
+  const Texture &depthTarget() const {
+    return (msaaEnabled && depthMsaa.hasValue()) ? depthMsaa : depthBuffer;
+  }
+
+  SDL_GPUTexture *resolvedColorTarget() const { return colorBuffer; }
+  SDL_GPUTexture *resolvedDepthTarget() const { return depthBuffer; }
+
+  SDL_GPUSampleCount getMsaaSampleCount() const {
+    if (msaaEnabled && colorMsaa.hasValue()) {
+      return colorMsaa.sampleCount();
+    }
+    return SDL_GPU_SAMPLECOUNT_1;
+  }
+
+  void enableMSAA(SDL_GPUSampleCount samples) {
+    if (samples > SDL_GPU_SAMPLECOUNT_1) {
+      // msaaEnabled = true;
+      // createMsaaTargets(samples);
+      // SDL_Log("MSAA enabled with %d samples", samples);
+    } else {
+      disableMSAA();
+    }
+  }
+
+  void disableMSAA() {
+    msaaEnabled = false;
+    colorMsaa.destroy();
+    depthMsaa.destroy();
+    SDL_Log("MSAA disabled.");
+  }
+
+  void resolveMSAA(CommandBuffer &command_buffer);
 
   bool initialized() const { return bool(device); }
 
@@ -49,21 +92,26 @@ struct RenderContext {
   /// the meaning of "main thread").
   bool acquireSwapchain(CommandBuffer &command_buffer);
 
+  /// \brief Wait for the swapchain to be available.
   bool waitForSwapchain() { return SDL_WaitForGPUSwapchain(device, window); }
+
+  /// \brief Present the resolved texture to the swapchain. You must acquire the
+  /// swapchain beforehand.
+  void presentToSwapchain(CommandBuffer &command_buffer);
 
   SDL_GPUTextureFormat getSwapchainTextureFormat() const {
     return SDL_GetGPUSwapchainTextureFormat(device, window);
   }
 
   /// \brief Check if a depth texture was created.
-  inline bool hasDepthTexture() const { return depth_texture.hasValue(); }
+  inline bool hasDepthTexture() const { return depthBuffer.hasValue(); }
 
   inline void setSwapchainParameters(SDL_GPUSwapchainComposition composition,
                                      SDL_GPUPresentMode present_mode) {
     SDL_SetGPUSwapchainParameters(device, window, composition, present_mode);
   }
 
-  SDL_GPUTextureFormat depthFormat() const { return depth_texture.format(); }
+  SDL_GPUTextureFormat depthFormat() const { return depthBuffer.format(); }
 
   void destroy() noexcept;
   ~RenderContext() noexcept { this->destroy(); }

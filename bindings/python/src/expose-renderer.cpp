@@ -11,6 +11,13 @@ void exposeRenderer() {
       .def("driverName", &Device::driverName, ("self"_a))
       .def("shaderFormats", &Device::shaderFormats, ("self"_a));
 
+  bp::class_<Window, boost::noncopyable>("Window", bp::no_init)
+      .def("pixelDensity", &Window::pixelDensity, ("self"_a))
+      .def("displayScale", &Window::displayScale, ("self"_a))
+      .def(
+          "title", +[](const Window &w) { return w.title().data(); },
+          ("self"_a));
+
   bp::def("get_num_gpu_drivers", SDL_GetNumGPUDrivers,
           "Get number of available GPU drivers.");
 
@@ -36,5 +43,8 @@ void exposeRenderer() {
               "Automatically detect the compatible set of shader formats."});
 
   bp::class_<RenderContext, boost::noncopyable>("RenderContext", bp::no_init)
-      .def_readonly("device", &RenderContext::device);
+      .def_readonly("device", &RenderContext::device)
+      .def_readonly("window", &RenderContext::window)
+      .add_property("hasDepthTexture", &RenderContext::hasDepthTexture)
+      .def("disableMSAA", &RenderContext::disableMSAA, ("self"_a));
 }

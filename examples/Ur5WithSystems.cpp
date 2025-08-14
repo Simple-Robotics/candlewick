@@ -214,7 +214,7 @@ static void screenshot_button_callback(RenderContext &renderer,
   renderer.waitAndAcquireSwapchain(command_buffer);
 
   SDL_Log("Saving screenshot at %s", filename);
-  media::saveTextureToFile(command_buffer, device, pool, renderer.swapchain,
+  media::saveTextureToFile(command_buffer, device, pool, renderer.colorTarget(),
                            renderer.getSwapchainTextureFormat(), wWidth,
                            wHeight, filename);
 }
@@ -331,14 +331,14 @@ int main(int argc, char **argv) {
   robot_debug.addFrameVelocityArrow(ee_frame_id);
 
   DepthPass depthPass(renderer.device, plane_obj.mesh.layout(),
-                      renderer.depth_texture,
+                      renderer.depthTarget(),
                       {SDL_GPU_CULLMODE_NONE, 0.05f, 0.f, true, false});
   auto &shadowPassInfo = robot_scene.shadowPass;
   auto shadowDebugPass =
       DepthDebugPass::create(renderer, shadowPassInfo.shadowMap);
 
   auto depthDebugPass =
-      DepthDebugPass::create(renderer, renderer.depth_texture);
+      DepthDebugPass::create(renderer, renderer.depthTarget());
   DepthDebugPass::VizStyle depth_mode = DepthDebugPass::VIZ_GRAYSCALE;
 
   FrustumBoundsDebugSystem frustumBoundsDebug{registry, renderer};
@@ -541,15 +541,15 @@ int main(int argc, char **argv) {
       continue;
     }
 
+    renderer.presentToSwapchain(command_buffer);
     command_buffer.submit();
 
     if (performRecording) {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
       CommandBuffer command_buffer = renderer.acquireCommandBuffer();
-      auto swapchain_format = renderer.getSwapchainTextureFormat();
-      recorder.writeTextureToVideoFrame(command_buffer, renderer.device,
-                                        transfer_buffer_pool,
-                                        renderer.swapchain, swapchain_format);
+      recorder.writeTextureToVideoFrame(
+          command_buffer, renderer.device, transfer_buffer_pool,
+          renderer.colorTarget(), renderer.getSwapchainTextureFormat());
 #endif
     }
     if (screenshot_filename) {
@@ -557,6 +557,7 @@ int main(int argc, char **argv) {
                                  screenshot_filename);
       screenshot_filename = nullptr;
     }
+
     frameNo++;
   }
 

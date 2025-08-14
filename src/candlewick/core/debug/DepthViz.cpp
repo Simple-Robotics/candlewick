@@ -60,7 +60,7 @@ void renderDepthDebug(const RenderContext &renderer,
                       const DepthDebugPass::Options &opts) {
   SDL_GPUColorTargetInfo color_target;
   SDL_zero(color_target);
-  color_target.texture = renderer.swapchain;
+  color_target.texture = renderer.colorTarget();
   color_target.clear_color = {0., 0., 0., 1.};
   color_target.load_op = SDL_GPU_LOADOP_CLEAR;
   color_target.store_op = SDL_GPU_STOREOP_STORE;

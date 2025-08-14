@@ -154,7 +154,7 @@ namespace ssao {
 
   SsaoPass::SsaoPass(const RenderContext &renderer, SDL_GPUTexture *normalMap)
       : _device(renderer.device)
-      , inDepthMap(renderer.depth_texture)
+      , inDepthMap(renderer.depthTarget())
       , inNormalMap(normalMap) {
     const auto &device = renderer.device;
 

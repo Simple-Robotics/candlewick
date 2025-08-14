@@ -67,8 +67,6 @@ int main() {
   Shader vertexShader{device, "VertexNormal.vert", {.uniform_buffers = 1}};
   Shader fragmentShader{device, "VertexNormal.frag", {}};
 
-  SDL_GPUTexture *depthTexture = ctx.depth_texture;
-
   SDL_GPUColorTargetDescription colorTarget;
   SDL_zero(colorTarget);
   colorTarget.format = SDL_GetGPUSwapchainTextureFormat(device, window);
@@ -79,7 +77,7 @@ int main() {
   depthTarget.store_op = SDL_GPU_STOREOP_DONT_CARE;
   depthTarget.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
   depthTarget.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
-  depthTarget.texture = depthTexture;
+  depthTarget.texture = ctx.depthTarget();
   depthTarget.cycle = true;
 
   // create pipeline
@@ -191,10 +189,8 @@ int main() {
       SDL_Log("Failed to acquire swapchain: %s", SDL_GetError());
       break;
     } else {
-      auto *swapchain = ctx.swapchain;
-
       SDL_GPUColorTargetInfo ctinfo{
-          .texture = swapchain,
+          .texture = ctx.colorTarget(),
           .clear_color = SDL_FColor{0., 0., 0., 0.},
           .load_op = SDL_GPU_LOADOP_CLEAR,
           .store_op = SDL_GPU_STOREOP_STORE,
