@@ -80,8 +80,7 @@ inline std::array<int, 2> Window::size() const {
 
 inline std::array<int, 2> Window::sizeInPixels() const {
   int width, height;
-  if (!SDL_GetWindowSizeInPixels(_handle, &width, &height)) {
-  }
+  SDL_GetWindowSizeInPixels(_handle, &width, &height);
   return {width, height};
 }
 
