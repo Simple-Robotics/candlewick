@@ -21,6 +21,7 @@
 #include <set>
 
 namespace candlewick {
+enum class RenderMode;
 
 /// \brief Terminate the application after encountering an invalid enum value.
 template <typename T>
@@ -72,8 +73,6 @@ namespace multibody {
       PIPELINE_POINTCLOUD,
     };
     using enum PipelineType;
-    static constexpr size_t kNumPipelineTypes =
-        magic_enum::enum_count<PipelineType>();
     enum VertexUniformSlots : Uint32 { TRANSFORM, LIGHT_MATRICES };
     enum FragmentUniformSlots : Uint32 {
       MATERIAL,
@@ -131,6 +130,42 @@ namespace multibody {
       bool enable_normal_target = false;
       SDL_GPUSampleCount msaa_samples = SDL_GPU_SAMPLECOUNT_1;
       ShadowPassConfig shadow_config;
+    };
+
+    struct PipelineKey {
+      PipelineType type;
+      bool transparent;
+      RenderMode renderMode;
+
+      auto operator<=>(const PipelineKey &) const = default;
+    };
+    class PipelineManager {
+      std::map<PipelineKey, GraphicsPipeline> m_store;
+
+    public:
+      PipelineManager() : m_store() {}
+
+      bool contains(const PipelineKey &key) const {
+        return m_store.contains(key);
+      }
+
+      PipelineManager(const PipelineManager &) = delete;
+      PipelineManager(PipelineManager &&) = default;
+      PipelineManager &operator=(const PipelineManager &) = delete;
+
+      GraphicsPipeline *get(const PipelineKey &key) {
+        auto it = m_store.find(key);
+        if (it != m_store.cend())
+          return &it->second;
+
+        return nullptr;
+      }
+
+      void set(const PipelineKey &key, GraphicsPipeline &&pipeline) {
+        m_store.emplace(key, std::move(pipeline));
+      }
+
+      void clear() { m_store.clear(); }
     };
 
     std::array<DirectionalLight, kNumLights> directionalLight;
@@ -198,10 +233,10 @@ namespace multibody {
     /// (Pinocchio geometry objects).
     void clearRobotGeometries();
 
-    void createRenderPipeline(const MeshLayout &layout,
-                              SDL_GPUTextureFormat render_target_format,
-                              SDL_GPUTextureFormat depth_stencil_format,
-                              PipelineType type, bool transparent);
+    GraphicsPipeline
+    createRenderPipeline(const PipelineKey &key, const MeshLayout &layout,
+                         SDL_GPUTextureFormat render_target_format,
+                         SDL_GPUTextureFormat depth_stencil_format);
 
     /// \warning Call updateTransforms() before rendering the objects with
     /// this function.
@@ -219,7 +254,7 @@ namespace multibody {
     inline bool pbrHasPrepass() const { return m_config.triangle_has_prepass; }
     inline bool shadowsEnabled() const { return m_config.enable_shadows; }
 
-    using pipeline_req_t = std::tuple<MeshLayout, PipelineType, bool>;
+    using pipeline_req_t = std::tuple<MeshLayout, PipelineKey>;
     /// \brief Ensure the render pipelines were properly created following the
     /// provided requirements.
     void
@@ -243,31 +278,16 @@ namespace multibody {
     const pin::GeometryData *m_geomData;
     std::vector<OpaqueCastable> m_castables;
     bool m_initialized;
-    struct {
-      SDL_GPUGraphicsPipeline *triangleMeshOpaque = nullptr;
-      SDL_GPUGraphicsPipeline *triangleMeshTransparent = nullptr;
-      SDL_GPUGraphicsPipeline *triangleMeshWireframe = nullptr;
-      SDL_GPUGraphicsPipeline *heightfield = nullptr;
-      SDL_GPUGraphicsPipeline *pointcloud = nullptr;
-      SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
-    } m_pipelines;
-
-    SDL_GPUGraphicsPipeline *&routePipeline(PipelineType type, bool transparent,
-                                            bool wireframe = false) {
-      switch (type) {
-      case PIPELINE_TRIANGLEMESH:
-        if (transparent)
-          return m_pipelines.triangleMeshTransparent;
-        else if (wireframe)
-          return m_pipelines.triangleMeshWireframe;
-        else
-          return m_pipelines.triangleMeshOpaque;
-      case PIPELINE_HEIGHTFIELD:
-        return m_pipelines.heightfield;
-      case PIPELINE_POINTCLOUD:
-        return m_pipelines.pointcloud;
-      }
-    }
+    // struct {
+    //   SDL_GPUGraphicsPipeline *triangleMeshOpaque = nullptr;
+    //   SDL_GPUGraphicsPipeline *triangleMeshTransparent = nullptr;
+    //   SDL_GPUGraphicsPipeline *triangleMeshWireframe = nullptr;
+    //   SDL_GPUGraphicsPipeline *heightfield = nullptr;
+    //   SDL_GPUGraphicsPipeline *pointcloud = nullptr;
+    //   SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
+    // } m_pipelines;
+    PipelineManager m_pipelines;
+    GraphicsPipeline m_wboitComposite{NoInit};
   };
   static_assert(Scene<RobotScene>);
 
