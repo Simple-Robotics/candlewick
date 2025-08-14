@@ -185,7 +185,7 @@ void Visualizer::displayImpl() {
   if (m_videoRecorder.isRecording()) {
     CommandBuffer command_buffer{device()};
     m_videoRecorder.writeTextureToVideoFrame(
-        command_buffer, device(), m_transferBuffers, renderer.swapchain,
+        command_buffer, device(), m_transferBuffers, renderer.colorTarget(),
         renderer.getSwapchainTextureFormat());
   }
 #endif
@@ -209,6 +209,8 @@ void Visualizer::render() {
       guiSystem.render(command_buffer);
   }
 
+  // present (blit) main color target to swapchain
+  renderer.presentToSwapchain(command_buffer);
   command_buffer.submit();
 }
 
@@ -217,7 +219,7 @@ void Visualizer::takeScreenshot(std::string_view filename) {
   auto [width, height] = renderer.window.sizeInPixels();
   SDL_Log("Saving %dx%d screenshot at: '%s'", width, height, filename.data());
   media::saveTextureToFile(command_buffer, device(), m_transferBuffers,
-                           renderer.swapchain,
+                           renderer.colorTarget(),
                            renderer.getSwapchainTextureFormat(), Uint16(width),
                            Uint16(height), filename);
 }

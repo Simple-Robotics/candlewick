@@ -94,7 +94,7 @@ int main() {
     depth_target_info.store_op = SDL_GPU_STOREOP_DONT_CARE;
     depth_target_info.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
     depth_target_info.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
-    depth_target_info.texture = ctx.depth_texture;
+    depth_target_info.texture = ctx.depthTarget();
     depth_target_info.cycle = true;
 
     // create pipeline
@@ -200,7 +200,7 @@ int main() {
     } else {
 
       SDL_GPUColorTargetInfo ctinfo{
-          .texture = ctx.swapchain,
+          .texture = ctx.colorTarget(),
           .clear_color = SDL_FColor{0., 0., 0., 0.},
           .load_op = SDL_GPU_LOADOP_CLEAR,
           .store_op = SDL_GPU_STOREOP_STORE,
@@ -234,6 +234,7 @@ int main() {
       SDL_EndGPURenderPass(render_pass);
     }
 
+    ctx.presentToSwapchain(command_buffer);
     command_buffer.submit();
     frameNo++;
   }

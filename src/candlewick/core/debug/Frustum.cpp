@@ -50,12 +50,12 @@ namespace frustum_debug {
                                           CommandBuffer &cmdBuf) {
     SDL_GPUColorTargetInfo color_target;
     SDL_zero(color_target);
-    color_target.texture = renderer.swapchain;
+    color_target.texture = renderer.colorTarget();
     color_target.load_op = SDL_GPU_LOADOP_LOAD;
     color_target.store_op = SDL_GPU_STOREOP_STORE;
     SDL_GPUDepthStencilTargetInfo depth_target;
     SDL_zero(depth_target);
-    depth_target.texture = renderer.depth_texture;
+    depth_target.texture = renderer.depthTarget();
     depth_target.load_op = SDL_GPU_LOADOP_LOAD;
     depth_target.store_op = SDL_GPU_STOREOP_STORE;
     depth_target.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;

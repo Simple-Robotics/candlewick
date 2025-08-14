@@ -12,14 +12,13 @@ namespace candlewick {
 
 GuiSystem::GuiSystem(const RenderContext &renderer, GuiBehavior behav)
     : m_renderer(&renderer), m_callback{std::move(behav)} {
-  if (!init(renderer)) {
+  if (!init()) {
     terminate_with_message("Failed to initialize ImGui for SDLGPU3.");
   }
   m_initialized = true;
 }
 
-bool GuiSystem::init(const RenderContext &renderer) {
-  m_renderer = &renderer;
+bool GuiSystem::init() {
   assert(!m_initialized); // can't initialize twice
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -37,12 +36,12 @@ bool GuiSystem::init(const RenderContext &renderer) {
   ImGui::StyleColorsDark(&style);
   style.WindowBorderSize = 0.5f;
   style.WindowRounding = 6;
-  if (!ImGui_ImplSDL3_InitForSDLGPU(renderer.window)) {
+  if (!ImGui_ImplSDL3_InitForSDLGPU(m_renderer->window)) {
     return false;
   }
   ImGui_ImplSDLGPU3_InitInfo imguiInfo{
-      .Device = renderer.device,
-      .ColorTargetFormat = renderer.getSwapchainTextureFormat(),
+      .Device = m_renderer->device,
+      .ColorTargetFormat = m_renderer->getSwapchainTextureFormat(),
       .MSAASamples = SDL_GPU_SAMPLECOUNT_1,
   };
   return ImGui_ImplSDLGPU3_Init(&imguiInfo);
@@ -60,7 +59,7 @@ void GuiSystem::render(CommandBuffer &cmdBuf) {
   ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, cmdBuf);
 
   SDL_GPUColorTargetInfo info{
-      .texture = m_renderer->swapchain,
+      .texture = m_renderer->colorTarget(),
       .clear_color{},
       .load_op = SDL_GPU_LOADOP_LOAD,
       .store_op = SDL_GPU_STOREOP_STORE,

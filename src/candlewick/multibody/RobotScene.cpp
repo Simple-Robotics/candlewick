@@ -372,14 +372,14 @@ getRenderPass(const RenderContext &renderer, CommandBuffer &command_buffer,
               bool has_normals_target, const RobotScene::GBuffer &gbuffer) {
   SDL_GPUColorTargetInfo color_targets[2];
   SDL_zero(color_targets);
-  color_targets[0].texture = renderer.swapchain;
+  color_targets[0].texture = renderer.colorTarget();
   color_targets[0].load_op = color_load_op;
   color_targets[0].store_op = SDL_GPU_STOREOP_STORE;
   color_targets[0].cycle = false;
 
   SDL_GPUDepthStencilTargetInfo depth_target;
   SDL_zero(depth_target);
-  depth_target.texture = renderer.depth_texture;
+  depth_target.texture = renderer.depthTarget();
   depth_target.clear_depth = 1.0f;
   depth_target.load_op = depth_load_op;
   depth_target.store_op = SDL_GPU_STOREOP_STORE;
@@ -413,7 +413,7 @@ getTransparentRenderPass(const RenderContext &renderer,
 
   SDL_GPUDepthStencilTargetInfo depth_target;
   SDL_zero(depth_target);
-  depth_target.texture = renderer.depth_texture;
+  depth_target.texture = renderer.depthTarget();
   depth_target.load_op = SDL_GPU_LOADOP_LOAD;
   depth_target.store_op = SDL_GPU_STOREOP_STORE;
 
@@ -427,7 +427,7 @@ void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
 
   SDL_GPUColorTargetInfo target;
   SDL_zero(target);
-  target.texture = m_renderer.swapchain;
+  target.texture = m_renderer.colorTarget();
   // op is LOAD - we want to keep results from opaque pass
   target.load_op = SDL_GPU_LOADOP_LOAD;
   target.store_op = SDL_GPU_STOREOP_STORE;

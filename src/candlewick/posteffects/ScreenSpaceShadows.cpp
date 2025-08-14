@@ -12,9 +12,8 @@ namespace candlewick {
 namespace effects {
   ScreenSpaceShadowPass::ScreenSpaceShadowPass(const RenderContext &renderer,
                                                const Config &config)
-      : config(config) {
+      : config(config), depthTexture(renderer.depthTarget()) {
     const Device &device = renderer.device;
-    this->depthTexture = renderer.depth_texture;
 
     auto vertexShader = Shader::fromMetadata(device, "ShadowCast.vert");
     auto fragmentShader =

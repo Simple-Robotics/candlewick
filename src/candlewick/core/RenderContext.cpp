@@ -7,18 +7,13 @@
 #include <SDL3/SDL_log.h>
 
 namespace candlewick {
-RenderContext::RenderContext(Device &&device_, Window &&window_)
-    : device(std::move(device_))
-    , window(std::move(window_))
-    , swapchain(nullptr) {
-  if (!SDL_ClaimWindowForGPUDevice(device, window))
-    throw RAIIException(SDL_GetError());
-}
-
 RenderContext::RenderContext(Device &&device_, Window &&window_,
                              SDL_GPUTextureFormat suggested_depth_format)
-    : RenderContext(std::move(device_), std::move(window_)) {
-  createDepthTexture(suggested_depth_format);
+    : device(std::move(device_)), window(std::move(window_)) {
+  if (!SDL_ClaimWindowForGPUDevice(device, window))
+    throw RAIIException(SDL_GetError());
+
+  createRenderTargets(suggested_depth_format);
 }
 
 bool RenderContext::waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
@@ -33,15 +28,14 @@ bool RenderContext::acquireSwapchain(CommandBuffer &command_buffer) {
                                         NULL, NULL);
 }
 
-void RenderContext::createDepthTexture(
+void RenderContext::createRenderTargets(
     SDL_GPUTextureFormat suggested_depth_format) {
   auto [width, height] = window.size();
 
-  SDL_GPUTextureCreateInfo texInfo{
+  SDL_GPUTextureCreateInfo colorInfo{
       .type = SDL_GPU_TEXTURETYPE_2D,
-      .format = suggested_depth_format,
-      .usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET |
-               SDL_GPU_TEXTUREUSAGE_SAMPLER,
+      .format = getSwapchainTextureFormat(),
+      .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
       .width = Uint32(width),
       .height = Uint32(height),
       .layer_count_or_depth = 1,
@@ -49,30 +43,94 @@ void RenderContext::createDepthTexture(
       .sample_count = SDL_GPU_SAMPLECOUNT_1,
       .props = 0,
   };
+  colorBuffer = Texture(device, colorInfo, "Main color target");
+
+  if (suggested_depth_format == SDL_GPU_TEXTUREFORMAT_INVALID)
+    return;
+
+  SDL_GPUTextureCreateInfo depthInfo = colorInfo;
+  depthInfo.format = suggested_depth_format;
+  depthInfo.usage =
+      SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
+
   SDL_GPUTextureFormat depth_format_fallbacks[] = {
       // supported on macOS, supports SAMPLER usage
       SDL_GPU_TEXTUREFORMAT_D16_UNORM,
       // not sure about SAMPLER usage on macOS
       SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
   };
+
   size_t try_idx = 0;
-  while (!SDL_GPUTextureSupportsFormat(device, texInfo.format, texInfo.type,
-                                       texInfo.usage) &&
+  while (!SDL_GPUTextureSupportsFormat(device, depthInfo.format, depthInfo.type,
+                                       depthInfo.usage) &&
          try_idx < std::size(depth_format_fallbacks)) {
-    texInfo.format = depth_format_fallbacks[try_idx];
+    depthInfo.format = depth_format_fallbacks[try_idx];
     try_idx++;
   }
-  depth_texture = Texture(this->device, texInfo);
+
+  depthBuffer = Texture(this->device, depthInfo, "Main depth target");
   SDL_Log("Created depth texture of format %s, size %d x %d\n",
-          magic_enum::enum_name(texInfo.format).data(), width, height);
-  SDL_SetGPUTextureName(device, depth_texture, "Main depth texture");
+          magic_enum::enum_name(depthInfo.format).data(), width, height);
+}
+
+void RenderContext::resolveMSAA(CommandBuffer &command_buffer) {
+  if (!msaaEnabled && !colorMsaa.hasValue())
+    return;
+  SDL_GPUBlitInfo colorBlit{
+      .source = colorMsaa.blitRegion(0, 0),
+      .destination = colorBuffer.blitRegion(0, 0),
+      .load_op = SDL_GPU_LOADOP_DONT_CARE,
+      .clear_color = {},
+      .flip_mode = SDL_FLIP_NONE,
+      .filter = SDL_GPU_FILTER_LINEAR,
+      .cycle = false,
+  };
+  SDL_BlitGPUTexture(command_buffer, &colorBlit);
+
+  SDL_GPUBlitInfo depthBlit{
+      .source = depthMsaa.blitRegion(0, 0),
+      .destination = depthBuffer.blitRegion(0, 0),
+      .load_op = SDL_GPU_LOADOP_DONT_CARE,
+      .clear_color = {},
+      .flip_mode = SDL_FLIP_NONE,
+      .filter = SDL_GPU_FILTER_LINEAR,
+      .cycle = false,
+  };
+  SDL_BlitGPUTexture(command_buffer, &depthBlit);
+}
+
+void RenderContext::presentToSwapchain(CommandBuffer &command_buffer) {
+  // NOTE: we always present the resolved color buffer (whether MSAA or not)
+  auto [w, h] = window.size();
+
+  SDL_GPUBlitInfo blit{
+      .source = colorBuffer.blitRegion(0, 0),
+      .destination{
+          .texture = swapchain,
+          .mip_level = 0,
+          .layer_or_depth_plane = 0,
+          .x = 0,
+          .y = 0,
+          .w = Uint32(w),
+          .h = Uint32(h),
+      },
+      .load_op = SDL_GPU_LOADOP_DONT_CARE,
+      .clear_color = {},
+      .flip_mode = SDL_FLIP_NONE,
+      .filter = SDL_GPU_FILTER_LINEAR,
+      .cycle = false,
+  };
+  SDL_BlitGPUTexture(command_buffer, &blit);
 }
 
 void RenderContext::destroy() noexcept {
   if (device && window) {
     SDL_ReleaseWindowFromGPUDevice(device, window);
   }
-  depth_texture.destroy();
+  colorMsaa.destroy();
+  depthMsaa.destroy();
+  colorBuffer.destroy();
+  depthBuffer.destroy();
   window.destroy();
   device.destroy();
 }
