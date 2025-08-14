@@ -26,6 +26,7 @@
 #include "Tags.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "GraphicsPipeline.h"
 #include "math_types.h"
 #include "LightUniforms.h"
 
@@ -56,10 +57,11 @@ public:
     float depth_bias_slope_factor;
     bool enable_depth_bias;
     bool enable_depth_clip;
+    const char *pipeline_name;
   };
 
   SDL_GPUTexture *depthTexture = nullptr;
-  SDL_GPUGraphicsPipeline *pipeline = nullptr;
+  GraphicsPipeline pipeline{NoInit};
 
   DepthPass(NoInitT) {}
 
@@ -86,7 +88,8 @@ public:
   /// \param depth_texture %Texture object.
   /// \param config Configuration.
   DepthPass(const Device &device, const MeshLayout &layout,
-            const Texture &depth_texture, const Config &config = {});
+            const Texture &texture, const Config &config = {})
+      : DepthPass(device, layout, texture, texture.format(), config) {}
 
   DepthPass(const DepthPass &) = delete;
   DepthPass &operator=(const DepthPass &) = delete;
@@ -98,6 +101,7 @@ public:
 
   /// Release the pass resources.
   void release() noexcept;
+  /// Class destructor.
   ~DepthPass() noexcept { this->release(); }
 };
 
@@ -120,8 +124,8 @@ struct ShadowPassConfig {
 /// The user has to take care of setting the "cameras" corresponding to the
 /// actual lights.
 class ShadowMapPass {
-  SDL_GPUDevice *_device = nullptr;
-  Uint32 _numLights = 0;
+  SDL_GPUDevice *m_device = nullptr;
+  Uint32 m_numLights = 0;
 
   void configureAtlasRegions(const ShadowPassConfig &config);
 
@@ -136,7 +140,7 @@ public:
   };
   /// actually a texture atlas
   Texture shadowMap{NoInit};
-  SDL_GPUGraphicsPipeline *pipeline = nullptr;
+  GraphicsPipeline pipeline{NoInit};
   SDL_GPUSampler *sampler = nullptr;
   std::array<Camera, kNumLights> cam;
   /// regions of the atlas
@@ -157,7 +161,7 @@ public:
   ShadowMapPass &operator=(ShadowMapPass &&other) noexcept;
 
   bool initialized() const {
-    return (pipeline != nullptr) && (sampler != nullptr);
+    return pipeline.initialized() && (sampler != nullptr);
   }
 
   void render(CommandBuffer &cmdBuf, std::span<const OpaqueCastable> castables);
@@ -165,7 +169,7 @@ public:
   void release() noexcept;
   ~ShadowMapPass() noexcept { this->release(); }
 
-  auto numLights() const noexcept { return _numLights; }
+  auto numLights() const noexcept { return m_numLights; }
 };
 
 /// \addtogroup depth_pass

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - core : add RAII class `GraphicsPipeline`
+- core/DepthAndShadowPass : use new RAII `GraphicsPipeline`
 - multibody : integrate wireframe mode switch in Visualizer GUI
 - multibody/RobotDebug : add external forces to debug elts GUI
 - core/DebugScene : add getters for subsystems
