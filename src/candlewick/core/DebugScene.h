@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene.h"
+#include "GraphicsPipeline.h"
 #include "Mesh.h"
 #include "RenderContext.h"
 #include "math_types.h"
@@ -50,8 +51,8 @@ struct DebugMeshComponent;
 class DebugScene {
   entt::registry &m_registry;
   const RenderContext &m_renderer;
-  SDL_GPUGraphicsPipeline *m_trianglePipeline{nullptr};
-  SDL_GPUGraphicsPipeline *m_linePipeline{nullptr};
+  GraphicsPipeline m_trianglePipeline;
+  GraphicsPipeline m_linePipeline;
   entt::dense_map<entt::hashed_string::hash_type,
                   std::unique_ptr<IDebugSubSystem>>
       m_subsystems;

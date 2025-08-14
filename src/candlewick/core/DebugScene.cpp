@@ -14,8 +14,8 @@ namespace candlewick {
 DebugScene::DebugScene(entt::registry &reg, const RenderContext &renderer)
     : m_registry(reg)
     , m_renderer(renderer)
-    , m_trianglePipeline(nullptr)
-    , m_linePipeline(nullptr)
+    , m_trianglePipeline(NoInit)
+    , m_linePipeline(NoInit)
     , m_sharedMeshes() {
   this->initializeSharedMeshes();
 }
@@ -23,13 +23,10 @@ DebugScene::DebugScene(entt::registry &reg, const RenderContext &renderer)
 DebugScene::DebugScene(DebugScene &&other)
     : m_registry(other.m_registry)
     , m_renderer(other.m_renderer)
-    , m_trianglePipeline(other.m_trianglePipeline)
-    , m_linePipeline(other.m_linePipeline)
+    , m_trianglePipeline(std::move(other.m_trianglePipeline))
+    , m_linePipeline(std::move(other.m_linePipeline))
     , m_subsystems(std::move(other.m_subsystems))
-    , m_sharedMeshes(std::move(other.m_sharedMeshes)) {
-  other.m_trianglePipeline = nullptr;
-  other.m_linePipeline = nullptr;
-}
+    , m_sharedMeshes(std::move(other.m_sharedMeshes)) {}
 
 void DebugScene::initializeSharedMeshes() {
   {
@@ -80,7 +77,7 @@ DebugScene::addArrow(const Float4 &color) {
 }
 
 void DebugScene::setupPipelines(const MeshLayout &layout) {
-  if (m_linePipeline && m_trianglePipeline)
+  if (m_linePipeline.initialized() && m_trianglePipeline.initialized())
     return;
   auto vertexShader = Shader::fromMetadata(device(), "Hud3dElement.vert");
   auto fragmentShader = Shader::fromMetadata(device(), "Hud3dElement.frag");
@@ -98,6 +95,7 @@ void DebugScene::setupPipelines(const MeshLayout &layout) {
                         .depth_bias_slope_factor = 0.001f,
                         .enable_depth_bias = true,
                         .enable_depth_clip = true},
+      .multisample_state{},
       .depth_stencil_state{.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL,
                            .enable_depth_test = true,
                            .enable_depth_write = true},
@@ -107,13 +105,13 @@ void DebugScene::setupPipelines(const MeshLayout &layout) {
                    .has_depth_stencil_target = true},
       .props = 0,
   };
-  if (!m_trianglePipeline)
-    m_trianglePipeline = SDL_CreateGPUGraphicsPipeline(device(), &info);
+  if (!m_trianglePipeline.initialized())
+    m_trianglePipeline = GraphicsPipeline(device(), info, "Debug [triangle]");
 
   // re-use
   info.primitive_type = SDL_GPU_PRIMITIVETYPE_LINELIST;
-  if (!m_linePipeline)
-    m_linePipeline = SDL_CreateGPUGraphicsPipeline(device(), &info);
+  if (!m_linePipeline.initialized())
+    m_linePipeline = GraphicsPipeline(device(), info, "Debug [line]");
 }
 
 void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
@@ -146,10 +144,10 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 
     switch (cmd.pipeline_type) {
     case DebugPipelines::TRIANGLE_FILL:
-      SDL_BindGPUGraphicsPipeline(render_pass, m_trianglePipeline);
+      m_trianglePipeline.bind(render_pass);
       break;
     case DebugPipelines::TRIANGLE_LINE:
-      SDL_BindGPUGraphicsPipeline(render_pass, m_linePipeline);
+      m_linePipeline.bind(render_pass);
       break;
     }
 
@@ -168,14 +166,9 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
 }
 
 void DebugScene::release() {
-  if (device() && m_trianglePipeline) {
-    SDL_ReleaseGPUGraphicsPipeline(device(), m_trianglePipeline);
-    m_trianglePipeline = nullptr;
-  }
-  if (device() && m_linePipeline) {
-    SDL_ReleaseGPUGraphicsPipeline(device(), m_linePipeline);
-    m_linePipeline = nullptr;
-  }
+  m_trianglePipeline.release();
+  m_linePipeline.release();
+
   // clean up all DebugMeshComponent objects.
   auto view = m_registry.view<DebugMeshComponent>();
   m_registry.destroy(view.begin(), view.end());
