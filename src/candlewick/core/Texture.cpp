@@ -9,36 +9,38 @@ namespace candlewick {
 
 Texture::Texture(const Device &device, SDL_GPUTextureCreateInfo texture_desc,
                  const char *name)
-    : _device(device)
-    , _texture(nullptr)
-    , _description(std::move(texture_desc)) {
-  if (!(_texture = SDL_CreateGPUTexture(_device, &_description))) {
+    : m_device(device)
+    , m_texture(nullptr)
+    , m_description(std::move(texture_desc)) {
+  if (!(m_texture = SDL_CreateGPUTexture(m_device, &m_description))) {
     std::string msg = std::format("Failed to create texture with format (%s)",
-                                  magic_enum::enum_name(_description.format));
+                                  magic_enum::enum_name(m_description.format));
     if (name)
       msg += std::format(" (name %s)", name);
     throw RAIIException(std::move(msg));
   }
   if (name != nullptr)
-    SDL_SetGPUTextureName(_device, _texture, name);
+    SDL_SetGPUTextureName(m_device, m_texture, name);
 }
 
 Texture::Texture(Texture &&other) noexcept
-    : _device(other._device)
-    , _texture(other._texture)
-    , _description(std::move(other._description)) {
-  other._device = nullptr;
-  other._texture = nullptr;
+    : m_device(other.m_device)
+    , m_texture(other.m_texture)
+    , m_description(std::move(other.m_description)) {
+  other.m_device = nullptr;
+  other.m_texture = nullptr;
 }
 
 Texture &Texture::operator=(Texture &&other) noexcept {
-  this->destroy();
-  _device = other._device;
-  _texture = other._texture;
-  _description = std::move(other._description);
+  if (this != &other) {
+    this->destroy();
+    m_device = other.m_device;
+    m_texture = other.m_texture;
+    m_description = std::move(other.m_description);
 
-  other._device = nullptr;
-  other._texture = nullptr;
+    other.m_device = nullptr;
+    other.m_texture = nullptr;
+  }
   return *this;
 }
 
@@ -47,7 +49,7 @@ SDL_GPUBlitRegion Texture::blitRegion(Uint32 x, Uint32 y,
   CANDLEWICK_ASSERT(layer_or_depth_plane < layerCount(),
                     "layer is higher than layerCount!");
   return {
-      .texture = _texture,
+      .texture = m_texture,
       .mip_level = 0,
       .layer_or_depth_plane = layer_or_depth_plane,
       .x = x,
@@ -63,10 +65,10 @@ Uint32 Texture::textureSize() const {
 }
 
 void Texture::destroy() noexcept {
-  if (_device && _texture) {
-    SDL_ReleaseGPUTexture(_device, _texture);
-    _texture = nullptr;
-    _device = nullptr;
+  if (m_device && m_texture) {
+    SDL_ReleaseGPUTexture(m_device, m_texture);
+    m_texture = nullptr;
+    m_device = nullptr;
   }
 }
 } // namespace candlewick

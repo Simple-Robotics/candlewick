@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- core/Texture.h : add `sampleCount()` getter
 - core : add RAII class `GraphicsPipeline`
 - core : move contents on `Scene.h` into `Core.h` header
 - multibody : better graphics pipeline management using RAII class
