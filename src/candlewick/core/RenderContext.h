@@ -65,9 +65,8 @@ struct RenderContext {
 
   SDL_GPUTextureFormat depthFormat() const { return depth_texture.format(); }
 
-  ~RenderContext() noexcept;
-
-  void destroy() noexcept { this->~RenderContext(); }
+  void destroy() noexcept;
+  ~RenderContext() noexcept { this->destroy(); }
 };
 
 namespace rend {

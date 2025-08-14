@@ -19,7 +19,12 @@ struct Device {
   explicit Device(NoInitT) noexcept;
   explicit Device(SDL_GPUShaderFormat format_flags, bool debug_mode = false);
   Device(const Device &) = delete;
-  Device(Device &&other) noexcept;
+  Device(Device &&other) noexcept {
+    _device = other._device;
+    other._device = nullptr;
+  }
+
+  Device &operator=(const Device &) = delete;
   Device &operator=(Device &&) = delete;
 
   void create(SDL_GPUShaderFormat format_flags, bool debug_mode = false);
@@ -50,10 +55,5 @@ private:
 };
 
 inline Device::Device(NoInitT) noexcept : _device(nullptr) {}
-
-inline Device::Device(Device &&other) noexcept {
-  _device = other._device;
-  other._device = nullptr;
-}
 
 } // namespace candlewick

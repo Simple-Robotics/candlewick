@@ -22,9 +22,11 @@ struct Window {
   }
 
   Window &operator=(Window &&other) noexcept {
-    this->~Window();
-    _handle = other._handle;
-    other._handle = nullptr;
+    if (this != &other) {
+      this->destroy();
+      _handle = other._handle;
+      other._handle = nullptr;
+    }
     return *this;
   }
 

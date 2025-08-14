@@ -68,7 +68,7 @@ void RenderContext::createDepthTexture(
   SDL_SetGPUTextureName(device, depth_texture, "Main depth texture");
 }
 
-RenderContext::~RenderContext() noexcept {
+void RenderContext::destroy() noexcept {
   if (device && window) {
     SDL_ReleaseWindowFromGPUDevice(device, window);
   }
