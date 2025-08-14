@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Scene.h"
 #include "GraphicsPipeline.h"
 #include "Mesh.h"
 #include "RenderContext.h"

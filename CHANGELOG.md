@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - core : add RAII class `GraphicsPipeline`
+- core : move contents on `Scene.h` into `Core.h` header
 - multibody : better graphics pipeline management using RAII class
 - multibody : integrate wireframe mode switch in Visualizer GUI
 - multibody/RobotDebug : add external forces to debug elts GUI

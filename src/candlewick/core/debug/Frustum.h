@@ -74,6 +74,9 @@ public:
   void render(CommandBuffer &cmdBuf, const Camera &camera);
 
   void release() noexcept { pipeline.release(); }
+
+  void update() {}
 };
+static_assert(Scene<FrustumBoundsDebugSystem>);
 
 } // namespace candlewick
