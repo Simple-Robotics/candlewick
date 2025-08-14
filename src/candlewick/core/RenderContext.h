@@ -26,7 +26,7 @@ private:
   bool msaaEnabled = false;
   SDL_GPUTexture *swapchain{nullptr};
 
-  // void createMsaaTargets(SDL_GPUSampleCount samples) {}
+  void createMsaaTargets(SDL_GPUSampleCount samples);
   void createRenderTargets(SDL_GPUTextureFormat suggested_depth_format);
 
 public:
@@ -49,8 +49,8 @@ public:
     return (msaaEnabled && depthMsaa.hasValue()) ? depthMsaa : depthBuffer;
   }
 
-  SDL_GPUTexture *resolvedColorTarget() const { return colorBuffer; }
-  SDL_GPUTexture *resolvedDepthTarget() const { return depthBuffer; }
+  const Texture &resolvedColorTarget() const { return colorBuffer; }
+  const Texture &resolvedDepthTarget() const { return depthBuffer; }
 
   SDL_GPUSampleCount getMsaaSampleCount() const {
     if (msaaEnabled && colorMsaa.hasValue()) {
@@ -111,6 +111,7 @@ public:
     SDL_SetGPUSwapchainParameters(device, window, composition, present_mode);
   }
 
+  SDL_GPUTextureFormat colorFormat() const { return colorBuffer.format(); }
   SDL_GPUTextureFormat depthFormat() const { return depthBuffer.format(); }
 
   void destroy() noexcept;

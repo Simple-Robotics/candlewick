@@ -211,12 +211,12 @@ static void screenshot_button_callback(RenderContext &renderer,
                                        const char *filename) {
   const auto &device = renderer.device;
   CommandBuffer command_buffer{device};
-  renderer.waitAndAcquireSwapchain(command_buffer);
+  renderer.resolveMSAA(command_buffer);
 
   SDL_Log("Saving screenshot at %s", filename);
-  media::saveTextureToFile(command_buffer, device, pool, renderer.colorTarget(),
-                           renderer.getSwapchainTextureFormat(), wWidth,
-                           wHeight, filename);
+  media::saveTextureToFile(command_buffer, device, pool,
+                           renderer.resolvedColorTarget(),
+                           renderer.colorFormat(), wWidth, wHeight, filename);
 }
 
 static const RobotSpec ur_robot_spec =
@@ -549,7 +549,7 @@ int main(int argc, char **argv) {
       CommandBuffer command_buffer = renderer.acquireCommandBuffer();
       recorder.writeTextureToVideoFrame(
           command_buffer, renderer.device, transfer_buffer_pool,
-          renderer.colorTarget(), renderer.getSwapchainTextureFormat());
+          renderer.resolvedColorTarget(), renderer.colorFormat());
 #endif
     }
     if (screenshot_filename) {

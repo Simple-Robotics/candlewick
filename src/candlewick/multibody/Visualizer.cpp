@@ -185,8 +185,8 @@ void Visualizer::displayImpl() {
   if (m_videoRecorder.isRecording()) {
     CommandBuffer command_buffer{device()};
     m_videoRecorder.writeTextureToVideoFrame(
-        command_buffer, device(), m_transferBuffers, renderer.colorTarget(),
-        renderer.getSwapchainTextureFormat());
+        command_buffer, device(), m_transferBuffers,
+        renderer.resolvedColorTarget(), renderer.colorFormat());
   }
 #endif
 }
@@ -201,10 +201,9 @@ void Visualizer::render() {
                              robotScene.directionalLight, castables,
                              worldSceneBounds);
 
-    auto &camera = controller.camera;
-    robotScene.renderOpaque(command_buffer, camera);
-    debugScene.render(command_buffer, camera);
-    robotScene.renderTransparent(command_buffer, camera);
+    robotScene.renderOpaque(command_buffer, controller);
+    debugScene.render(command_buffer, controller);
+    robotScene.renderTransparent(command_buffer, controller);
     if (m_showGui)
       guiSystem.render(command_buffer);
   }
@@ -219,8 +218,8 @@ void Visualizer::takeScreenshot(std::string_view filename) {
   auto [width, height] = renderer.window.sizeInPixels();
   SDL_Log("Saving %dx%d screenshot at: '%s'", width, height, filename.data());
   media::saveTextureToFile(command_buffer, device(), m_transferBuffers,
-                           renderer.colorTarget(),
-                           renderer.getSwapchainTextureFormat(), Uint16(width),
+                           renderer.resolvedColorTarget(),
+                           renderer.colorFormat(), Uint16(width),
                            Uint16(height), filename);
 }
 
