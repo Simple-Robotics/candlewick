@@ -11,6 +11,19 @@
 
 namespace candlewick {
 
+inline constexpr int sdlSampleToValue(SDL_GPUSampleCount samples) {
+  switch (samples) {
+  case SDL_GPU_SAMPLECOUNT_1:
+    return 1;
+  case SDL_GPU_SAMPLECOUNT_2:
+    return 2;
+  case SDL_GPU_SAMPLECOUNT_4:
+    return 4;
+  case SDL_GPU_SAMPLECOUNT_8:
+    return 8;
+  }
+}
+
 /// \brief The RenderContext class provides a rendering context for a graphical
 /// application.
 ///
@@ -20,10 +33,9 @@ namespace candlewick {
 struct RenderContext {
 private:
   Texture colorMsaa{NoInit};
-  Texture depthMsaa{NoInit};
   Texture colorBuffer{NoInit}; // no MSAA
   Texture depthBuffer{NoInit}; // no MSAA
-  bool msaaEnabled = false;
+  bool m_msaaEnabled = false;
   SDL_GPUTexture *swapchain{nullptr};
 
   void createMsaaTargets(SDL_GPUSampleCount samples);
@@ -42,18 +54,17 @@ public:
                     SDL_GPU_TEXTUREFORMAT_INVALID);
 
   const Texture &colorTarget() const {
-    return (msaaEnabled && colorMsaa.hasValue()) ? colorMsaa : colorBuffer;
+    return (m_msaaEnabled && colorMsaa.hasValue()) ? colorMsaa : colorBuffer;
   }
 
-  const Texture &depthTarget() const {
-    return (msaaEnabled && depthMsaa.hasValue()) ? depthMsaa : depthBuffer;
-  }
+  const Texture &depthTarget() const { return depthBuffer; }
 
   const Texture &resolvedColorTarget() const { return colorBuffer; }
-  const Texture &resolvedDepthTarget() const { return depthBuffer; }
+
+  bool msaaEnabled() const { return m_msaaEnabled; }
 
   SDL_GPUSampleCount getMsaaSampleCount() const {
-    if (msaaEnabled && colorMsaa.hasValue()) {
+    if (m_msaaEnabled && colorMsaa.hasValue()) {
       return colorMsaa.sampleCount();
     }
     return SDL_GPU_SAMPLECOUNT_1;
@@ -61,22 +72,20 @@ public:
 
   void enableMSAA(SDL_GPUSampleCount samples) {
     if (samples > SDL_GPU_SAMPLECOUNT_1) {
-      // msaaEnabled = true;
-      // createMsaaTargets(samples);
-      // SDL_Log("MSAA enabled with %d samples", samples);
+      m_msaaEnabled = true;
+      createMsaaTargets(samples);
+      int sample_size = sdlSampleToValue(samples);
+      SDL_Log("MSAA enabled with %d samples", sample_size);
     } else {
       disableMSAA();
     }
   }
 
   void disableMSAA() {
-    msaaEnabled = false;
+    m_msaaEnabled = false;
     colorMsaa.destroy();
-    depthMsaa.destroy();
     SDL_Log("MSAA disabled.");
   }
-
-  void resolveMSAA(CommandBuffer &command_buffer);
 
   bool initialized() const { return bool(device); }
 

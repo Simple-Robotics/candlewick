@@ -92,38 +92,6 @@ void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {
     terminate_with_message("Unsupported sample count for MSAA color target.");
   }
   colorMsaa = Texture(device, msaaColorInfo, "MSAA color target");
-
-  SDL_GPUTextureCreateInfo msaaDepthInfo = msaaColorInfo;
-  msaaDepthInfo.format =
-      depthBuffer.format(); // same format as resolved (single-sample) texture
-  msaaDepthInfo.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
-  depthMsaa = Texture(device, msaaDepthInfo, "MSAA depth target");
-}
-
-void RenderContext::resolveMSAA(CommandBuffer &command_buffer) {
-  if (!msaaEnabled && !colorMsaa.hasValue())
-    return;
-  SDL_GPUBlitInfo colorBlit{
-      .source = colorMsaa.blitRegion(0, 0),
-      .destination = colorBuffer.blitRegion(0, 0),
-      .load_op = SDL_GPU_LOADOP_DONT_CARE,
-      .clear_color = {},
-      .flip_mode = SDL_FLIP_NONE,
-      .filter = SDL_GPU_FILTER_LINEAR,
-      .cycle = false,
-  };
-  SDL_BlitGPUTexture(command_buffer, &colorBlit);
-
-  SDL_GPUBlitInfo depthBlit{
-      .source = depthMsaa.blitRegion(0, 0),
-      .destination = depthBuffer.blitRegion(0, 0),
-      .load_op = SDL_GPU_LOADOP_DONT_CARE,
-      .clear_color = {},
-      .flip_mode = SDL_FLIP_NONE,
-      .filter = SDL_GPU_FILTER_LINEAR,
-      .cycle = false,
-  };
-  SDL_BlitGPUTexture(command_buffer, &depthBlit);
 }
 
 void RenderContext::presentToSwapchain(CommandBuffer &command_buffer) {
@@ -155,7 +123,6 @@ void RenderContext::destroy() noexcept {
     SDL_ReleaseWindowFromGPUDevice(device, window);
   }
   colorMsaa.destroy();
-  depthMsaa.destroy();
   colorBuffer.destroy();
   depthBuffer.destroy();
   window.destroy();

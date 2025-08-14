@@ -211,7 +211,6 @@ static void screenshot_button_callback(RenderContext &renderer,
                                        const char *filename) {
   const auto &device = renderer.device;
   CommandBuffer command_buffer{device};
-  renderer.resolveMSAA(command_buffer);
 
   SDL_Log("Saving screenshot at %s", filename);
   media::saveTextureToFile(command_buffer, device, pool,
