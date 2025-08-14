@@ -124,29 +124,31 @@ namespace ssao {
       , inDepthMap(other.inDepthMap)
       , inNormalMap(other.inNormalMap)
       , texSampler(other.texSampler)
-      , pipeline(other.pipeline)
+      , pipeline(std::move(other.pipeline))
       , ssaoMap(std::move(other.ssaoMap))
       , ssaoNoise(std::move(other.ssaoNoise))
-      , blurPipeline(other.blurPipeline)
+      , blurPipeline(std::move(other.blurPipeline))
       , blurPass1Tex(std::move(other.blurPass1Tex)) {
     other._device = nullptr;
   }
 
   SsaoPass &SsaoPass::operator=(SsaoPass &&other) noexcept {
-    this->release();
+    if (this != &other) {
+      this->release();
 #define _c(name) name = std::move(other.name)
-    _c(_device);
-    _c(inDepthMap);
-    _c(inNormalMap);
-    _c(texSampler);
-    _c(pipeline);
-    _c(ssaoMap);
-    _c(ssaoNoise);
-    _c(blurPipeline);
-    _c(blurPass1Tex);
+      _c(_device);
+      _c(inDepthMap);
+      _c(inNormalMap);
+      _c(texSampler);
+      _c(pipeline);
+      _c(ssaoMap);
+      _c(ssaoNoise);
+      _c(blurPipeline);
+      _c(blurPass1Tex);
 #undef _c
 
-    other._device = nullptr;
+      other._device = nullptr;
+    }
     return *this;
   }
 
@@ -198,11 +200,12 @@ namespace ssao {
                      .num_color_targets = 1,
                      .has_depth_stencil_target = false},
     };
-    pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
+    pipeline = GraphicsPipeline(device, pipeline_desc, "SSAO pipeline");
     auto blurShader = Shader::fromMetadata(device, "SSAOblur.frag");
     SDL_GPUGraphicsPipelineCreateInfo blur_pipeline_desc = pipeline_desc;
     blur_pipeline_desc.fragment_shader = blurShader;
-    blurPipeline = SDL_CreateGPUGraphicsPipeline(device, &blur_pipeline_desc);
+    blurPipeline =
+        GraphicsPipeline(device, blur_pipeline_desc, "SSAO pipeline [blur]");
 
     // Now, we create the noise texture
     Uint32 num_pixels_rows = 4u;
@@ -234,7 +237,7 @@ namespace ssao {
     cmdBuf
         .pushFragmentUniformRaw(0, KERNEL_SAMPLES.data(), SAMPLES_PAYLOAD_BYTES)
         .pushFragmentUniform(1, proj);
-    SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+    pipeline.bind(render_pass);
     SDL_DrawGPUPrimitives(render_pass, 6, 1, 0, 0);
     SDL_EndGPURenderPass(render_pass);
 
@@ -245,7 +248,7 @@ namespace ssao {
       color_info.texture = (i == 0) ? blurPass1Tex : ssaoMap;
 
       render_pass = SDL_BeginGPURenderPass(cmdBuf, &color_info, 1, nullptr);
-      SDL_BindGPUGraphicsPipeline(render_pass, blurPipeline);
+      blurPipeline.bind(render_pass);
 
       cmdBuf.pushFragmentUniform(0, blurDir);
       rend::bindFragmentSamplers(
@@ -264,17 +267,13 @@ namespace ssao {
       if (texSampler)
         SDL_ReleaseGPUSampler(_device, texSampler);
       texSampler = nullptr;
-      if (pipeline)
-        SDL_ReleaseGPUGraphicsPipeline(_device, pipeline);
-      pipeline = nullptr;
       if (ssaoNoise.sampler)
         SDL_ReleaseGPUSampler(_device, ssaoNoise.sampler);
       ssaoNoise.sampler = nullptr;
-      if (blurPipeline)
-        SDL_ReleaseGPUGraphicsPipeline(_device, blurPipeline);
-      blurPipeline = nullptr;
       _device = nullptr;
     }
+    pipeline.release();
+    blurPipeline.release();
     ssaoMap.destroy();
     ssaoNoise.tex.destroy();
     blurPass1Tex.destroy();

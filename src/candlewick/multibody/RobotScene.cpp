@@ -262,7 +262,7 @@ void RobotScene::ensurePipelinesExist(
 
     // handle other pipelines for effects
     if (key.type == PIPELINE_TRIANGLEMESH) {
-      if (!ssaoPass.pipeline) {
+      if (!ssaoPass.pipeline.initialized()) {
         ssaoPass = ssao::SsaoPass(m_renderer, gBuffer.normalMap);
       }
       // configure shadow pass

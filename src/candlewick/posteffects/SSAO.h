@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/Core.h"
+#include "../core/GraphicsPipeline.h"
 #include "../core/Texture.h"
 #include <SDL3/SDL_gpu.h>
 
@@ -11,7 +11,7 @@ namespace ssao {
     SDL_GPUTexture *inDepthMap = nullptr;
     SDL_GPUTexture *inNormalMap = nullptr;
     SDL_GPUSampler *texSampler = nullptr;
-    SDL_GPUGraphicsPipeline *pipeline = nullptr;
+    GraphicsPipeline pipeline{NoInit};
     Texture ssaoMap{NoInit};
     struct SsaoNoise {
       Texture tex{NoInit};
@@ -19,7 +19,7 @@ namespace ssao {
       // The texture will be N x N where N is this value.
       Uint32 pixel_window_size;
     } ssaoNoise;
-    SDL_GPUGraphicsPipeline *blurPipeline = nullptr;
+    GraphicsPipeline blurPipeline{NoInit};
     // first blur pass target
     Texture blurPass1Tex{NoInit};
 
