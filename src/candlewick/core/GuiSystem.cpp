@@ -59,7 +59,7 @@ void GuiSystem::render(CommandBuffer &cmdBuf) {
   ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, cmdBuf);
 
   SDL_GPUColorTargetInfo info{
-      .texture = m_renderer->colorTarget(),
+      .texture = m_renderer->resolvedColorTarget(),
       .clear_color{},
       .load_op = SDL_GPU_LOADOP_LOAD,
       .store_op = SDL_GPU_STOREOP_STORE,
