@@ -546,9 +546,9 @@ int main(int argc, char **argv) {
     if (performRecording) {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
       CommandBuffer command_buffer = renderer.acquireCommandBuffer();
-      recorder.writeTextureToVideoFrame(
-          command_buffer, renderer.device, transfer_buffer_pool,
-          renderer.resolvedColorTarget(), renderer.colorFormat());
+      recorder.writeTextureToFrame(command_buffer, renderer.device,
+                                   transfer_buffer_pool,
+                                   renderer.resolvedColorTarget());
 #endif
     }
     if (screenshot_filename) {

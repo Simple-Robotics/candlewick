@@ -74,11 +74,14 @@ namespace media {
 
     ~VideoRecorder();
 
-    void writeTextureToVideoFrame(CommandBuffer &command_buffer,
-                                  const Device &device,
-                                  TransferBufferPool &pool,
-                                  SDL_GPUTexture *texture,
-                                  SDL_GPUTextureFormat format);
+    void writeTextureToFrame(CommandBuffer &command_buffer,
+                             const Device &device, TransferBufferPool &pool,
+                             SDL_GPUTexture *texture,
+                             SDL_GPUTextureFormat format);
+
+    void writeTextureToFrame(CommandBuffer &command_buffer,
+                             const Device &device, TransferBufferPool &pool,
+                             const Texture &texture);
   };
 
 } // namespace media

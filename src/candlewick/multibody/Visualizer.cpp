@@ -184,9 +184,9 @@ void Visualizer::displayImpl() {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   if (m_videoRecorder.isRecording()) {
     CommandBuffer command_buffer{device()};
-    m_videoRecorder.writeTextureToVideoFrame(
-        command_buffer, device(), m_transferBuffers,
-        renderer.resolvedColorTarget(), renderer.colorFormat());
+    m_videoRecorder.writeTextureToFrame(command_buffer, device(),
+                                        m_transferBuffers,
+                                        renderer.resolvedColorTarget());
   }
 #endif
 }
