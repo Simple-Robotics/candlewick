@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - core/DebugScene : add getters for subsystems
 - [gui] Move all GUI functions into "gui" namespaces
 
+### Removed
+
+- Remove deprecated header `candlewick/multibody/LoadCoalPrimitives.h`
+
 ## [0.9.0] - 2025-08-12
 
 - utils/VideoRecorder : check filename extension (must be ".mp4")
