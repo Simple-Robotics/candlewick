@@ -61,9 +61,9 @@ void updateRobotTransforms(entt::registry &registry,
 
 auto RobotScene::pinGeomToPipeline(const coal::CollisionGeometry &geom)
     -> PipelineType {
-  using enum coal::OBJECT_TYPE;
   const auto objType = geom.getObjectType();
   switch (objType) {
+    using enum coal::OBJECT_TYPE;
   case OT_GEOM:
     return PIPELINE_TRIANGLEMESH;
   case OT_HFIELD:
@@ -255,8 +255,7 @@ void RobotScene::ensurePipelinesExist(
   for (auto &[layout, key] : required_pipelines) {
     if (!m_pipelines.contains(key)) {
       auto pipeline = createRenderPipeline(
-          key, layout, m_renderer.getSwapchainTextureFormat(),
-          m_renderer.depthFormat());
+          key, layout, m_renderer.colorFormat(), m_renderer.depthFormat());
       m_pipelines.set(key, std::move(pipeline));
     }
 
@@ -353,7 +352,6 @@ void RobotScene::renderOpaque(CommandBuffer &command_buffer,
 void RobotScene::renderTransparent(CommandBuffer &command_buffer,
                                    const Camera &camera) {
   renderPBRTriangleGeometry(command_buffer, camera, true);
-
   compositeTransparencyPass(command_buffer);
 }
 
@@ -367,9 +365,10 @@ void RobotScene::render(CommandBuffer &command_buffer, const Camera &camera) {
 /// with just two configuration options: whether to load or clear the color and
 /// depth targets.
 static SDL_GPURenderPass *
-getRenderPass(const RenderContext &renderer, CommandBuffer &command_buffer,
-              SDL_GPULoadOp color_load_op, SDL_GPULoadOp depth_load_op,
-              bool has_normals_target, const RobotScene::GBuffer &gbuffer) {
+getOpaqueRenderPass(const RenderContext &renderer,
+                    CommandBuffer &command_buffer, SDL_GPULoadOp color_load_op,
+                    SDL_GPULoadOp depth_load_op, bool has_normals_target,
+                    const RobotScene::GBuffer &gbuffer) {
   SDL_GPUColorTargetInfo color_targets[2];
   SDL_zero(color_targets);
   color_targets[0].texture = renderer.colorTarget();
@@ -465,7 +464,6 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
     lightUbo.intensity[i].x() = dl.intensity;
   }
 
-  const bool enable_shadows = m_config.enable_shadows;
   ShadowAtlasInfoUbo shadowAtlasUbo{
       .regions{},
   };
@@ -477,17 +475,17 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   }
   const Mat4f viewProj = camera.viewProj();
 
-  // this is the first render pass, hence:
-  // clear the color texture (swapchain), either load or clear the depth texture
+  // if geometry is opaque, this is the first render pass, hence we clear the
+  // color target transparent objects do not participate in SSAO
   SDL_GPURenderPass *render_pass =
       transparent
           ? getTransparentRenderPass(m_renderer, command_buffer, gBuffer)
-          : getRenderPass(m_renderer, command_buffer, SDL_GPU_LOADOP_CLEAR,
-                          m_config.triangle_has_prepass ? SDL_GPU_LOADOP_LOAD
-                                                        : SDL_GPU_LOADOP_CLEAR,
-                          m_config.enable_normal_target, gBuffer);
+          : getOpaqueRenderPass(
+                m_renderer, command_buffer, SDL_GPU_LOADOP_CLEAR,
+                pbrHasPrepass() ? SDL_GPU_LOADOP_LOAD : SDL_GPU_LOADOP_CLEAR,
+                m_config.enable_normal_target, gBuffer);
 
-  if (enable_shadows) {
+  if (shadowsEnabled()) {
     rend::bindFragmentSamplers(render_pass, SHADOW_MAP_SLOT,
                                {{
                                    .texture = shadowPass.shadowMap,
@@ -516,14 +514,14 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
             ent);
     const Mat4f modelView = camera.view * tr;
     const Mesh &mesh = obj.mesh;
-    Mat4f mvp = viewProj * tr;
+    const Mat4f mvp = viewProj * tr;
     TransformUniformData data{
         .modelView = modelView,
         .mvp = mvp,
         .normalMatrix = math::computeNormalMatrix(modelView),
     };
     command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, data);
-    if (enable_shadows) {
+    if (shadowsEnabled()) {
       LightSpaceMatricesUbo shadowUbo;
       shadowUbo.numLights = numLights;
       for (size_t i = 0; i < numLights; i++) {
@@ -582,8 +580,8 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
 void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
                                      const Camera &camera) {
   SDL_GPURenderPass *render_pass =
-      getRenderPass(m_renderer, command_buffer, SDL_GPU_LOADOP_LOAD,
-                    SDL_GPU_LOADOP_LOAD, false, gBuffer);
+      getOpaqueRenderPass(m_renderer, command_buffer, SDL_GPU_LOADOP_LOAD,
+                          SDL_GPU_LOADOP_LOAD, false, gBuffer);
 
   const Mat4f viewProj = camera.viewProj();
 
@@ -605,7 +603,7 @@ void RobotScene::renderOtherGeometry(CommandBuffer &command_buffer,
     for (auto &&[entity, tr, obj] : env_view.each()) {
       const Mesh &mesh = obj.mesh;
       const GpuMat4 mvp = viewProj * tr;
-      const auto &color = obj.materials[0].baseColor;
+      const GpuVec4 &color = obj.materials[0].baseColor;
       command_buffer.pushVertexUniform(VertexUniformSlots::TRANSFORM, mvp)
           .pushFragmentUniform(FragmentUniformSlots::MATERIAL, color);
       rend::bindMesh(render_pass, mesh);
@@ -625,13 +623,7 @@ void RobotScene::release() {
   m_pipelines.clear();
   m_wboitComposite.release();
 
-  gBuffer.normalMap.destroy();
-  gBuffer.accumTexture.destroy();
-  gBuffer.revealTexture.destroy();
-  if (gBuffer.sampler) {
-    SDL_ReleaseGPUSampler(device(), gBuffer.sampler);
-    gBuffer.sampler = nullptr;
-  }
+  gBuffer.release();
   ssaoPass.release();
   shadowPass.release();
 }
@@ -679,8 +671,7 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
       .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
       .enable_blend = true,
   };
-  bool had_prepass =
-      (type == PIPELINE_TRIANGLEMESH) && m_config.triangle_has_prepass;
+  bool had_prepass = (type == PIPELINE_TRIANGLEMESH) && pbrHasPrepass();
   SDL_GPUCompareOp depth_compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
 
   SDL_GPUFillMode fill_mode;
