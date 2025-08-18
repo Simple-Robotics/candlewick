@@ -23,6 +23,13 @@ static const RobotSpec ur_robot_spec =
     }
         .ensure_absolute_filepaths();
 
+static void addFloor(pin::GeometryModel &geom_model) {
+  auto coll = std::make_shared<coal::Plane>(0., 0., 1., -0.1);
+  pin::GeometryObject object{"plane", 0ul, coll, pin::SE3::Identity()};
+  object.meshColor << 1.0, 1.0, 1.0, 1.0;
+  geom_model.addGeometryObject(object);
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Visualizer example"};
   argv = app.ensure_utf8(argv);
@@ -39,9 +46,13 @@ int main(int argc, char **argv) {
   pin::Model model;
   pin::GeometryModel geom_model;
   loadModels(ur_robot_spec, model, &geom_model, NULL);
+  addFloor(geom_model);
 
-  Visualizer::Config config{window_dims[0], window_dims[1],
-                            SDL_GPU_SAMPLECOUNT_2};
+  Visualizer::Config config{
+      window_dims[0],
+      window_dims[1],
+      SDL_GPU_SAMPLECOUNT_1,
+  };
   Visualizer visualizer{config, model, geom_model};
   assert(!visualizer.hasExternalData());
   visualizer.addFrameViz(model.getFrameId("world"), false, Vector3::Ones());
