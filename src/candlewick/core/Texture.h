@@ -23,6 +23,10 @@ public:
 
   operator SDL_GPUTexture *() const noexcept { return m_texture; }
 
+  bool operator==(const Texture &other) const noexcept {
+    return m_texture == other.m_texture;
+  }
+
   bool hasValue() const { return bool(m_texture); }
   const auto &description() const { return m_description; }
   SDL_GPUTextureType type() const { return m_description.type; }
