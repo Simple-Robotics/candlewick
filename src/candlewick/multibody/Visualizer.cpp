@@ -40,7 +40,7 @@ static RenderContext _create_renderer(const Visualizer::Config &config) {
   return RenderContext{Device{auto_detect_shader_format_subset()},
                        Window{"Candlewick Pinocchio visualizer",
                               int(config.width), int(config.height), 0},
-                       config.depth_stencil_format};
+                       config.depthStencilFormat};
 }
 
 Visualizer::Visualizer(const Config &config, const pin::Model &model,

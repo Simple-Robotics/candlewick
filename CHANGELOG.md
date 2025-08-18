@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- multibody/Visualizer : rename a data member in Config
 - core/RenderContext.h : implement move ctor and assignment op
 - core/Device.h : implement move assignment operator
 - core/RenderContext : introduce intermediate color render target, start introducing MSAA texture buffers

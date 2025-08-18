@@ -85,7 +85,7 @@ public:
   struct Config {
     Uint32 width;
     Uint32 height;
-    SDL_GPUTextureFormat depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
+    SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
   };
 
   void resetCamera();
