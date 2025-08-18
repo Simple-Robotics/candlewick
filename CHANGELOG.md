@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- core: move header `LoadCoalGeometries.h` and its functions to library core
 - multibody/Visualizer : rename a data member in Config
 - core/Device.h : implement move assignment operator
 - core/RenderContext : introduce intermediate color render target, start introducing MSAA texture buffers
