@@ -53,6 +53,9 @@ public:
                 SDL_GPUTextureFormat suggested_depth_format =
                     SDL_GPU_TEXTUREFORMAT_INVALID);
 
+  RenderContext(RenderContext &&) noexcept = default;
+  RenderContext &operator=(RenderContext &&) noexcept = default;
+
   const Texture &colorTarget() const {
     return (m_msaaEnabled && colorMsaa.hasValue()) ? colorMsaa : colorBuffer;
   }
