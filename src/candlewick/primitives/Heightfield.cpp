@@ -7,12 +7,14 @@ namespace candlewick {
 MeshData loadHeightfield(const Eigen::Ref<const Eigen::MatrixXf> &heights,
                          const Eigen::Ref<const Eigen::VectorXf> &xgrid,
                          const Eigen::Ref<const Eigen::VectorXf> &ygrid) {
-  SDL_assert(heights.rows() == xgrid.size());
-  SDL_assert(heights.cols() == ygrid.size());
+  CANDLEWICK_ASSERT(
+      heights.rows() == xgrid.size(),
+      "Incompatible dimensions between x-grid and 'heights' matrix.");
+  CANDLEWICK_ASSERT(
+      heights.cols() == ygrid.size(),
+      "Incompatible dimensions between y-grid and 'heights' matrix.");
   const auto nx = (Sint32)heights.rows();
   const auto ny = (Sint32)heights.cols();
-  SDL_assert(nx > 0);
-  SDL_assert(ny > 0);
   Uint32 vertexCount = Uint32(nx * ny);
   std::vector<PosOnlyVertex> vertexData;
   std::vector<MeshData::IndexType> indexData;

@@ -17,13 +17,15 @@ RenderContext::RenderContext(Device &&device_, Window &&window_,
 }
 
 bool RenderContext::waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
-  assert(SDL_IsMainThread());
+  CANDLEWICK_ASSERT(SDL_IsMainThread(),
+                    "Can only acquire swapchain from main thread.");
   return SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, window,
                                                &swapchain, NULL, NULL);
 }
 
 bool RenderContext::acquireSwapchain(CommandBuffer &command_buffer) {
-  assert(SDL_IsMainThread());
+  CANDLEWICK_ASSERT(SDL_IsMainThread(),
+                    "Can only acquire swapchain from main thread.");
   return SDL_AcquireGPUSwapchainTexture(command_buffer, window, &swapchain,
                                         NULL, NULL);
 }
@@ -187,9 +189,11 @@ namespace rend {
 #endif
     for (auto &view : meshViews) {
 #ifndef NDEBUG
-      SDL_assert(ib == view.indexBuffer);
+      CANDLEWICK_ASSERT(ib == view.indexBuffer,
+                        "Invalid view set (different index buffers)");
       for (size_t i = 0; i < n_vbs; i++)
-        SDL_assert(vbs[i] == view.vertexBuffers[i]);
+        CANDLEWICK_ASSERT(vbs[i] == view.vertexBuffers[i],
+                          "Invalid view set (different vertex buffers)");
 #endif
       drawView(pass, view, numInstances);
     }
