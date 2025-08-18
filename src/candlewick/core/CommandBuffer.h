@@ -15,40 +15,46 @@ concept GpuCompatibleData =
     (alignof(T) == 4 || alignof(T) == 8 || alignof(T) == 16);
 
 class CommandBuffer {
-  SDL_GPUCommandBuffer *_cmdBuf;
+  SDL_GPUCommandBuffer *m_handle;
 
 public:
   CommandBuffer(const Device &device);
 
   /// \brief Convert to SDL_GPU command buffer handle.
-  operator SDL_GPUCommandBuffer *() const { return _cmdBuf; }
+  operator SDL_GPUCommandBuffer *() const { return m_handle; }
 
   /// \brief Deleted copy constructor.
   CommandBuffer(const CommandBuffer &) = delete;
 
   /// \brief Move constructor.
-  CommandBuffer(CommandBuffer &&other) noexcept;
+  CommandBuffer(CommandBuffer &&other) noexcept : m_handle(other.m_handle) {
+    other.m_handle = nullptr;
+  }
 
   /// \brief Deleted copy assignment operator.
   CommandBuffer &operator=(const CommandBuffer &) = delete;
 
   /// \brief Move assignment operator.
-  CommandBuffer &operator=(CommandBuffer &&other) noexcept;
-
-  friend void swap(CommandBuffer &lhs, CommandBuffer &rhs) noexcept {
-    std::swap(lhs._cmdBuf, rhs._cmdBuf);
+  CommandBuffer &operator=(CommandBuffer &&other) noexcept {
+    if (this != &other) {
+      if (active())
+        this->cancel();
+      m_handle = other.m_handle;
+      other.m_handle = nullptr;
+    }
+    return *this;
   }
 
   bool submit() noexcept {
-    if (!(active() && SDL_SubmitGPUCommandBuffer(_cmdBuf)))
+    if (!(active() && SDL_SubmitGPUCommandBuffer(m_handle)))
       return false;
-    _cmdBuf = nullptr;
+    m_handle = nullptr;
     return true;
   }
 
   SDL_GPUFence *submitAndAcquireFence() noexcept {
-    SDL_GPUFence *fence = SDL_SubmitGPUCommandBufferAndAcquireFence(_cmdBuf);
-    _cmdBuf = nullptr;
+    SDL_GPUFence *fence = SDL_SubmitGPUCommandBufferAndAcquireFence(m_handle);
+    m_handle = nullptr;
     return fence;
   }
 
@@ -59,15 +65,15 @@ public:
   /// \brief Check if the command buffer is still active.
   ///
   /// For this wrapper class, it means the internal pointer is non-null.
-  bool active() const noexcept { return _cmdBuf; }
+  bool active() const noexcept { return m_handle; }
 
   ~CommandBuffer() noexcept {
     if (active()) {
       SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                  "CommandBuffer object is being destroyed while still active! "
+                  "CommandBuffer object is being destroyed while still active. "
                   "It will be cancelled.");
       [[maybe_unused]] bool ret = cancel();
-      assert(ret);
+      CANDLEWICK_ASSERT(ret, "Failed to cancel command buffer on cleanup.");
     }
   }
 
@@ -105,13 +111,13 @@ public:
   /// \brief Push uniform data to the vertex shader.
   CommandBuffer &pushVertexUniformRaw(Uint32 slot_index, const void *data,
                                       Uint32 length) {
-    SDL_PushGPUVertexUniformData(_cmdBuf, slot_index, data, length);
+    SDL_PushGPUVertexUniformData(m_handle, slot_index, data, length);
     return *this;
   }
   /// \brief Push uniform data to the fragment shader.
   CommandBuffer &pushFragmentUniformRaw(Uint32 slot_index, const void *data,
                                         Uint32 length) {
-    SDL_PushGPUFragmentUniformData(_cmdBuf, slot_index, data, length);
+    SDL_PushGPUFragmentUniformData(m_handle, slot_index, data, length);
     return *this;
   }
 };
