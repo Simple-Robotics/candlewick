@@ -25,7 +25,14 @@ struct Device {
   }
 
   Device &operator=(const Device &) = delete;
-  Device &operator=(Device &&) = delete;
+  Device &operator=(Device &&other) noexcept {
+    if (this != &other) {
+      this->destroy();
+      _device = other._device;
+      other._device = nullptr;
+    }
+    return *this;
+  }
 
   void create(SDL_GPUShaderFormat format_flags, bool debug_mode = false);
 

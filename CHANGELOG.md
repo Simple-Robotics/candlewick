@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- core/Device.h : implement move assignment operator
 - core/RenderContext : introduce intermediate color render target, start introducing MSAA texture buffers
 - core/Texture.h : add `sampleCount()` getter
 - core : add RAII class `GraphicsPipeline`
