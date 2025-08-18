@@ -58,7 +58,7 @@ void Visualizer::guiCallbackImpl() {
   }
 
   ImGui::Text("Video driver: %s", SDL_GetCurrentVideoDriver());
-  ImGui::Text("Display pixel density: %.2f / scale: %.2f",
+  ImGui::Text("Window pixel density: %.2f / display scale: %.2f",
               renderer.window.pixelDensity(), renderer.window.displayScale());
   ImGui::Text("Device driver: %s", renderer.device.driverName());
 

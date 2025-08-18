@@ -373,7 +373,7 @@ int main(int argc, char **argv) {
         ImGui::Text("Video driver: %s", SDL_GetCurrentVideoDriver());
         ImGui::SameLine();
         ImGui::Text("Device driver: %s", r.device.driverName());
-        ImGui::Text("Display pixel density: %.2f / scale: %.2f",
+        ImGui::Text("Window pixel density: %.2f / display scale: %.2f",
                     r.window.pixelDensity(), r.window.displayScale());
         ImGui::SeparatorText("Camera");
         bool ortho_change, persp_change;

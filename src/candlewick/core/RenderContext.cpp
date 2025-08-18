@@ -32,7 +32,7 @@ bool RenderContext::acquireSwapchain(CommandBuffer &command_buffer) {
 
 void RenderContext::createRenderTargets(
     SDL_GPUTextureFormat suggested_depth_format) {
-  auto [width, height] = window.size();
+  auto [width, height] = window.sizeInPixels();
 
   SDL_GPUTextureCreateInfo colorInfo{
       .type = SDL_GPU_TEXTURETYPE_2D,
@@ -76,7 +76,7 @@ void RenderContext::createRenderTargets(
 }
 
 void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {
-  auto [width, height] = window.size();
+  auto [width, height] = window.sizeInPixels();
 
   SDL_GPUTextureCreateInfo msaaColorInfo{
       .type = SDL_GPU_TEXTURETYPE_2D,
@@ -98,7 +98,7 @@ void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {
 
 void RenderContext::presentToSwapchain(CommandBuffer &command_buffer) {
   // NOTE: we always present the resolved color buffer (whether MSAA or not)
-  auto [w, h] = window.size();
+  auto [w, h] = window.sizeInPixels();
 
   SDL_GPUBlitInfo blit{
       .source = colorBuffer.blitRegion(0, 0),
