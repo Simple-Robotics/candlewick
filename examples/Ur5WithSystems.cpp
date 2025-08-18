@@ -206,9 +206,9 @@ static void addTeapotGeometry(pin::GeometryModel &geom_model) {
   geom_model.addGeometryObject(convex_obj);
 }
 
-static void screenshot_button_callback(RenderContext &renderer,
-                                       media::TransferBufferPool &pool,
-                                       const char *filename) {
+static void screenshotButtonCallback(const RenderContext &renderer,
+                                     media::TransferBufferPool &pool,
+                                     const char *filename) {
   const auto &device = renderer.device;
   CommandBuffer command_buffer{device};
 
@@ -552,8 +552,8 @@ int main(int argc, char **argv) {
 #endif
     }
     if (screenshot_filename) {
-      screenshot_button_callback(renderer, transfer_buffer_pool,
-                                 screenshot_filename);
+      screenshotButtonCallback(renderer, transfer_buffer_pool,
+                               screenshot_filename);
       screenshot_filename = nullptr;
     }
 

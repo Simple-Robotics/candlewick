@@ -2,6 +2,7 @@
 
 #include "candlewick/core/RenderContext.h"
 #include "candlewick/core/CommandBuffer.h"
+#include "candlewick/core/GraphicsPipeline.h"
 #include "candlewick/core/Mesh.h"
 #include "candlewick/core/Shader.h"
 #include "candlewick/utils/MeshData.h"
@@ -69,7 +70,7 @@ int main() {
 
   SDL_GPUColorTargetDescription colorTarget;
   SDL_zero(colorTarget);
-  colorTarget.format = SDL_GetGPUSwapchainTextureFormat(device, window);
+  colorTarget.format = ctx.colorFormat();
   SDL_GPUDepthStencilTargetInfo depthTarget;
   SDL_zero(depthTarget);
   depthTarget.clear_depth = 1.0;
@@ -81,35 +82,33 @@ int main() {
   depthTarget.cycle = true;
 
   // create pipeline
-  SDL_GPUGraphicsPipelineCreateInfo pipeline_desc{
-      .vertex_shader = vertexShader,
-      .fragment_shader = fragmentShader,
-      .vertex_input_state = meshes[0].layout(),
-      .primitive_type = meshDatas[0].primitiveType,
-      .rasterizer_state{
-          .fill_mode = SDL_GPU_FILLMODE_FILL,
-          .cull_mode = SDL_GPU_CULLMODE_NONE,
-          .front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE,
+  GraphicsPipeline pipeline{
+      device,
+      {
+          .vertex_shader = vertexShader,
+          .fragment_shader = fragmentShader,
+          .vertex_input_state = meshes[0].layout(),
+          .primitive_type = meshDatas[0].primitiveType,
+          .rasterizer_state{
+              .fill_mode = SDL_GPU_FILLMODE_FILL,
+              .cull_mode = SDL_GPU_CULLMODE_NONE,
+              .front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE,
+          },
+          .depth_stencil_state{
+              .compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL,
+              .enable_depth_test = true,
+              .enable_depth_write = true,
+          },
+          .target_info{
+              .color_target_descriptions = &colorTarget,
+              .num_color_targets = 1,
+              .depth_stencil_format = ctx.depthFormat(),
+              .has_depth_stencil_target = true,
+          },
+          .props = 0,
       },
-      .depth_stencil_state{
-          .compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL,
-          .enable_depth_test = true,
-          .enable_depth_write = true,
-      },
-      .target_info{
-          .color_target_descriptions = &colorTarget,
-          .num_color_targets = 1,
-          .depth_stencil_format = ctx.depthFormat(),
-          .has_depth_stencil_target = true,
-      },
-      .props = 0,
+      "Main color pipeline",
   };
-  SDL_GPUGraphicsPipeline *pipeline =
-      SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
-  if (pipeline == NULL) {
-    SDL_Log("Failed to create pipeline: %s", SDL_GetError());
-    return 1;
-  }
 
   vertexShader.release();
   fragmentShader.release();
@@ -198,7 +197,7 @@ int main() {
       };
       render_pass =
           SDL_BeginGPURenderPass(command_buffer, &ctinfo, 1, &depthTarget);
-      SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+      pipeline.bind(render_pass);
       TransformUniformData cameraUniform{
           projViewMat,
           normalMatrix,
@@ -220,8 +219,7 @@ int main() {
   for (auto &mesh : meshes) {
     mesh.release();
   }
-  SDL_ReleaseGPUGraphicsPipeline(device, pipeline);
-
+  pipeline.release();
   ctx.destroy();
   SDL_Quit();
   return 0;
