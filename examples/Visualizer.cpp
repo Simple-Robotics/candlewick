@@ -40,7 +40,9 @@ int main(int argc, char **argv) {
   pin::GeometryModel geom_model;
   loadModels(ur_robot_spec, model, &geom_model, NULL);
 
-  Visualizer visualizer{{window_dims[0], window_dims[1]}, model, geom_model};
+  Visualizer::Config config{window_dims[0], window_dims[1],
+                            SDL_GPU_SAMPLECOUNT_2};
+  Visualizer visualizer{config, model, geom_model};
   assert(!visualizer.hasExternalData());
   visualizer.addFrameViz(model.getFrameId("world"), false, Vector3::Ones());
   visualizer.addFrameViz(model.getFrameId("elbow_joint"));
