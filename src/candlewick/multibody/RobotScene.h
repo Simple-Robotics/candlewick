@@ -197,9 +197,10 @@ namespace multibody {
     RobotScene(const RobotScene &) = delete;
 
     void setConfig(const Config &config) {
-      CANDLEWICK_ASSERT(
-          !m_initialized,
-          "Cannot call setConfig() after render system was initialized.");
+      if (m_initialized)
+        terminate_with_message(
+            "Cannot call setConfig() after render system was initialized.");
+
       m_config = config;
     }
 
