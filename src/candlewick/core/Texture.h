@@ -27,7 +27,6 @@ public:
     return m_texture == other.m_texture;
   }
 
-  bool hasValue() const { return bool(m_texture); }
   const auto &description() const { return m_description; }
   SDL_GPUTextureType type() const { return m_description.type; }
   SDL_GPUTextureFormat format() const { return m_description.format; }
@@ -42,6 +41,8 @@ public:
                                Uint32 layer_or_depth_plane = 0) const;
 
   Uint32 textureSize() const;
+
+  SDL_GPUDevice *device() const { return m_device; }
 
   void destroy() noexcept;
   ~Texture() noexcept { this->destroy(); }

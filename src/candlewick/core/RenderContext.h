@@ -57,7 +57,7 @@ public:
   RenderContext &operator=(RenderContext &&) noexcept = default;
 
   const Texture &colorTarget() const {
-    return (m_msaaEnabled && colorMsaa.hasValue()) ? colorMsaa : colorBuffer;
+    return (m_msaaEnabled && colorMsaa) ? colorMsaa : colorBuffer;
   }
 
   const Texture &depthTarget() const { return depthBuffer; }
@@ -67,7 +67,7 @@ public:
   bool msaaEnabled() const { return m_msaaEnabled; }
 
   SDL_GPUSampleCount getMsaaSampleCount() const {
-    if (m_msaaEnabled && colorMsaa.hasValue()) {
+    if (m_msaaEnabled && colorMsaa) {
       return colorMsaa.sampleCount();
     }
     return SDL_GPU_SAMPLECOUNT_1;
@@ -116,7 +116,7 @@ public:
   }
 
   /// \brief Check if a depth texture was created.
-  inline bool hasDepthTexture() const { return depthBuffer.hasValue(); }
+  inline bool hasDepthTexture() const { return depthBuffer; }
 
   inline void setSwapchainParameters(SDL_GPUSwapchainComposition composition,
                                      SDL_GPUPresentMode present_mode) {
