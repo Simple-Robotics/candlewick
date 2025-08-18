@@ -147,7 +147,7 @@ RobotScene::RobotScene(entt::registry &registry, const RenderContext &renderer,
 
 void RobotScene::initGBuffer() {
   const auto [width, height] = m_renderer.window.size();
-  gBuffer.normalMap = Texture{m_renderer.device,
+  gBuffer.normalMap = Texture{device(),
                               {
                                   .type = SDL_GPU_TEXTURETYPE_2D,
                                   .format = SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
