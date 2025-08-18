@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- core/GraphicsPipeline : store pipeline metadata
 - core/Texture.h : add comparison operator
 - multibody/Visualizer : rename a data member in Config
 - core/RenderContext.h : implement move ctor and assignment op

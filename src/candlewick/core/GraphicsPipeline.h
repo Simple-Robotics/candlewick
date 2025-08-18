@@ -4,6 +4,7 @@
 #include "Tags.h"
 #include "errors.h"
 #include <SDL3/SDL_gpu.h>
+#include <vector>
 
 namespace candlewick {
 
@@ -14,16 +15,30 @@ namespace candlewick {
 class GraphicsPipeline {
   SDL_GPUDevice *m_device{nullptr};
   SDL_GPUGraphicsPipeline *m_pipeline{nullptr};
-  SDL_GPUPrimitiveType m_primitiveType;
+  struct PipelineMetadata {
+    SDL_GPUPrimitiveType primitiveType;
+    std::vector<SDL_GPUColorTargetDescription> colorTargets;
+    SDL_GPUTextureFormat depthStencilFormat;
+    bool hasDepthStencilTarget;
+    SDL_GPUMultisampleState multisampleState;
+
+    PipelineMetadata(SDL_GPUGraphicsPipelineCreateInfo desc)
+        : primitiveType(desc.primitive_type)
+        , colorTargets(desc.target_info.color_target_descriptions,
+                       desc.target_info.color_target_descriptions +
+                           desc.target_info.num_color_targets)
+        , depthStencilFormat(desc.target_info.depth_stencil_format)
+        , hasDepthStencilTarget(desc.target_info.depth_stencil_format)
+        , multisampleState(desc.multisample_state) {}
+    PipelineMetadata() noexcept {}
+  } m_meta;
 
 public:
   GraphicsPipeline(NoInitT) {}
   GraphicsPipeline(SDL_GPUDevice *device,
                    SDL_GPUGraphicsPipelineCreateInfo pipeline_desc,
                    const char *name)
-      : m_device(device)
-      , m_pipeline(nullptr)
-      , m_primitiveType(pipeline_desc.primitive_type) {
+      : m_device(device), m_pipeline(nullptr), m_meta(pipeline_desc) {
     if (name && !pipeline_desc.props) {
       pipeline_desc.props = SDL_CreateProperties();
       SDL_SetStringProperty(pipeline_desc.props,
@@ -42,7 +57,9 @@ public:
 
   GraphicsPipeline(const GraphicsPipeline &) = delete;
   GraphicsPipeline(GraphicsPipeline &&other) noexcept
-      : m_device(other.m_device), m_pipeline(other.m_pipeline) {
+      : m_device(other.m_device)
+      , m_pipeline(other.m_pipeline)
+      , m_meta(std::move(other.m_meta)) {
     other.m_device = nullptr;
     other.m_pipeline = nullptr;
   }
@@ -53,7 +70,7 @@ public:
       this->release(); // release if we've got managed resources
       m_device = other.m_device;
       m_pipeline = other.m_pipeline;
-      m_primitiveType = other.m_primitiveType;
+      m_meta = std::move(other.m_meta);
 
       other.m_device = nullptr;
       other.m_pipeline = nullptr;
@@ -61,7 +78,7 @@ public:
     return *this;
   }
 
-  auto primitiveType() const noexcept { return m_primitiveType; }
+  auto primitiveType() const noexcept { return m_meta.primitiveType; }
 
   void bind(SDL_GPURenderPass *render_pass) const noexcept {
     SDL_BindGPUGraphicsPipeline(render_pass, m_pipeline);
