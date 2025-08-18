@@ -31,16 +31,18 @@ const char *sdlMouseButtonToString(Uint8 button) {
 
 namespace candlewick::multibody {
 
-static RenderContext _create_renderer(const Visualizer::Config &config) {
+static RenderContext _create_renderer(const Visualizer::Config &config,
+                                      SDL_WindowFlags flags = 0) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     terminate_with_message("Failed to init video: {:s}", SDL_GetError());
   }
   SDL_Log("Video driver: %s", SDL_GetCurrentVideoDriver());
 
-  return RenderContext{Device{auto_detect_shader_format_subset()},
-                       Window{"Candlewick Pinocchio visualizer",
-                              int(config.width), int(config.height), 0},
-                       config.depthStencilFormat};
+  RenderContext r{Device{auto_detect_shader_format_subset()},
+                  Window{"Candlewick Pinocchio visualizer", int(config.width),
+                         int(config.height), flags},
+                  config.depthStencilFormat};
+  return r;
 }
 
 Visualizer::Visualizer(const Config &config, const pin::Model &model,
@@ -48,7 +50,7 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
                        GuiSystem::GuiBehavior gui_callback)
     : BaseVisualizer{model, visual_model}
     , registry{}
-    , renderer{_create_renderer(config)}
+    , renderer{_create_renderer(config, SDL_WINDOW_HIGH_PIXEL_DENSITY)}
     , guiSystem{renderer, std::move(gui_callback)}
     , robotScene{registry, renderer}
     , debugScene{registry, renderer}

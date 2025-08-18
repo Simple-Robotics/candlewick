@@ -55,9 +55,10 @@ using multibody::RobotSpec;
 
 /// Application constants
 
-constexpr Uint32 wWidth = 1920;
-constexpr Uint32 wHeight = 1050;
-constexpr float aspectRatio = float(wWidth) / float(wHeight);
+static std::array<Uint32, 2> wDims{1600u, 960u};
+const auto &[wWidth, wHeight] = wDims;
+
+static float aspectRatio;
 
 /// Application state
 
@@ -65,10 +66,7 @@ static Radf currentFov = 55.0_degf;
 static float nearZ = 0.01f;
 static float farZ = 10.f;
 static float currentOrthoScale = 1.f;
-static CylindricalCamera g_camera{{
-    .projection = perspectiveFromFov(currentFov, aspectRatio, nearZ, farZ),
-    .view = Eigen::Isometry3f{lookAt({2.0, 0, 2.}, Float3::Zero())},
-}};
+static CylindricalCamera g_camera;
 static CameraProjection g_cameraType = CameraProjection::PERSPECTIVE;
 static bool quitRequested = false;
 static bool showFrustum = false;
@@ -78,9 +76,6 @@ enum VizMode {
   LIGHT_DEBUG,
 };
 static VizMode g_showDebugViz = FULL_RENDER;
-
-static float pixelDensity;
-static float displayScale;
 
 static void updateFov(Radf newFov) {
   g_camera.camera.projection =
@@ -115,8 +110,7 @@ loadGeomObjFromFile(const char *name, std::string_view filename,
 
 void eventLoop(const RenderContext &renderer) {
   // update pixel density and display scale
-  pixelDensity = renderer.window.pixelDensity();
-  displayScale = renderer.window.displayScale();
+  float pixelDensity = renderer.window.pixelDensity();
   const float rotSensitivity = 5e-3f * pixelDensity;
   const float panSensitivity = 1e-2f * pixelDensity;
   SDL_Event event;
@@ -227,6 +221,14 @@ static const RobotSpec ur_robot_spec =
     }
         .ensure_absolute_filepaths();
 
+static void initialize() {
+  aspectRatio = float(wWidth) / float(wHeight);
+  g_camera = CylindricalCamera{{
+      .projection = perspectiveFromFov(currentFov, aspectRatio, nearZ, farZ),
+      .view = Eigen::Isometry3f{lookAt({2.0, 0, 2.}, Float3::Zero())},
+  }};
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Ur5 example"};
   bool performRecording{false};
@@ -236,6 +238,7 @@ int main(int argc, char **argv) {
 
   argv = app.ensure_utf8(argv);
   app.add_flag("-r,--record", performRecording, "Record output");
+  app.add_option("--dims", wDims, "Window dimensions.")->capture_default_str();
   CLI11_PARSE(app, argc, argv);
 
   if (!SDL_Init(SDL_INIT_VIDEO))
@@ -244,9 +247,11 @@ int main(int argc, char **argv) {
   // D16_UNORM works on macOS, D24_UNORM and D32_FLOAT break the depth prepass
   RenderContext renderer{
       Device{auto_detect_shader_format_subset(), false},
-      Window(__FILE__, wWidth, wHeight, 0),
+      Window(__FILE__, int(wWidth), int(wHeight),
+             SDL_WINDOW_HIGH_PIXEL_DENSITY),
       SDL_GPU_TEXTUREFORMAT_D16_UNORM,
   };
+  initialize();
 
   entt::registry registry{};
 
@@ -323,9 +328,9 @@ int main(int argc, char **argv) {
   DebugScene debug_scene{registry, renderer};
   auto &robot_debug =
       debug_scene.addSystem<RobotDebugSystem>("robot"_hs, model, pin_data);
-  auto [triad_id, triad] = debug_scene.addTriad();
   auto [grid_id, grid] = debug_scene.addLineGrid(0xE0A236ff_rgbaf);
   pin::FrameIndex ee_frame_id = model.getFrameId("ee_link");
+  robot_debug.addFrameTriad(0ul);
   robot_debug.addFrameTriad(ee_frame_id);
   robot_debug.addFrameVelocityArrow(ee_frame_id);
 
@@ -407,7 +412,6 @@ int main(int argc, char **argv) {
         gui::addDisableCheckbox("Render plane", registry, plane_entity,
                                 show_plane_vis);
         ImGui::Checkbox("Render grid", &grid.enable);
-        ImGui::Checkbox("Render triad", &triad.enable);
         ImGui::Checkbox("Render frustum", &showFrustum);
 
         ImGui::Checkbox("Ambient occlusion (SSAO)",
