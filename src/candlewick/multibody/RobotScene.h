@@ -122,12 +122,10 @@ namespace multibody {
           .fragment_shader_path = "Hud3dElement.frag",
       };
       PipelineConfig pointcloud_config;
-      bool enable_msaa = false;
       bool enable_shadows = true;
       bool enable_ssao = true;
       bool triangle_has_prepass = false;
       bool enable_normal_target = false;
-      SDL_GPUSampleCount msaa_samples = SDL_GPU_SAMPLECOUNT_1;
       ShadowPassConfig shadow_config;
     };
 
