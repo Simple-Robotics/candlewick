@@ -83,7 +83,7 @@ void DebugScene::setupPipelines(const MeshLayout &layout) {
   auto fragmentShader = Shader::fromMetadata(device(), "Hud3dElement.frag");
   SDL_GPUColorTargetDescription color_desc;
   SDL_zero(color_desc);
-  color_desc.format = m_renderer.getSwapchainTextureFormat();
+  color_desc.format = m_renderer.colorFormat();
   SDL_GPUGraphicsPipelineCreateInfo info{
       .vertex_shader = vertexShader,
       .fragment_shader = fragmentShader,
@@ -95,7 +95,7 @@ void DebugScene::setupPipelines(const MeshLayout &layout) {
                         .depth_bias_slope_factor = 0.001f,
                         .enable_depth_bias = true,
                         .enable_depth_clip = true},
-      .multisample_state{},
+      .multisample_state{m_renderer.getMsaaSampleCount()},
       .depth_stencil_state{.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL,
                            .enable_depth_test = true,
                            .enable_depth_write = true},
@@ -121,6 +121,12 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
   color_target_info.texture = m_renderer.colorTarget();
   color_target_info.load_op = SDL_GPU_LOADOP_LOAD;
   color_target_info.store_op = SDL_GPU_STOREOP_STORE;
+  color_target_info.cycle = false;
+  // do resolve to the target that's presented to swapchain
+  if (m_renderer.msaaEnabled()) {
+    color_target_info.resolve_texture = m_renderer.resolvedColorTarget();
+    color_target_info.store_op = SDL_GPU_STOREOP_RESOLVE_AND_STORE;
+  }
   SDL_GPUDepthStencilTargetInfo depth_target_info;
   SDL_zero(depth_target_info);
   depth_target_info.load_op = SDL_GPU_LOADOP_LOAD;
