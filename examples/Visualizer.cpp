@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
 
   spdlog::cfg::load_env_levels();
   spdlog::set_pattern(">>> [%T] [%^%l%$] %v");
+  spdlog::info("Robot spec:\n{}", ur_robot_spec);
   pin::Model model;
   pin::GeometryModel geom_model;
   loadModels(ur_robot_spec, model, &geom_model, NULL);

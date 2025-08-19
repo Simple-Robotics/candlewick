@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <fmt/std.h>
 
 namespace candlewick::multibody {
 namespace pin = pinocchio;
@@ -40,7 +41,31 @@ struct RobotSpec {
     return *this;
   }
 };
+} // namespace candlewick::multibody
 
+FMT_BEGIN_NAMESPACE
+template <> struct formatter<candlewick::multibody::RobotSpec> {
+  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+
+  template <typename FormatContext>
+  auto format(const candlewick::multibody::RobotSpec &spec,
+              FormatContext &ctx) const {
+    return fmt::format_to(ctx.out(),
+                          "RobotSpec{{\n"
+                          "  urdf_path: \"{}\"\n"
+                          "  srdf_path: \"{}\"\n"
+                          "  base_package_path: \"{}\"\n"
+                          "  relative_package_path: \"{}\"\n"
+                          "  has_free_flyer: {}\n"
+                          "}}",
+                          spec.urdf_path, spec.srdf_path,
+                          spec.base_package_path, spec.relative_package_path,
+                          spec.has_free_flyer);
+  }
+};
+FMT_END_NAMESPACE
+
+namespace candlewick::multibody {
 inline std::vector<std::string> getPackageDirs(const RobotSpec &spec) {
   if (spec.relative_package_path.is_absolute()) {
     terminate_with_message(
