@@ -195,19 +195,19 @@ void Visualizer::displayImpl() {
 void Visualizer::render() {
 
   CommandBuffer command_buffer = renderer.acquireCommandBuffer();
+  robotScene.collectOpaqueCastables();
+  std::span castables = robotScene.castables();
+  renderShadowPassFromAABB(command_buffer, robotScene.shadowPass,
+                           robotScene.directionalLight, castables,
+                           worldSceneBounds);
+
+  robotScene.renderOpaque(command_buffer, controller);
+  debugScene.render(command_buffer, controller);
+  robotScene.renderTransparent(command_buffer, controller);
+  if (m_showGui)
+    guiSystem.render(command_buffer);
+
   if (renderer.waitAndAcquireSwapchain(command_buffer)) {
-    robotScene.collectOpaqueCastables();
-    std::span castables = robotScene.castables();
-    renderShadowPassFromAABB(command_buffer, robotScene.shadowPass,
-                             robotScene.directionalLight, castables,
-                             worldSceneBounds);
-
-    robotScene.renderOpaque(command_buffer, controller);
-    debugScene.render(command_buffer, controller);
-    robotScene.renderTransparent(command_buffer, controller);
-    if (m_showGui)
-      guiSystem.render(command_buffer);
-
     // present (blit) main color target to swapchain
     renderer.presentToSwapchain(command_buffer);
   } else {
