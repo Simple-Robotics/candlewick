@@ -46,20 +46,28 @@ namespace detail {
 
 } // namespace detail
 
-template <typename... Ts>
-[[noreturn]]
-void terminate_with_message(std::source_location location, std::string_view fmt,
-                            Ts &&...args) {
-  throw std::runtime_error(detail::error_message_format(
-      location.function_name(), fmt, std::forward<Ts>(args)...));
-}
+// source_location default for last argument using ctad trick, see
+// https://stackoverflow.com/a/71082768
+template <typename... Ts> struct terminate_with_message {
+  [[noreturn]] terminate_with_message(
+      std::string_view fmt, Ts &&...args,
+      std::source_location location = std::source_location::current()) {
+    throw std::runtime_error(detail::error_message_format(
+        location.function_name(), fmt, std::forward<Ts>(args)...));
+  }
+
+  [[noreturn]] terminate_with_message(std::source_location location,
+                                      std::string_view fmt, Ts &&...args)
+      : terminate_with_message(fmt, std::forward<Ts>(args)..., location) {}
+};
 
 template <typename... Ts>
-[[noreturn]]
-void terminate_with_message(std::string_view fmt, Ts &&...args) {
-  terminate_with_message(std::source_location::current(), fmt,
-                         std::forward<Ts>(args)...);
-}
+terminate_with_message(std::string_view, Ts &&...)
+    -> terminate_with_message<Ts...>;
+
+template <typename... Ts>
+terminate_with_message(std::source_location, std::string_view, Ts &&...)
+    -> terminate_with_message<Ts...>;
 
 [[noreturn]]
 inline void unreachable_with_message(
