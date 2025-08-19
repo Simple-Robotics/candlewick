@@ -10,6 +10,7 @@
 #include <CLI/Config.hpp>
 
 using namespace candlewick::multibody;
+using candlewick::sdlSampleToValue;
 using pinocchio::visualizers::Vector3;
 using std::chrono::steady_clock;
 namespace fs = std::filesystem;
@@ -35,11 +36,25 @@ int main(int argc, char **argv) {
   argv = app.ensure_utf8(argv);
   std::array<Uint32, 2> window_dims{1920u, 1080u};
   double fps;
+  SDL_GPUSampleCount sample_count{SDL_GPU_SAMPLECOUNT_1};
+  const std::map<std::string, SDL_GPUSampleCount> sample_count_map{
+      {"1", SDL_GPU_SAMPLECOUNT_1},
+      {"2", SDL_GPU_SAMPLECOUNT_2},
+      {"4", SDL_GPU_SAMPLECOUNT_4},
+      {"8", SDL_GPU_SAMPLECOUNT_8}};
+  const auto transform_validator =
+      CLI::IsMember(sample_count_map) & CLI::Transformer(sample_count_map);
 
   app.add_option("--dims", window_dims, "Window dimensions.")
       ->capture_default_str();
   app.add_option<double, unsigned int>("--fps", fps, "Framerate")
       ->default_val(60);
+  app.add_option("--msaa", sample_count, "Level of multisample anti-aliasing.")
+      ->default_function([&sample_count] {
+        return std::to_string(sdlSampleToValue(sample_count));
+      })
+      ->transform(transform_validator)
+      ->capture_default_str();
 
   CLI11_PARSE(app, argc, argv);
 
@@ -51,7 +66,7 @@ int main(int argc, char **argv) {
   Visualizer::Config config{
       window_dims[0],
       window_dims[1],
-      SDL_GPU_SAMPLECOUNT_1,
+      sample_count,
   };
   Visualizer visualizer{config, model, geom_model};
   assert(!visualizer.hasExternalData());
