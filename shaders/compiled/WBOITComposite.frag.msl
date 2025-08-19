@@ -8,13 +8,13 @@ struct main0_out
     float4 outColor [[color(0)]];
 };
 
-fragment main0_out main0(texture2d<float> accumTexture [[texture(0)]], texture2d<float> revealTexture [[texture(1)]], sampler accumTextureSmplr [[sampler(0)]], sampler revealTextureSmplr [[sampler(1)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(texture2d_ms<float> accumTexture [[texture(0)]], texture2d_ms<float> revealTexture [[texture(1)]], sampler accumTextureSmplr [[sampler(0)]], sampler revealTextureSmplr [[sampler(1)]], float4 gl_FragCoord [[position]], uint gl_SampleID [[sample_id]])
 {
     main0_out out = {};
-    float2 viewportSize = float2(int2(accumTexture.get_width(), accumTexture.get_height()));
-    float2 uv = gl_FragCoord.xy / viewportSize;
-    float4 accum = accumTexture.sample(accumTextureSmplr, uv);
-    float reveal = revealTexture.sample(revealTextureSmplr, uv).x;
+    gl_FragCoord.xy += get_sample_position(gl_SampleID) - 0.5;
+    int2 uv = int2(gl_FragCoord.xy);
+    float4 accum = accumTexture.read(uint2(uv), gl_SampleID);
+    float reveal = revealTexture.read(uint2(uv), gl_SampleID).x;
     float3 color = accum.xyz;
     if (accum.w > 0.001000000047497451305389404296875)
     {

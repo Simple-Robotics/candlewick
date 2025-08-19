@@ -1,1 +1,1 @@
-{ "samplers": 2, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 0 }
+{ "samplers": 2, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 0, "inputs": [], "outputs": [{ "name": "outColor", "type": "float4", "location": 0 }] }
