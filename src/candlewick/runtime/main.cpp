@@ -14,6 +14,8 @@
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
 
+#include <spdlog/cfg/env.h>
+
 namespace cdw = candlewick;
 namespace pin = pinocchio;
 using namespace cdw::runtime;
@@ -151,7 +153,9 @@ void run_main_loop(Visualizer &viz, ApplicationContext &app_ctx) {
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
+  spdlog::cfg::load_env_levels();
+  spdlog::set_pattern(">>> [%T] [%^%l%$] %v");
   CLI::App app{"Candlewick visualizer runtime"};
   argv = app.ensure_utf8(argv);
 
