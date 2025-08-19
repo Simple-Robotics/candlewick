@@ -345,7 +345,6 @@ void RobotScene::renderOpaque(CommandBuffer &command_buffer,
   }
 
   renderPBRTriangleGeometry(command_buffer, camera, false);
-
   renderOtherGeometry(command_buffer, camera);
 }
 
@@ -671,6 +670,7 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
       .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
       .enable_blend = true,
   };
+  color_targets[1].format = gBuffer.normalMap.format();
   bool had_prepass = (type == PIPELINE_TRIANGLEMESH) && pbrHasPrepass();
   SDL_GPUCompareOp depth_compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
 
@@ -702,18 +702,13 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
       },
       .target_info{
           .color_target_descriptions = color_targets,
-          .num_color_targets = 1,
+          .num_color_targets = 2,
           .depth_stencil_format = depth_stencil_format,
           .has_depth_stencil_target = true,
       },
   };
 
   if (type == PIPELINE_TRIANGLEMESH) {
-    if (m_config.enable_normal_target) {
-      color_targets[1].format = gBuffer.normalMap.format();
-      desc.target_info.num_color_targets = 2;
-    }
-
     if (transparent) {
       // modify color targets
       SDL_zero(color_targets);

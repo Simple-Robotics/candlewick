@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- multibody/RobotScene : always render to G-buffer normal map
 - core: move header `LoadCoalGeometries.h` and its functions to library core
 - multibody/Visualizer : rename a data member in Config
 - core/Device.h : implement move assignment operator

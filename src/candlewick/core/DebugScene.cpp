@@ -35,14 +35,9 @@ void DebugScene::initializeSharedMeshes() {
     setupPipelines(mesh.layout());
     m_sharedMeshes.emplace(TRIAD, std::move(mesh));
   }
-  {
-    MeshData grid_data = loadGrid(20);
-    m_sharedMeshes.emplace(GRID, createMesh(device(), grid_data, true));
-  }
-  {
-    MeshData arrow_data = loadArrowSolid(false);
-    m_sharedMeshes.emplace(ARROW, createMesh(device(), arrow_data, true));
-  }
+  m_sharedMeshes.emplace(GRID, createMesh(device(), loadGrid(20), true));
+  m_sharedMeshes.emplace(ARROW,
+                         createMesh(device(), loadArrowSolid(false), true));
 }
 
 std::tuple<entt::entity, DebugMeshComponent &>

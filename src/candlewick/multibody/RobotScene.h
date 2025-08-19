@@ -125,7 +125,6 @@ namespace multibody {
       bool enable_shadows = true;
       bool enable_ssao = true;
       bool triangle_has_prepass = false;
-      bool enable_normal_target = false;
       ShadowPassConfig shadow_config;
     };
 

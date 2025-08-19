@@ -1,3 +1,4 @@
+/// \copyright Copyright (c) 2025 Inria
 #pragma once
 
 #include "Device.h"

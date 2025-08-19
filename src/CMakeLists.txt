@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 ManifoldFR
+# Copyright (c) 2024-2025 Inria
 
 add_library(
   candlewick_core

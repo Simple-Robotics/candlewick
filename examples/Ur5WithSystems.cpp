@@ -234,7 +234,6 @@ int main(int argc, char **argv) {
   bool performRecording{false};
   RobotScene::Config robot_scene_config;
   robot_scene_config.triangle_has_prepass = true;
-  robot_scene_config.enable_normal_target = true;
 
   argv = app.ensure_utf8(argv);
   app.add_flag("-r,--record", performRecording, "Record output");

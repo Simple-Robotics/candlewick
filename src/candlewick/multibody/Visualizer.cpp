@@ -83,7 +83,6 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
 void Visualizer::initialize() {
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
-  rconfig.enable_normal_target = true;
   robotScene.setConfig(rconfig);
 
   robotScene.directionalLight = {
