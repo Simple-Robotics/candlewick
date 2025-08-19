@@ -31,6 +31,15 @@ static void addFloor(pin::GeometryModel &geom_model) {
   geom_model.addGeometryObject(object);
 }
 
+static void addBall(pin::GeometryModel &geom_model) {
+  auto sp = std::make_shared<coal::Sphere>(0.2);
+  pin::SE3 M = pin::SE3::Identity();
+  M.translation() << 0.4, 0.1, 0.3;
+  pin::GeometryObject object{"sphere", 0ul, sp, M};
+  object.meshColor << 1.0, 1.0, 0.2, 0.3;
+  geom_model.addGeometryObject(object);
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Visualizer example"};
   argv = app.ensure_utf8(argv);
@@ -62,6 +71,7 @@ int main(int argc, char **argv) {
   pin::GeometryModel geom_model;
   loadModels(ur_robot_spec, model, &geom_model, NULL);
   addFloor(geom_model);
+  addBall(geom_model);
 
   Visualizer::Config config{
       window_dims[0],
