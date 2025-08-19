@@ -94,6 +94,13 @@ void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {
     terminate_with_message("Unsupported sample count for MSAA color target.");
   }
   colorMsaa = Texture(device, msaaColorInfo, "MSAA color target");
+
+  if (hasDepthTexture()) {
+    // overwrite current depth texture to make it Msaa
+    auto depthInfo = depthBuffer.description();
+    depthInfo.sample_count = samples;
+    depthBuffer = Texture(device, depthInfo, "Main depth target [MSAA]");
+  }
 }
 
 void RenderContext::presentToSwapchain(CommandBuffer &command_buffer) {
