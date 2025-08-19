@@ -168,16 +168,34 @@ namespace multibody {
     ssao::SsaoPass ssaoPass{NoInit};
     struct GBuffer {
       Texture normalMap{NoInit};
+      Texture resolveNormalMap{NoInit};
 
       // WBOIT buffers
       Texture accumTexture{NoInit};
       Texture revealTexture{NoInit};
+      Texture resolveAccumTexture{NoInit};
+      Texture resolveRevealTexture{NoInit};
       SDL_GPUSampler *sampler = nullptr; // composite pass
 
       bool initialized() const {
         return (sampler != nullptr) && normalMap && accumTexture &&
                revealTexture;
       }
+
+      void release() noexcept {
+        auto *device = normalMap.device();
+        normalMap.destroy();
+        resolveNormalMap.destroy();
+        accumTexture.destroy();
+        revealTexture.destroy();
+        resolveAccumTexture.destroy();
+        resolveRevealTexture.destroy();
+        if (sampler) {
+          SDL_ReleaseGPUSampler(device, sampler);
+          sampler = nullptr;
+        }
+      }
+      ~GBuffer() noexcept { this->release(); }
     } gBuffer;
     ShadowMapPass shadowPass{NoInit};
 

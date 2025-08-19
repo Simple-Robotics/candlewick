@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- core/DepthAndShadowPass : add support for multisampled depth/shadow passes
+- multibody : add MSAA support in `RobotScene` and `Visualizer`
 - core/RenderContext.h : implement move ctor and assignment op
 - multibody/Visualizer : working high DPI support
 - core/GraphicsPipeline : store pipeline metadata

@@ -42,6 +42,7 @@ static RenderContext _create_renderer(const Visualizer::Config &config,
                   Window{"Candlewick Pinocchio visualizer", int(config.width),
                          int(config.height), flags},
                   config.depthStencilFormat};
+  r.enableMSAA(config.sampleCount);
   return r;
 }
 

@@ -145,54 +145,82 @@ RobotScene::RobotScene(entt::registry &registry, const RenderContext &renderer,
   this->loadModels(geom_model, geom_data);
 }
 
+auto createTextureWithMultisampledVariant(const Device &device,
+                                          SDL_GPUTextureCreateInfo texture_desc,
+                                          const char *name) {
+  const auto sample_count = texture_desc.sample_count;
+  auto texture_desc_resolve = texture_desc;
+  texture_desc_resolve.sample_count = SDL_GPU_SAMPLECOUNT_1;
+  if (!SDL_GPUTextureSupportsSampleCount(device, texture_desc.format,
+                                         sample_count)) {
+    terminate_with_message(
+        "Texture with format {:s} does not support sample count {:d}",
+        magic_enum::enum_name(texture_desc.format),
+        sdlSampleToValue(sample_count));
+  }
+  if (!SDL_GPUTextureSupportsFormat(device, texture_desc.format,
+                                    texture_desc.type, texture_desc.usage)) {
+    terminate_with_message("Texture format + type + usage unsupported.");
+  }
+  return std::tuple{
+      Texture{device, texture_desc, name},
+      Texture{device, texture_desc_resolve, name},
+  };
+}
+
 void RobotScene::initGBuffer() {
-  const auto [width, height] = m_renderer.window.size();
-  gBuffer.normalMap = Texture{device(),
-                              {
-                                  .type = SDL_GPU_TEXTURETYPE_2D,
-                                  .format = SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
-                                  .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
-                                           SDL_GPU_TEXTUREUSAGE_SAMPLER,
-                                  .width = Uint32(width),
-                                  .height = Uint32(height),
-                                  .layer_count_or_depth = 1,
-                                  .num_levels = 1,
-                                  .sample_count = SDL_GPU_SAMPLECOUNT_1,
-                                  .props = 0,
-                              },
-                              "GBuffer normal"};
+  auto sample_count = m_renderer.getMsaaSampleCount();
+  const auto [width, height] = m_renderer.window.sizeInPixels();
+  std::tie(gBuffer.normalMap, gBuffer.resolveNormalMap) =
+      createTextureWithMultisampledVariant(
+          device(),
+          {
+              .type = SDL_GPU_TEXTURETYPE_2D,
+              .format = SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
+              .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
+                       SDL_GPU_TEXTUREUSAGE_SAMPLER,
+              .width = Uint32(width),
+              .height = Uint32(height),
+              .layer_count_or_depth = 1,
+              .num_levels = 1,
+              .sample_count = sample_count,
+              .props = 0,
+          },
+          "GBuffer [Normal map]");
 
-  gBuffer.accumTexture =
-      Texture{device(),
-              {
-                  .type = SDL_GPU_TEXTURETYPE_2D,
-                  .format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
-                  .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
-                           SDL_GPU_TEXTUREUSAGE_SAMPLER,
-                  .width = Uint32(width),
-                  .height = Uint32(height),
-                  .layer_count_or_depth = 1,
-                  .num_levels = 1,
-                  .sample_count = SDL_GPU_SAMPLECOUNT_1,
-                  .props = 0,
-              },
-              "WBOIT Accumulation"};
+  std::tie(gBuffer.accumTexture, gBuffer.resolveAccumTexture) =
+      createTextureWithMultisampledVariant(
+          device(),
+          {
+              .type = SDL_GPU_TEXTURETYPE_2D,
+              .format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
+              .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
+                       SDL_GPU_TEXTUREUSAGE_SAMPLER,
+              .width = Uint32(width),
+              .height = Uint32(height),
+              .layer_count_or_depth = 1,
+              .num_levels = 1,
+              .sample_count = sample_count,
+              .props = 0,
+          },
+          "WBOIT Accumulation");
 
-  gBuffer.revealTexture =
-      Texture{device(),
-              {
-                  .type = SDL_GPU_TEXTURETYPE_2D,
-                  .format = SDL_GPU_TEXTUREFORMAT_R8_UNORM,
-                  .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
-                           SDL_GPU_TEXTUREUSAGE_SAMPLER,
-                  .width = Uint32(width),
-                  .height = Uint32(height),
-                  .layer_count_or_depth = 1,
-                  .num_levels = 1,
-                  .sample_count = SDL_GPU_SAMPLECOUNT_1,
-                  .props = 0,
-              },
-              "WBOIT Revelage"};
+  std::tie(gBuffer.revealTexture, gBuffer.resolveRevealTexture) =
+      createTextureWithMultisampledVariant(
+          device(),
+          {
+              .type = SDL_GPU_TEXTURETYPE_2D,
+              .format = SDL_GPU_TEXTUREFORMAT_R8_UNORM,
+              .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
+                       SDL_GPU_TEXTUREUSAGE_SAMPLER,
+              .width = Uint32(width),
+              .height = Uint32(height),
+              .layer_count_or_depth = 1,
+              .num_levels = 1,
+              .sample_count = sample_count,
+              .props = 0,
+          },
+          "WBOIT Revealage");
 
   SDL_GPUSamplerCreateInfo sic{
       .min_filter = SDL_GPU_FILTER_LINEAR,
@@ -230,6 +258,7 @@ void RobotScene::initCompositePipeline(const MeshLayout &layout) {
           .fill_mode = SDL_GPU_FILLMODE_FILL,
           .cull_mode = SDL_GPU_CULLMODE_NONE,
       },
+      .multisample_state{m_renderer.getMsaaSampleCount()},
       .depth_stencil_state{
           .enable_depth_test = false,
           .enable_depth_write = false,
@@ -259,10 +288,13 @@ void RobotScene::ensurePipelinesExist(
       m_pipelines.set(key, std::move(pipeline));
     }
 
+    const bool has_msaa = m_renderer.msaaEnabled();
     // handle other pipelines for effects
     if (key.type == PIPELINE_TRIANGLEMESH) {
       if (!ssaoPass.pipeline.initialized()) {
-        ssaoPass = ssao::SsaoPass(m_renderer, gBuffer.normalMap);
+        ssaoPass =
+            ssao::SsaoPass(m_renderer, has_msaa ? gBuffer.resolveNormalMap
+                                                : gBuffer.normalMap);
       }
       // configure shadow pass
       if (enable_shadows && !shadowPass.initialized()) {
@@ -388,6 +420,10 @@ getOpaqueRenderPass(const RenderContext &renderer,
     color_targets[1].load_op = SDL_GPU_LOADOP_CLEAR;
     color_targets[1].store_op = SDL_GPU_STOREOP_STORE;
     color_targets[1].cycle = false;
+    if (renderer.msaaEnabled()) {
+      color_targets[1].resolve_texture = gbuffer.resolveNormalMap;
+      color_targets[1].store_op = SDL_GPU_STOREOP_RESOLVE;
+    }
   }
   Uint32 num_color_targets = has_normals_target ? 2 : 1;
   return SDL_BeginGPURenderPass(command_buffer, color_targets,
@@ -429,6 +465,11 @@ void RobotScene::compositeTransparencyPass(CommandBuffer &command_buffer) {
   // op is LOAD - we want to keep results from opaque pass
   target.load_op = SDL_GPU_LOADOP_LOAD;
   target.store_op = SDL_GPU_STOREOP_STORE;
+  const bool has_msaa = m_renderer.msaaEnabled();
+  if (has_msaa) {
+    target.resolve_texture = m_renderer.resolvedColorTarget();
+    target.store_op = SDL_GPU_STOREOP_RESOLVE;
+  }
 
   SDL_GPURenderPass *render_pass =
       SDL_BeginGPURenderPass(command_buffer, &target, 1, nullptr);
@@ -476,13 +517,15 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
 
   // if geometry is opaque, this is the first render pass, hence we clear the
   // color target transparent objects do not participate in SSAO
-  SDL_GPURenderPass *render_pass =
-      transparent
-          ? getTransparentRenderPass(m_renderer, command_buffer, gBuffer)
-          : getOpaqueRenderPass(
-                m_renderer, command_buffer, SDL_GPU_LOADOP_CLEAR,
-                pbrHasPrepass() ? SDL_GPU_LOADOP_LOAD : SDL_GPU_LOADOP_CLEAR,
-                m_config.enable_normal_target, gBuffer);
+  SDL_GPURenderPass *render_pass;
+  if (transparent) {
+    render_pass = getTransparentRenderPass(m_renderer, command_buffer, gBuffer);
+  } else {
+    render_pass = getOpaqueRenderPass(
+        m_renderer, command_buffer, SDL_GPU_LOADOP_CLEAR,
+        pbrHasPrepass() ? SDL_GPU_LOADOP_LOAD : SDL_GPU_LOADOP_CLEAR, true,
+        gBuffer);
+  }
 
   if (shadowsEnabled()) {
     rend::bindFragmentSamplers(render_pass, SHADOW_MAP_SLOT,
@@ -650,7 +693,9 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
   assert(validateMeshLayout(layout));
 
   auto [type, transparent, renderMode] = key;
-  SDL_Log("Building pipeline for type %s", magic_enum::enum_name(type).data());
+  const auto sample_count = m_renderer.getMsaaSampleCount();
+  SDL_Log("Building pipeline for type %s (%d MSAA)",
+          magic_enum::enum_name(type).data(), sdlSampleToValue(sample_count));
 
   PipelineConfig pipe_config = getPipelineConfig(m_config, type, transparent);
   auto vertexShader =
@@ -707,6 +752,7 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
           .has_depth_stencil_target = true,
       },
   };
+  desc.multisample_state.sample_count = sample_count;
 
   if (type == PIPELINE_TRIANGLEMESH) {
     if (transparent) {
@@ -736,7 +782,6 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
           .enable_blend = true,
       };
 
-      desc.target_info.num_color_targets = 2;
       desc.depth_stencil_state.enable_depth_write = false;
     }
 

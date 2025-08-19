@@ -118,10 +118,10 @@ void DebugScene::render(CommandBuffer &cmdBuf, const Camera &camera) const {
   color_target_info.store_op = SDL_GPU_STOREOP_STORE;
   color_target_info.cycle = false;
   // do resolve to the target that's presented to swapchain
-  if (m_renderer.msaaEnabled()) {
-    color_target_info.resolve_texture = m_renderer.resolvedColorTarget();
-    color_target_info.store_op = SDL_GPU_STOREOP_RESOLVE_AND_STORE;
-  }
+  // if (m_renderer.msaaEnabled()) {
+  //   color_target_info.resolve_texture = m_renderer.resolvedColorTarget();
+  //   color_target_info.store_op = SDL_GPU_STOREOP_RESOLVE_AND_STORE;
+  // }
   SDL_GPUDepthStencilTargetInfo depth_target_info;
   SDL_zero(depth_target_info);
   depth_target_info.load_op = SDL_GPU_LOADOP_LOAD;

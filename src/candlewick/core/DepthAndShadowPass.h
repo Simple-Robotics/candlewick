@@ -58,6 +58,7 @@ public:
     bool enable_depth_bias;
     bool enable_depth_clip;
     const char *pipeline_name;
+    SDL_GPUSampleCount sample_count;
   };
 
   SDL_GPUTexture *depthTexture = nullptr;

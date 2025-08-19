@@ -29,7 +29,7 @@ create_depth_pass_pipeline(const Device &device, const MeshLayout &layout,
               .enable_depth_bias = config.enable_depth_bias,
               .enable_depth_clip = config.enable_depth_clip,
           },
-          .multisample_state{},
+          .multisample_state{config.sample_count},
           .depth_stencil_state{
               .compare_op = SDL_GPU_COMPAREOP_LESS,
               .enable_depth_test = true,
@@ -159,6 +159,7 @@ ShadowMapPass::ShadowMapPass(const Device &device, const MeshLayout &layout,
                                             config.enable_depth_bias,
                                             config.enable_depth_clip,
                                             nullptr,
+                                            SDL_GPU_SAMPLECOUNT_1,
                                         });
 
   SDL_GPUSamplerCreateInfo sample_desc{
