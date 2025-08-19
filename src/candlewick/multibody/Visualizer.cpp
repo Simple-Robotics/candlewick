@@ -208,10 +208,12 @@ void Visualizer::render() {
     robotScene.renderTransparent(command_buffer, controller);
     if (m_showGui)
       guiSystem.render(command_buffer);
-  }
 
-  // present (blit) main color target to swapchain
-  renderer.presentToSwapchain(command_buffer);
+    // present (blit) main color target to swapchain
+    renderer.presentToSwapchain(command_buffer);
+  } else {
+    terminate_with_message("Failed to acquire swapchain: {:s}", SDL_GetError());
+  }
   command_buffer.submit();
 }
 
