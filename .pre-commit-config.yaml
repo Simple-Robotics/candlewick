@@ -12,7 +12,7 @@ repos:
       types: [text]
       files: '\.(cpp|cxx|c|h|hpp|hxx|txx)$'
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
         args: ['--maxkb=1800']
@@ -30,12 +30,12 @@ repos:
                 doc/doxygen-awesome.*
             )$
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.12.7'
+    rev: 'v0.12.9'
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
   - repo: https://github.com/BlankSpruce/gersemi
-    rev: 0.21.0
+    rev: 0.22.1
     hooks:
       - id: gersemi
