@@ -79,6 +79,9 @@ public:
   }
 
   auto primitiveType() const noexcept { return m_meta.primitiveType; }
+  auto numColorTargets() const noexcept {
+    return Uint32(m_meta.colorTargets.size());
+  }
 
   void bind(SDL_GPURenderPass *render_pass) const noexcept {
     SDL_BindGPUGraphicsPipeline(render_pass, m_pipeline);
