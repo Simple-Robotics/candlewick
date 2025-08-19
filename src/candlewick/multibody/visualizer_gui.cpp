@@ -2,7 +2,6 @@
 #include "RobotDebug.h"
 
 #include <SDL3/SDL_events.h>
-#include <SDL3/SDL_log.h>
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -183,7 +182,7 @@ void Visualizer::processEvents() {
     ImGui_ImplSDL3_ProcessEvent(&event);
 
     if (event.type == SDL_EVENT_QUIT) {
-      SDL_Log("Exiting application...");
+      spdlog::info("Exiting application...");
       m_shouldExit = true;
     }
 

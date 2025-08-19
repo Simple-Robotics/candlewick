@@ -706,8 +706,8 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
 
   auto [type, transparent, renderMode] = key;
   const auto sample_count = m_renderer.getMsaaSampleCount();
-  SDL_Log("Building pipeline for type %s (%d MSAA)",
-          magic_enum::enum_name(type).data(), sdlSampleToValue(sample_count));
+  spdlog::info("Building pipeline for type {:s} ({:d} MSAA)",
+               magic_enum::enum_name(type), sdlSampleToValue(sample_count));
 
   PipelineConfig pipe_config = getPipelineConfig(m_config, type, transparent);
   auto vertexShader =
@@ -797,11 +797,11 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
       desc.depth_stencil_state.enable_depth_write = false;
     }
 
-    SDL_Log("  > transparency: %s", transparent ? "true" : "false");
-    SDL_Log("  > render mode: %s", magic_enum::enum_name(renderMode).data());
-    SDL_Log("  > depth compare op: %s",
-            magic_enum::enum_name(depth_compare_op).data());
-    SDL_Log("  > prepass: %s", had_prepass ? "true" : "false");
+    spdlog::info(" > transparency:  {}", transparent);
+    spdlog::info(" > render mode:   {:s}", magic_enum::enum_name(renderMode));
+    spdlog::info(" > depth comp op: {:s}",
+                 magic_enum::enum_name(depth_compare_op));
+    spdlog::info(" > prepass:       {}", had_prepass);
   }
 
   return GraphicsPipeline(device(), desc, nullptr);

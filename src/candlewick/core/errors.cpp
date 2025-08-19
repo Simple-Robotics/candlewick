@@ -1,5 +1,7 @@
 #include "errors.h"
 #include <format>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/std.h>
 
 namespace candlewick {
 RAIIException::RAIIException(std::string_view msg,
@@ -15,4 +17,10 @@ namespace detail {
     return std::format("{:s} :: {:s}", fname, std::vformat(fmtstr, args));
   }
 } // namespace detail
+
+void unreachable_with_message(std::string_view msg,
+                              std::source_location location) {
+  spdlog::error("{} :: {:s}", location, msg);
+  ::candlewick::unreachable();
+}
 } // namespace candlewick

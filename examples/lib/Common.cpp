@@ -4,7 +4,6 @@
 
 #include "Common.h"
 #include <SDL3/SDL_init.h>
-#include <SDL3/SDL_log.h>
 
 using namespace candlewick;
 

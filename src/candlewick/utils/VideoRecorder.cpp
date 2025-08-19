@@ -7,6 +7,7 @@
 #include <SDL3/SDL_filesystem.h>
 #include <magic_enum/magic_enum.hpp>
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 extern "C" {
 #include <libavutil/pixfmt.h>
@@ -279,7 +280,7 @@ namespace media {
       terminate_with_message("Recording stream already open.");
     }
 
-    SDL_Log("[VideoRecorder] Opening stream at %s", filename.data());
+    spdlog::debug("Opening stream at %s", filename.data());
     m_width = width;
     m_height = height;
     if (settings.outputWidth == 0)

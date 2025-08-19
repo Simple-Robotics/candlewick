@@ -4,7 +4,6 @@
 
 #include <utility>
 #include <SDL3/SDL_init.h>
-#include <SDL3/SDL_log.h>
 
 namespace candlewick {
 RenderContext::RenderContext(Device &&device_, Window &&window_,
@@ -71,8 +70,8 @@ void RenderContext::createRenderTargets(
   }
 
   depthBuffer = Texture(this->device, depthInfo, "Main depth target");
-  SDL_Log("Created depth texture of format %s, size %d x %d\n",
-          magic_enum::enum_name(depthInfo.format).data(), width, height);
+  spdlog::debug("Created depth texture of format {:s}, size {:d} x {:d}",
+                magic_enum::enum_name(depthInfo.format), width, height);
 }
 
 void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {

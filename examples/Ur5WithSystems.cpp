@@ -118,7 +118,7 @@ void eventLoop(const RenderContext &renderer) {
     ImGui_ImplSDL3_ProcessEvent(&event);
     ImGuiIO &io = ImGui::GetIO();
     if (event.type == SDL_EVENT_QUIT) {
-      SDL_Log("Application exit requested.");
+      spdlog::info("Application exit requested.");
       quitRequested = true;
       break;
     }
@@ -202,11 +202,11 @@ static void addTeapotGeometry(pin::GeometryModel &geom_model) {
 
 static void screenshotButtonCallback(const RenderContext &renderer,
                                      media::TransferBufferPool &pool,
-                                     const char *filename) {
+                                     std::string_view filename) {
   const auto &device = renderer.device;
   CommandBuffer command_buffer{device};
 
-  SDL_Log("Saving screenshot at %s", filename);
+  spdlog::info("Saving screenshot at {:s}", filename);
   media::saveTextureToFile(command_buffer, device, pool,
                            renderer.resolvedColorTarget(),
                            renderer.colorFormat(), wWidth, wHeight, filename);
@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
   const size_t numRobotShapes =
       registry.view<const multibody::PinGeomObjComponent>().size();
   SDL_assert(numRobotShapes == geom_model.ngeoms);
-  SDL_Log("Registered %zu robot geometry objects.", numRobotShapes);
+  spdlog::info("Registered {:d} robot geometry objects.", numRobotShapes);
 
   // DEBUG SYSTEM
 
@@ -539,7 +539,7 @@ int main(int argc, char **argv) {
       }
       gui_system.render(command_buffer);
     } else {
-      SDL_Log("Failed to acquire swapchain: %s", SDL_GetError());
+      spdlog::info("Failed to acquire swapchain: {:s}", SDL_GetError());
       continue;
     }
 

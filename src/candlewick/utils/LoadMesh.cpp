@@ -5,7 +5,7 @@
 #include "../core/DefaultVertex.h"
 
 #include <source_location>
-#include <SDL3/SDL_log.h>
+#include <spdlog/spdlog.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
@@ -55,7 +55,7 @@ MeshData loadAiMesh(const aiMesh *inMesh, const aiMatrix4x4 transform) {
 static void log_resource_failure(
     const char *err_message,
     std::source_location loc = std::source_location::current()) {
-  SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s: Failed to load resource [%s]",
+  spdlog::log(spdlog::level::warn, "{}: Failed to load resource [{:s}]",
               loc.function_name(), err_message);
 }
 

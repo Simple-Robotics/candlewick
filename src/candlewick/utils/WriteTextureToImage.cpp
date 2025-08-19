@@ -47,7 +47,7 @@ namespace media {
 
       // grow by 20%
       _currentBufSize = Uint32(1.2 * requiredSize);
-      SDL_Log("Reallocate transfer buffer of size %u", _currentBufSize);
+      spdlog::debug("Reallocate transfer buffer of size {:d}", _currentBufSize);
       _buffer = acquireBufferImpl(_device, _currentBufSize);
     }
     return _buffer;

@@ -10,7 +10,6 @@
 #include <coal/shape/geometric_shapes.h>
 #include <coal/hfield.h>
 #include <SDL3/SDL_assert.h>
-#include <SDL3/SDL_log.h>
 
 namespace candlewick {
 

@@ -4,8 +4,6 @@
 #include "Collision.h"
 #include "Camera.h"
 
-#include <SDL3/SDL_log.h>
-
 namespace candlewick {
 
 static GraphicsPipeline
@@ -112,18 +110,16 @@ void DepthPass::release() noexcept {
 }
 
 void ShadowMapPass::configureAtlasRegions(const Config &config) {
-  SDL_Log("Building shadow atlas.\n"
-          "  > Dims: (%d, %d)\n"
-          "  > %d regions:",
-          shadowMap.width(), shadowMap.height(), config.numLights);
+  spdlog::info("Building shadow atlas (dims: ({:d}, {:d}), regions: {:d}).",
+               shadowMap.width(), shadowMap.height(), config.numLights);
 
   // compute atlas regions
   for (Uint32 i = 0; i < config.numLights; i++) {
     regions[i] = AtlasRegion(i * config.width, 0, config.width, config.height);
     const auto &reg = regions[i];
     regions[i] = reg;
-    SDL_Log("    - %d: [%d, %d] x [%d, %d]", i, reg.x, reg.x + reg.w, reg.y,
-            reg.y + reg.h);
+    spdlog::info("    - {:d}: [{:d}, {:d}] x [{:d}, {:d}]", i, reg.x,
+                 reg.x + reg.w, reg.y, reg.y + reg.h);
   }
 }
 

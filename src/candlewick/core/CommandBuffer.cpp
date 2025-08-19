@@ -11,8 +11,7 @@ bool CommandBuffer::cancel() noexcept {
   bool ret = SDL_CancelGPUCommandBuffer(m_handle);
   m_handle = nullptr;
   if (!ret) {
-    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                "Failed to cancel command buffer: %s", SDL_GetError());
+    spdlog::error("Failed to cancel command buffer: {:s}", SDL_GetError());
     return false;
   }
   return true;

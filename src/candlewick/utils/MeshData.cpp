@@ -3,8 +3,6 @@
 #include "../core/Mesh.h"
 #include "../core/CommandBuffer.h"
 
-#include <SDL3/SDL_log.h>
-
 namespace candlewick {
 
 MeshData::MeshData(NoInitT) {}
@@ -160,10 +158,7 @@ void uploadMeshToDevice(const Device &device, const MeshView &meshView,
   SDL_ReleaseGPUTransferBuffer(device, transfer_buffer);
   SDL_EndGPUCopyPass(copy_pass);
   if (!upload_command_buffer.submit()) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "%s: Failed to submit command buffer: %s", __FILE__,
-                 SDL_GetError());
-    assert(false);
+    spdlog::error("Failed to submit command buffer: {:s}", SDL_GetError());
   }
 }
 

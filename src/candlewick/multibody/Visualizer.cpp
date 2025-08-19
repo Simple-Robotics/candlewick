@@ -36,7 +36,7 @@ static RenderContext _create_renderer(const Visualizer::Config &config,
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     terminate_with_message("Failed to init video: {:s}", SDL_GetError());
   }
-  SDL_Log("Video driver: %s", SDL_GetCurrentVideoDriver());
+  spdlog::info("Video driver: {:s}", SDL_GetCurrentVideoDriver());
 
   RenderContext r{Device{auto_detect_shader_format_subset()},
                   Window{"Candlewick Pinocchio visualizer", int(config.width),
@@ -104,15 +104,15 @@ void Visualizer::initialize() {
   this->resetCamera();
   this->loadViewerModel();
 
-  SDL_Log("┌───────Controls────────");
-  SDL_Log("│ Toggle GUI:      [%s]", "H");
-  SDL_Log("│ Move camera:     [%s]",
-          sdlMouseButtonToString(cameraParams.mouseButtons.rotButton));
-  SDL_Log("│ Pan camera:      [%s]",
-          sdlMouseButtonToString(cameraParams.mouseButtons.panButton));
-  SDL_Log("│ Y-rotate camera: [%s]",
-          sdlMouseButtonToString(cameraParams.mouseButtons.yRotButton));
-  SDL_Log("└───────────────────────");
+  spdlog::info("┌───────Controls──────────");
+  spdlog::info("│ Toggle GUI:      [{:s}] ", "H");
+  spdlog::info("│ Move camera:     [{:s}] ",
+               sdlMouseButtonToString(cameraParams.mouseButtons.rotButton));
+  spdlog::info("│ Pan camera:      [{:s}] ",
+               sdlMouseButtonToString(cameraParams.mouseButtons.panButton));
+  spdlog::info("│ Y-rotate camera: [{:s}] ",
+               sdlMouseButtonToString(cameraParams.mouseButtons.yRotButton));
+  spdlog::info("└─────────────────────────");
 }
 
 void Visualizer::resetCamera() {
@@ -220,7 +220,8 @@ void Visualizer::render() {
 void Visualizer::takeScreenshot(std::string_view filename) {
   CommandBuffer command_buffer{device()};
   auto [width, height] = renderer.window.sizeInPixels();
-  SDL_Log("Saving %dx%d screenshot at: '%s'", width, height, filename.data());
+  spdlog::info("Saving {:d} x {:d} screenshot at: \'{:s}\'", width, height,
+               filename);
   media::saveTextureToFile(command_buffer, device(), m_transferBuffers,
                            renderer.resolvedColorTarget(),
                            renderer.colorFormat(), Uint16(width),
@@ -237,10 +238,9 @@ void Visualizer::startRecording([[maybe_unused]] std::string_view filename) {
                        m_videoSettings);
   m_currentVideoFilename = filename;
 #else
-  SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-              "Visualizer::%s() does nothing here, since Candlewick was "
-              "compiled without FFmpeg support.",
-              __FUNCTION__);
+  spdlog::warn("Visualizer::{:s}() does nothing here, since Candlewick was "
+               "compiled without FFmpeg support.",
+               __FUNCTION__);
 #endif
 }
 
@@ -249,7 +249,7 @@ bool Visualizer::stopRecording() {
   if (!m_videoRecorder.isRecording())
     return false;
   m_currentVideoFilename.clear();
-  SDL_Log("Wrote %d frames.", m_videoRecorder.frameCounter());
+  spdlog::info("Wrote {:d} frames.", m_videoRecorder.frameCounter());
   m_videoRecorder.close();
   return true;
 #else
@@ -295,10 +295,6 @@ void Visualizer::setFrameExternalForce(pin::FrameIndex frame_id,
   }
 
   // otherwise, create the arrow
-#ifndef NDEBUG
-  SDL_Log("Force arrow not found for frame %zu, adding arrow with lifetime %u",
-          frame_id, initial_lifetime);
-#endif
   auto [ent, dmc] = debugScene.addArrow();
   registry.emplace<ExternalForceComponent>(ent, frame_id, force,
                                            initial_lifetime, dmc.colors[0]);
