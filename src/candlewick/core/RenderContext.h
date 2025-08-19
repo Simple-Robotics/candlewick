@@ -22,6 +22,8 @@ inline constexpr int sdlSampleToValue(SDL_GPUSampleCount samples) {
     return 4;
   case SDL_GPU_SAMPLECOUNT_8:
     return 8;
+  default:
+    return 0;
   }
 }
 
@@ -78,8 +80,11 @@ public:
     if (samples > SDL_GPU_SAMPLECOUNT_1) {
       m_msaaEnabled = true;
       createMsaaTargets(samples);
-      int sample_size = sdlSampleToValue(samples);
-      SDL_Log("MSAA enabled with %d samples", sample_size);
+      if (int sample_size = sdlSampleToValue(samples)) {
+        SDL_Log("MSAA enabled with %d samples", sample_size);
+      } else {
+        terminate_with_message("Unrecognized sample count {:d}", sample_size);
+      }
     } else {
       disableMSAA();
     }
