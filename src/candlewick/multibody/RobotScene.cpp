@@ -15,6 +15,18 @@
 #include <magic_enum/magic_enum_utility.hpp>
 #include <magic_enum/magic_enum_switch.hpp>
 
+namespace candlewick {
+/// \brief Terminate the application after encountering an invalid enum value.
+template <typename T>
+  requires std::is_enum_v<T>
+[[noreturn]] void
+invalid_enum(const char *msg, T type,
+             std::source_location location = std::source_location::current()) {
+  terminate_with_message(location, "Invalid enum: {:s} - {:s}", msg,
+                         magic_enum::enum_name(type));
+}
+} // namespace candlewick
+
 namespace candlewick::multibody {
 
 struct alignas(16) LightArrayUbo {
