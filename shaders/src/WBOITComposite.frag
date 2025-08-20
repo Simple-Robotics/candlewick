@@ -1,15 +1,14 @@
 #version 450
-layout(set=2, binding=0) uniform sampler2D accumTexture;
-layout(set=2, binding=1) uniform sampler2D revealTexture;
+layout(set=2, binding=0) uniform sampler2DMS accumTexture;
+layout(set=2, binding=1) uniform sampler2DMS revealTexture;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec2 viewportSize = textureSize(accumTexture, 0).xy;
-    vec2 uv = gl_FragCoord.xy / viewportSize;
+    ivec2 uv = ivec2(gl_FragCoord.xy);
 
-    vec4 accum = texture(accumTexture, uv);
-    float reveal = texture(revealTexture, uv).r;
+    vec4 accum   = texelFetch(accumTexture, uv, gl_SampleID);
+    float reveal = texelFetch(revealTexture, uv, gl_SampleID).r;
 
     vec3 color = accum.rgb;
     if (accum.a > 0.001) {

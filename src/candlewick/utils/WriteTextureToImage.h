@@ -32,6 +32,7 @@ namespace media {
   /// \brief Download texture to a mapped buffer.
   ///
   /// \warning The user is expected to unmap the buffer in the result struct.
+  /// \warning Calling this function will submit the provided command buffer.
   DownloadResult downloadTexture(CommandBuffer &command_buffer,
                                  const Device &device, TransferBufferPool &pool,
                                  SDL_GPUTexture *texture,

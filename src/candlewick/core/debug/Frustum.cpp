@@ -7,8 +7,7 @@
 namespace candlewick {
 namespace frustum_debug {
 
-  SDL_GPUGraphicsPipeline *
-  createFrustumDebugPipeline(const RenderContext &renderer) {
+  GraphicsPipeline createFrustumDebugPipeline(const RenderContext &renderer) {
     const auto &device = renderer.device;
     auto vertexShader = Shader::fromMetadata(device, "FrustumDebug.vert");
     auto fragmentShader = Shader::fromMetadata(device, "VertexColor.frag");
@@ -17,19 +16,25 @@ namespace frustum_debug {
     SDL_zero(color_target);
     color_target.format = renderer.getSwapchainTextureFormat();
 
-    SDL_GPUGraphicsPipelineCreateInfo info{
-        .vertex_shader = vertexShader,
-        .fragment_shader = fragmentShader,
-        .primitive_type = SDL_GPU_PRIMITIVETYPE_LINELIST,
-        .depth_stencil_state{.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL,
-                             .enable_depth_test = true,
-                             .enable_depth_write = true},
-        .target_info{.color_target_descriptions = &color_target,
-                     .num_color_targets = 1,
-                     .depth_stencil_format = renderer.depthFormat(),
-                     .has_depth_stencil_target = true},
-    };
-    return SDL_CreateGPUGraphicsPipeline(device, &info);
+    return GraphicsPipeline(
+        device,
+        {
+            .vertex_shader = vertexShader,
+            .fragment_shader = fragmentShader,
+            .primitive_type = SDL_GPU_PRIMITIVETYPE_LINELIST,
+            .depth_stencil_state{
+                .compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL,
+                .enable_depth_test = true,
+                .enable_depth_write = true,
+            },
+            .target_info{
+                .color_target_descriptions = &color_target,
+                .num_color_targets = 1,
+                .depth_stencil_format = renderer.depthFormat(),
+                .has_depth_stencil_target = true,
+            },
+        },
+        "Frustum");
   }
 
   struct alignas(16) ubo_t {
@@ -45,12 +50,12 @@ namespace frustum_debug {
                                           CommandBuffer &cmdBuf) {
     SDL_GPUColorTargetInfo color_target;
     SDL_zero(color_target);
-    color_target.texture = renderer.swapchain;
+    color_target.texture = renderer.colorTarget();
     color_target.load_op = SDL_GPU_LOADOP_LOAD;
     color_target.store_op = SDL_GPU_STOREOP_STORE;
     SDL_GPUDepthStencilTargetInfo depth_target;
     SDL_zero(depth_target);
-    depth_target.texture = renderer.depth_texture;
+    depth_target.texture = renderer.depthTarget();
     depth_target.load_op = SDL_GPU_LOADOP_LOAD;
     depth_target.store_op = SDL_GPU_STOREOP_STORE;
     depth_target.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
@@ -107,7 +112,7 @@ FrustumBoundsDebugSystem::FrustumBoundsDebugSystem(
     entt::registry &registry, const RenderContext &renderer)
     : renderer(renderer)
     , device(renderer.device)
-    , pipeline(nullptr)
+    , pipeline(NoInit)
     , _registry(registry) {
   pipeline = frustum_debug::createFrustumDebugPipeline(renderer);
 }
@@ -118,7 +123,7 @@ void FrustumBoundsDebugSystem::render(CommandBuffer &cmdBuf,
   SDL_GPURenderPass *render_pass =
       frustum_debug::getDefaultRenderPass(renderer, cmdBuf);
 
-  SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
+  pipeline.bind(render_pass);
 
   for (auto [ent, item] : reg.view<const DebugFrustumComponent>().each()) {
     frustum_debug::renderFrustum(cmdBuf, render_pass, camera, *item.otherCam,

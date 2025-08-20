@@ -145,7 +145,7 @@ MeshData loadCoalPrimitive(const coal::ShapeBase &geometry) {
     float d;
     getPlaneOrHalfspaceNormalOffset(geometry, n, d);
     const auto quat = Eigen::Quaternionf::FromTwoVectors(Float3::UnitZ(), n);
-    transform.scale(kPlaneScale).rotate(quat).translate(d * Float3::UnitZ());
+    transform.rotate(quat).translate(d * Float3::UnitZ()).scale(kPlaneScale);
     break;
   }
   default:

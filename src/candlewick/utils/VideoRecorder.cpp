@@ -2,6 +2,7 @@
 #include "WriteTextureToImage.h"
 #include "../core/errors.h"
 #include "../core/Device.h"
+#include "../core/Texture.h"
 
 #include <SDL3/SDL_filesystem.h>
 #include <magic_enum/magic_enum.hpp>
@@ -298,11 +299,11 @@ namespace media {
 
   VideoRecorder::~VideoRecorder() = default;
 
-  void VideoRecorder::writeTextureToVideoFrame(CommandBuffer &command_buffer,
-                                               const Device &device,
-                                               TransferBufferPool &pool,
-                                               SDL_GPUTexture *texture,
-                                               SDL_GPUTextureFormat format) {
+  void VideoRecorder::writeTextureToFrame(CommandBuffer &command_buffer,
+                                          const Device &device,
+                                          TransferBufferPool &pool,
+                                          SDL_GPUTexture *texture,
+                                          SDL_GPUTextureFormat format) {
 
     auto res = downloadTexture(command_buffer, device, pool, texture, format,
                                Uint16(m_width), Uint16(m_height));
@@ -313,6 +314,14 @@ namespace media {
                        outputFormat);
 
     SDL_UnmapGPUTransferBuffer(device, res.buffer);
+  }
+
+  void VideoRecorder::writeTextureToFrame(CommandBuffer &command_buffer,
+                                          const Device &device,
+                                          TransferBufferPool &pool,
+                                          const Texture &texture) {
+    this->writeTextureToFrame(command_buffer, device, pool, texture,
+                              texture.format());
   }
 
 } // namespace media

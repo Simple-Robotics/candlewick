@@ -6,7 +6,6 @@
 #include "Multibody.h"
 
 #include "../core/Device.h"
-#include "../core/Scene.h"
 #include "../core/RenderContext.h"
 #include "../core/LightUniforms.h"
 #include "../core/DepthAndShadowPass.h"
@@ -21,6 +20,7 @@
 #include <set>
 
 namespace candlewick {
+enum class RenderMode;
 
 /// \brief Terminate the application after encountering an invalid enum value.
 template <typename T>
@@ -66,13 +66,12 @@ namespace multibody {
     void initCompositePipeline(const MeshLayout &layout);
 
   public:
-    enum PipelineType {
+    enum class PipelineType {
       PIPELINE_TRIANGLEMESH,
       PIPELINE_HEIGHTFIELD,
       PIPELINE_POINTCLOUD,
     };
-    static constexpr size_t kNumPipelineTypes =
-        magic_enum::enum_count<PipelineType>();
+    using enum PipelineType;
     enum VertexUniformSlots : Uint32 { TRANSFORM, LIGHT_MATRICES };
     enum FragmentUniformSlots : Uint32 {
       MATERIAL,
@@ -98,14 +97,13 @@ namespace multibody {
       }
     }
 
-    template <PipelineType t> using pipeline_tag = entt::tag<t>;
+    template <PipelineType T> using pipeline_tag = entt::integral_constant<T>;
 
     struct PipelineConfig {
       // shader set
       const char *vertex_shader_path;
       const char *fragment_shader_path;
       SDL_GPUCullMode cull_mode = SDL_GPU_CULLMODE_BACK;
-      SDL_GPUFillMode fill_mode = SDL_GPU_FILLMODE_FILL;
     };
     struct Config {
       struct TrianglePipelineConfig {
@@ -124,29 +122,80 @@ namespace multibody {
           .fragment_shader_path = "Hud3dElement.frag",
       };
       PipelineConfig pointcloud_config;
-      bool enable_msaa = false;
       bool enable_shadows = true;
       bool enable_ssao = true;
       bool triangle_has_prepass = false;
-      bool enable_normal_target = false;
-      SDL_GPUSampleCount msaa_samples = SDL_GPU_SAMPLECOUNT_1;
       ShadowPassConfig shadow_config;
+    };
+
+    struct PipelineKey {
+      PipelineType type;
+      bool transparent;
+      RenderMode renderMode;
+
+      auto operator<=>(const PipelineKey &) const = default;
+    };
+    class PipelineManager {
+      std::map<PipelineKey, GraphicsPipeline> m_store;
+
+    public:
+      PipelineManager() : m_store() {}
+
+      bool contains(const PipelineKey &key) const {
+        return m_store.contains(key);
+      }
+
+      PipelineManager(const PipelineManager &) = delete;
+      PipelineManager(PipelineManager &&) = default;
+      PipelineManager &operator=(const PipelineManager &) = delete;
+
+      GraphicsPipeline *get(const PipelineKey &key) {
+        auto it = m_store.find(key);
+        if (it != m_store.cend())
+          return &it->second;
+
+        return nullptr;
+      }
+
+      void set(const PipelineKey &key, GraphicsPipeline &&pipeline) {
+        m_store.emplace(key, std::move(pipeline));
+      }
+
+      void clear() { m_store.clear(); }
     };
 
     std::array<DirectionalLight, kNumLights> directionalLight;
     ssao::SsaoPass ssaoPass{NoInit};
     struct GBuffer {
       Texture normalMap{NoInit};
+      Texture resolveNormalMap{NoInit};
 
       // WBOIT buffers
       Texture accumTexture{NoInit};
       Texture revealTexture{NoInit};
+      Texture resolveAccumTexture{NoInit};
+      Texture resolveRevealTexture{NoInit};
       SDL_GPUSampler *sampler = nullptr; // composite pass
 
       bool initialized() const {
         return (sampler != nullptr) && normalMap && accumTexture &&
                revealTexture;
       }
+
+      void release() noexcept {
+        auto *device = normalMap.device();
+        normalMap.destroy();
+        resolveNormalMap.destroy();
+        accumTexture.destroy();
+        revealTexture.destroy();
+        resolveAccumTexture.destroy();
+        resolveRevealTexture.destroy();
+        if (sampler) {
+          SDL_ReleaseGPUSampler(device, sampler);
+          sampler = nullptr;
+        }
+      }
+      ~GBuffer() noexcept { this->release(); }
     } gBuffer;
     ShadowMapPass shadowPass{NoInit};
 
@@ -163,9 +212,10 @@ namespace multibody {
     RobotScene(const RobotScene &) = delete;
 
     void setConfig(const Config &config) {
-      CANDLEWICK_ASSERT(
-          !m_initialized,
-          "Cannot call setConfig() after render system was initialized.");
+      if (m_initialized)
+        terminate_with_message(
+            "Cannot call setConfig() after render system was initialized.");
+
       m_config = config;
     }
 
@@ -175,7 +225,7 @@ namespace multibody {
                     const pin::GeometryData &geom_data);
 
     /// \brief Update the transform component of the GeometryObject entities.
-    void updateTransforms();
+    void update();
 
     void collectOpaqueCastables();
     const std::vector<OpaqueCastable> &castables() const { return m_castables; }
@@ -198,10 +248,10 @@ namespace multibody {
     /// (Pinocchio geometry objects).
     void clearRobotGeometries();
 
-    void createRenderPipeline(const MeshLayout &layout,
-                              SDL_GPUTextureFormat render_target_format,
-                              SDL_GPUTextureFormat depth_stencil_format,
-                              PipelineType type, bool transparent);
+    GraphicsPipeline
+    createRenderPipeline(const PipelineKey &key, const MeshLayout &layout,
+                         SDL_GPUTextureFormat render_target_format,
+                         SDL_GPUTextureFormat depth_stencil_format);
 
     /// \warning Call updateTransforms() before rendering the objects with
     /// this function.
@@ -219,11 +269,11 @@ namespace multibody {
     inline bool pbrHasPrepass() const { return m_config.triangle_has_prepass; }
     inline bool shadowsEnabled() const { return m_config.enable_shadows; }
 
+    using pipeline_req_t = std::tuple<MeshLayout, PipelineKey>;
     /// \brief Ensure the render pipelines were properly created following the
     /// provided requirements.
-    void ensurePipelinesExist(
-        const std::set<std::tuple<MeshLayout, PipelineType, bool>>
-            &required_pipelines);
+    void
+    ensurePipelinesExist(const std::set<pipeline_req_t> &required_pipelines);
 
     /// \brief Getter for the pinocchio GeometryModel object.
     const pin::GeometryModel &geomModel() const { return *m_geomModel; }
@@ -243,26 +293,8 @@ namespace multibody {
     const pin::GeometryData *m_geomData;
     std::vector<OpaqueCastable> m_castables;
     bool m_initialized;
-    struct {
-      SDL_GPUGraphicsPipeline *triangleMeshOpaque = nullptr;
-      SDL_GPUGraphicsPipeline *triangleMeshTransparent = nullptr;
-      SDL_GPUGraphicsPipeline *heightfield = nullptr;
-      SDL_GPUGraphicsPipeline *pointcloud = nullptr;
-      SDL_GPUGraphicsPipeline *wboitComposite = nullptr;
-    } m_pipelines;
-
-    SDL_GPUGraphicsPipeline *&routePipeline(PipelineType type,
-                                            bool transparent = false) {
-      switch (type) {
-      case PIPELINE_TRIANGLEMESH:
-        return transparent ? m_pipelines.triangleMeshTransparent
-                           : m_pipelines.triangleMeshOpaque;
-      case PIPELINE_HEIGHTFIELD:
-        return m_pipelines.heightfield;
-      case PIPELINE_POINTCLOUD:
-        return m_pipelines.pointcloud;
-      }
-    }
+    PipelineManager m_pipelines;
+    GraphicsPipeline m_wboitComposite{NoInit};
   };
   static_assert(Scene<RobotScene>);
 

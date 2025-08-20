@@ -20,12 +20,13 @@ namespace multibody {
   using Inertiaf = pin::InertiaTpl<float>;
   using Forcef = pin::ForceTpl<float>;
 
-  /// \ingroup gui_util
-  /// \brief Display Pinocchio model and geometry model info in ImGui.
-  /// \image html robot-info-panel.png "Robot information panel."
-  void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
-                                const pin::GeometryModel &geom_model,
-                                int table_height_lines = 6);
+  namespace gui {
+    /// \brief Display Pinocchio model and geometry model info in ImGui.
+    /// \image html robot-info-panel.png "Robot information panel."
+    void addPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
+                               const pin::GeometryModel &geom_model,
+                               int table_height_lines = 6);
+  } // namespace gui
 
   struct PinGeomObjComponent {
     pin::GeomIndex geom_index;

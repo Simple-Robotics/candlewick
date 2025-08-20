@@ -10,11 +10,11 @@
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/geometry.hpp>
 
-namespace candlewick::multibody {
+namespace candlewick::multibody::gui {
 
-void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
-                              const pin::GeometryModel &geom_model,
-                              int table_height_lines) {
+void addPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
+                           const pin::GeometryModel &geom_model,
+                           int table_height_lines) {
   ImGuiTableFlags flags = 0;
   flags |= ImGuiTableFlags_SizingStretchProp;
   flags |= ImGuiTableFlags_RowBg;
@@ -69,7 +69,7 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
   ImGui::Spacing();
   ImGui::Text("No. of geometries: %zu", geom_model.ngeoms);
 
-  if (ImGui::BeginTable("pin_geom_table", 5, flags | ImGuiTableFlags_Sortable,
+  if (ImGui::BeginTable("pin_geom_table", 6, flags | ImGuiTableFlags_Sortable,
                         outer_size)) {
     ImGui::TableSetupColumn("Index", ImGuiTableColumnFlags_DefaultSort, 0.0f,
                             0);
@@ -77,6 +77,7 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
     ImGui::TableSetupColumn("Object / node type", ImGuiTableColumnFlags_NoSort);
     ImGui::TableSetupColumn("Parent joint", ImGuiTableColumnFlags_NoSort);
     ImGui::TableSetupColumn("Show", ImGuiTableColumnFlags_NoSort);
+    ImGui::TableSetupColumn("Mode", ImGuiTableColumnFlags_NoSort);
     ImGui::TableHeadersRow();
 
     if (ImGuiTableSortSpecs *sortSpecs = ImGui::TableGetSortSpecs()) {
@@ -114,6 +115,9 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
 
     for (auto [ent, id] : view.each()) {
       auto &gobj = geom_model.geometryObjects[id];
+
+      auto &mmc = reg.get<MeshMaterialComponent>(ent);
+
       const coal::CollisionGeometry &coll = *gobj.geometry;
       coal::OBJECT_TYPE objType = coll.getObjectType();
       coal::NODE_TYPE nodeType = coll.getNodeType();
@@ -131,13 +135,20 @@ void guiAddPinocchioModelInfo(entt::registry &reg, const pin::Model &model,
       ImGui::Text("%zu (%s)", parent_joint, parent_joint_name);
 
       ImGui::TableNextColumn();
-      char chk_label[32];
+      char label[32];
       bool enabled = !disabled.contains(ent);
-      SDL_snprintf(chk_label, 32, "###enabled%zu", pin::FrameIndex(id));
-      guiAddDisableCheckbox(chk_label, reg, ent, enabled);
+      SDL_snprintf(label, 32, "gobj_%zu", pin::GeomIndex(id));
+      ImGui::PushID(label);
+
+      ::candlewick::gui::addDisableCheckbox("###enabled", reg, ent, enabled);
+      ImGui::TableNextColumn();
+      const char *names[] = {"FILL", "LINE"};
+      ImGui::Combo("###mode", (int *)&mmc.mode, names, IM_ARRAYSIZE(names));
+
+      ImGui::PopID();
     }
     ImGui::EndTable();
   }
 }
 
-} // namespace candlewick::multibody
+} // namespace candlewick::multibody::gui

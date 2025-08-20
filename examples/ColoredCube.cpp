@@ -99,7 +99,6 @@ int main() {
       Window{window}, // take ownership of existing SDL_Window handle
       depth_stencil_format);
   Device &device = ctx.device;
-  SDL_GPUTexture *depthTexture = ctx.depth_texture;
 
   // Buffers
 
@@ -216,7 +215,6 @@ int main() {
     SDL_GPURenderPass *render_pass;
     SDL_GPUBufferBinding vertex_binding = mesh.getVertexBinding(0);
     CommandBuffer cmdbuf{device};
-    SDL_GPUTexture *&swapchain = ctx.swapchain;
     const Float3 center{0., 0., 0.};
     Float3 eye{0., 0., 0.};
     // start at phi -> eye.x = 2.5, eye.y = 0.5
@@ -227,10 +225,12 @@ int main() {
     projViewMat = perp * view * modelMat;
 
     if (ctx.waitAndAcquireSwapchain(cmdbuf)) {
-      SDL_GPUColorTargetInfo ctinfo{.texture = swapchain,
-                                    .clear_color = SDL_FColor{},
-                                    .load_op = SDL_GPU_LOADOP_CLEAR,
-                                    .store_op = SDL_GPU_STOREOP_STORE};
+      SDL_GPUColorTargetInfo ctinfo{
+          .texture = ctx.colorTarget(),
+          .clear_color = SDL_FColor{},
+          .load_op = SDL_GPU_LOADOP_CLEAR,
+          .store_op = SDL_GPU_STOREOP_STORE,
+      };
       SDL_GPUDepthStencilTargetInfo depth_target;
       SDL_zero(depth_target);
       depth_target.clear_depth = 1.0f;
@@ -238,7 +238,7 @@ int main() {
       depth_target.store_op = SDL_GPU_STOREOP_DONT_CARE;
       depth_target.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
       depth_target.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
-      depth_target.texture = depthTexture;
+      depth_target.texture = ctx.depthTarget();
       depth_target.cycle = true;
       render_pass = SDL_BeginGPURenderPass(cmdbuf, &ctinfo, 1, &depth_target);
       SDL_BindGPUGraphicsPipeline(render_pass, pipeline);
@@ -254,6 +254,7 @@ int main() {
       SDL_Log("Failed to acquire swapchain: %s", SDL_GetError());
       break;
     }
+    ctx.presentToSwapchain(cmdbuf);
     cmdbuf.submit();
   }
 

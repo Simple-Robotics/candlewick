@@ -22,9 +22,11 @@ struct Window {
   }
 
   Window &operator=(Window &&other) noexcept {
-    this->~Window();
-    _handle = other._handle;
-    other._handle = nullptr;
+    if (this != &other) {
+      this->destroy();
+      _handle = other._handle;
+      other._handle = nullptr;
+    }
     return *this;
   }
 
@@ -78,8 +80,7 @@ inline std::array<int, 2> Window::size() const {
 
 inline std::array<int, 2> Window::sizeInPixels() const {
   int width, height;
-  if (!SDL_GetWindowSizeInPixels(_handle, &width, &height)) {
-  }
+  SDL_GetWindowSizeInPixels(_handle, &width, &height);
   return {width, height};
 }
 

@@ -1,3 +1,4 @@
+/// \copyright Copyright (c) 2025 Inria
 #pragma once
 
 #include "Device.h"
@@ -11,6 +12,21 @@
 
 namespace candlewick {
 
+inline constexpr int sdlSampleToValue(SDL_GPUSampleCount samples) {
+  switch (samples) {
+  case SDL_GPU_SAMPLECOUNT_1:
+    return 1;
+  case SDL_GPU_SAMPLECOUNT_2:
+    return 2;
+  case SDL_GPU_SAMPLECOUNT_4:
+    return 4;
+  case SDL_GPU_SAMPLECOUNT_8:
+    return 8;
+  default:
+    return 0;
+  }
+}
+
 /// \brief The RenderContext class provides a rendering context for a graphical
 /// application.
 ///
@@ -18,22 +34,67 @@ namespace candlewick {
 /// \sa Device
 /// \sa Mesh
 struct RenderContext {
+private:
+  Texture colorMsaa{NoInit};
+  Texture colorBuffer{NoInit}; // no MSAA
+  Texture depthBuffer{NoInit}; // no MSAA
+  bool m_msaaEnabled = false;
+  SDL_GPUTexture *swapchain{nullptr};
+
+  void createMsaaTargets(SDL_GPUSampleCount samples);
+  void createRenderTargets(SDL_GPUTextureFormat suggested_depth_format);
+
+public:
   Device device;
   Window window;
-  SDL_GPUTexture *swapchain;
-  Texture depth_texture{NoInit};
 
-  RenderContext(NoInitT)
-      : device(NoInit), window(nullptr), swapchain(nullptr) {}
-  /// \brief Constructor without a depth format.
-  RenderContext(Device &&device, Window &&window);
-  /// \brief Constructor with a depth format. This will create a depth texture.
+  RenderContext(NoInitT) : device(NoInit), window(nullptr) {}
+  /// \brief Constructor.
+  /// The last argument (the depth texture format) is optional. By default, it
+  /// is set to INVALID, and no depth texture is created.
   RenderContext(Device &&device, Window &&window,
-                SDL_GPUTextureFormat suggested_depth_format);
+                SDL_GPUTextureFormat suggested_depth_format =
+                    SDL_GPU_TEXTUREFORMAT_INVALID);
 
-  /// \brief Add a depth texture to the rendering context.
-  /// \see hasDepthTexture()
-  void createDepthTexture(SDL_GPUTextureFormat suggested_depth_format);
+  RenderContext(RenderContext &&) noexcept = default;
+  RenderContext &operator=(RenderContext &&) noexcept = default;
+
+  const Texture &colorTarget() const {
+    return (m_msaaEnabled && colorMsaa) ? colorMsaa : colorBuffer;
+  }
+
+  const Texture &depthTarget() const { return depthBuffer; }
+
+  const Texture &resolvedColorTarget() const { return colorBuffer; }
+
+  bool msaaEnabled() const { return m_msaaEnabled; }
+
+  SDL_GPUSampleCount getMsaaSampleCount() const {
+    if (m_msaaEnabled && colorMsaa) {
+      return colorMsaa.sampleCount();
+    }
+    return SDL_GPU_SAMPLECOUNT_1;
+  }
+
+  void enableMSAA(SDL_GPUSampleCount samples) {
+    if (samples > SDL_GPU_SAMPLECOUNT_1) {
+      m_msaaEnabled = true;
+      createMsaaTargets(samples);
+      if (int sample_size = sdlSampleToValue(samples)) {
+        SDL_Log("MSAA enabled with %d samples", sample_size);
+      } else {
+        terminate_with_message("Unrecognized sample count {:d}", sample_size);
+      }
+    } else {
+      disableMSAA();
+    }
+  }
+
+  void disableMSAA() {
+    m_msaaEnabled = false;
+    colorMsaa.destroy();
+    SDL_Log("MSAA disabled.");
+  }
 
   bool initialized() const { return bool(device); }
 
@@ -49,25 +110,30 @@ struct RenderContext {
   /// the meaning of "main thread").
   bool acquireSwapchain(CommandBuffer &command_buffer);
 
+  /// \brief Wait for the swapchain to be available.
   bool waitForSwapchain() { return SDL_WaitForGPUSwapchain(device, window); }
+
+  /// \brief Present the resolved texture to the swapchain. You must acquire the
+  /// swapchain beforehand.
+  void presentToSwapchain(CommandBuffer &command_buffer);
 
   SDL_GPUTextureFormat getSwapchainTextureFormat() const {
     return SDL_GetGPUSwapchainTextureFormat(device, window);
   }
 
   /// \brief Check if a depth texture was created.
-  inline bool hasDepthTexture() const { return depth_texture.hasValue(); }
+  inline bool hasDepthTexture() const { return depthBuffer; }
 
   inline void setSwapchainParameters(SDL_GPUSwapchainComposition composition,
                                      SDL_GPUPresentMode present_mode) {
     SDL_SetGPUSwapchainParameters(device, window, composition, present_mode);
   }
 
-  SDL_GPUTextureFormat depthFormat() const { return depth_texture.format(); }
+  SDL_GPUTextureFormat colorFormat() const { return colorBuffer.format(); }
+  SDL_GPUTextureFormat depthFormat() const { return depthBuffer.format(); }
 
-  ~RenderContext() noexcept;
-
-  void destroy() noexcept { this->~RenderContext(); }
+  void destroy() noexcept;
+  ~RenderContext() noexcept { this->destroy(); }
 };
 
 namespace rend {

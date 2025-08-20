@@ -6,8 +6,11 @@
 
 #include <pinocchio/algorithm/frames.hpp>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_hints.h>
 
 namespace candlewick {
+using namespace entt::literals;
+
 const char *sdlMouseButtonToString(Uint8 button) {
   switch (button) {
   case SDL_BUTTON_LEFT:
@@ -28,16 +31,19 @@ const char *sdlMouseButtonToString(Uint8 button) {
 
 namespace candlewick::multibody {
 
-static RenderContext _create_renderer(const Visualizer::Config &config) {
+static RenderContext _create_renderer(const Visualizer::Config &config,
+                                      SDL_WindowFlags flags = 0) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     terminate_with_message("Failed to init video: {:s}", SDL_GetError());
   }
   SDL_Log("Video driver: %s", SDL_GetCurrentVideoDriver());
 
-  return RenderContext{Device{auto_detect_shader_format_subset()},
-                       Window{"Candlewick Pinocchio visualizer",
-                              int(config.width), int(config.height), 0},
-                       config.depth_stencil_format};
+  RenderContext r{Device{auto_detect_shader_format_subset()},
+                  Window{"Candlewick Pinocchio visualizer", int(config.width),
+                         int(config.height), flags},
+                  config.depthStencilFormat};
+  r.enableMSAA(config.sampleCount);
+  return r;
 }
 
 Visualizer::Visualizer(const Config &config, const pin::Model &model,
@@ -45,7 +51,7 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
                        GuiSystem::GuiBehavior gui_callback)
     : BaseVisualizer{model, visual_model}
     , registry{}
-    , renderer{_create_renderer(config)}
+    , renderer{_create_renderer(config, SDL_WINDOW_HIGH_PIXEL_DENSITY)}
     , guiSystem{renderer, std::move(gui_callback)}
     , robotScene{registry, renderer}
     , debugScene{registry, renderer}
@@ -78,7 +84,6 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
 void Visualizer::initialize() {
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
-  rconfig.enable_normal_target = true;
   robotScene.setConfig(rconfig);
 
   robotScene.directionalLight = {
@@ -126,11 +131,11 @@ void Visualizer::resetCamera() {
 void Visualizer::loadViewerModel() {
   robotScene.loadModels(visualModel(), visualData());
 
-  if (m_robotDebug) {
-    m_robotDebug->reload(this->model(), this->data());
+  if (auto *robotDebug = debugScene.getSystem<RobotDebugSystem>("robot"_hs)) {
+    robotDebug->reload(this->model(), this->data());
   } else {
-    m_robotDebug =
-        &debugScene.addSystem<RobotDebugSystem>(this->model(), this->data());
+    debugScene.addSystem<RobotDebugSystem>("robot"_hs, this->model(),
+                                           this->data());
     std::tie(m_grid, std::ignore) = debugScene.addLineGrid();
   }
 }
@@ -168,8 +173,8 @@ void Visualizer::displayImpl() {
 
   this->processEvents();
 
+  robotScene.update();
   debugScene.update();
-  robotScene.updateTransforms();
   this->render();
 
   if (m_shouldScreenshot) {
@@ -181,9 +186,9 @@ void Visualizer::displayImpl() {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
   if (m_videoRecorder.isRecording()) {
     CommandBuffer command_buffer{device()};
-    m_videoRecorder.writeTextureToVideoFrame(
-        command_buffer, device(), m_transferBuffers, renderer.swapchain,
-        renderer.getSwapchainTextureFormat());
+    m_videoRecorder.writeTextureToFrame(command_buffer, device(),
+                                        m_transferBuffers,
+                                        renderer.resolvedColorTarget());
   }
 #endif
 }
@@ -191,21 +196,24 @@ void Visualizer::displayImpl() {
 void Visualizer::render() {
 
   CommandBuffer command_buffer = renderer.acquireCommandBuffer();
+  robotScene.collectOpaqueCastables();
+  std::span castables = robotScene.castables();
+  renderShadowPassFromAABB(command_buffer, robotScene.shadowPass,
+                           robotScene.directionalLight, castables,
+                           worldSceneBounds);
+
+  robotScene.renderOpaque(command_buffer, controller);
+  debugScene.render(command_buffer, controller);
+  robotScene.renderTransparent(command_buffer, controller);
+  if (m_showGui)
+    guiSystem.render(command_buffer);
+
   if (renderer.waitAndAcquireSwapchain(command_buffer)) {
-    robotScene.collectOpaqueCastables();
-    std::span castables = robotScene.castables();
-    renderShadowPassFromAABB(command_buffer, robotScene.shadowPass,
-                             robotScene.directionalLight, castables,
-                             worldSceneBounds);
-
-    auto &camera = controller.camera;
-    robotScene.renderOpaque(command_buffer, camera);
-    debugScene.render(command_buffer, camera);
-    robotScene.renderTransparent(command_buffer, camera);
-    if (m_showGui)
-      guiSystem.render(command_buffer);
+    // present (blit) main color target to swapchain
+    renderer.presentToSwapchain(command_buffer);
+  } else {
+    terminate_with_message("Failed to acquire swapchain: {:s}", SDL_GetError());
   }
-
   command_buffer.submit();
 }
 
@@ -214,8 +222,8 @@ void Visualizer::takeScreenshot(std::string_view filename) {
   auto [width, height] = renderer.window.sizeInPixels();
   SDL_Log("Saving %dx%d screenshot at: '%s'", width, height, filename.data());
   media::saveTextureToFile(command_buffer, device(), m_transferBuffers,
-                           renderer.swapchain,
-                           renderer.getSwapchainTextureFormat(), Uint16(width),
+                           renderer.resolvedColorTarget(),
+                           renderer.colorFormat(), Uint16(width),
                            Uint16(height), filename);
 }
 
@@ -264,12 +272,12 @@ auto cast_eigen_optional(const std::optional<D> &xopt) {
 void Visualizer::addFrameViz(pin::FrameIndex id, bool show_velocity,
                              std::optional<Vector3> scale_,
                              std::optional<float> vel_scale) {
-  assert(m_robotDebug);
   auto scale = cast_eigen_optional<float>(scale_).value_or(
       RobotDebugSystem::DEFAULT_TRIAD_SCALE);
-  m_robotDebug->addFrameTriad(id, scale);
+  auto &robotDebug = debugScene.tryGetSystem<RobotDebugSystem>("robot"_hs);
+  robotDebug.addFrameTriad(id, scale);
   if (show_velocity)
-    m_robotDebug->addFrameVelocityArrow(
+    robotDebug.addFrameVelocityArrow(
         id, vel_scale.value_or(RobotDebugSystem::DEFAULT_VEL_SCALE));
 }
 
@@ -291,14 +299,14 @@ void Visualizer::setFrameExternalForce(pin::FrameIndex frame_id,
   SDL_Log("Force arrow not found for frame %zu, adding arrow with lifetime %u",
           frame_id, initial_lifetime);
 #endif
-  auto ent = debugScene.addArrow();
+  auto [ent, dmc] = debugScene.addArrow();
   registry.emplace<ExternalForceComponent>(ent, frame_id, force,
-                                           initial_lifetime);
+                                           initial_lifetime, dmc.colors[0]);
 }
 
 void Visualizer::removeFramesViz() {
-  assert(m_robotDebug);
-  m_robotDebug->destroyEntities();
+  if (auto *p = debugScene.getSystem<RobotDebugSystem>("robot"_hs))
+    p->destroyEntities();
 }
 
 } // namespace candlewick::multibody

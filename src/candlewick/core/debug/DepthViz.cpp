@@ -1,7 +1,6 @@
 #include "DepthViz.h"
 #include "../RenderContext.h"
 #include "../Shader.h"
-#include <format>
 
 namespace candlewick {
 
@@ -42,15 +41,11 @@ DepthDebugPass DepthDebugPass::create(const RenderContext &renderer,
                                .num_color_targets = 1,
                                .has_depth_stencil_target = false};
 
-  SDL_GPUGraphicsPipeline *pipeline =
-      SDL_CreateGPUGraphicsPipeline(device, &pipeline_desc);
-  if (!pipeline) {
-    auto msg = std::format("Failed to create depth debug pipeline: %s",
-                           SDL_GetError());
-    throw std::runtime_error(msg);
-  }
-
-  return {depthTexture, sampler, pipeline};
+  return {
+      depthTexture,
+      sampler,
+      GraphicsPipeline(device, pipeline_desc, "Depth debug"),
+  };
 }
 
 struct alignas(16) cam_param_ubo_t {
@@ -65,14 +60,14 @@ void renderDepthDebug(const RenderContext &renderer,
                       const DepthDebugPass::Options &opts) {
   SDL_GPUColorTargetInfo color_target;
   SDL_zero(color_target);
-  color_target.texture = renderer.swapchain;
+  color_target.texture = renderer.colorTarget();
   color_target.clear_color = {0., 0., 0., 1.};
   color_target.load_op = SDL_GPU_LOADOP_CLEAR;
   color_target.store_op = SDL_GPU_STOREOP_STORE;
   SDL_GPURenderPass *render_pass =
       SDL_BeginGPURenderPass(command_buffer, &color_target, 1, nullptr);
 
-  SDL_BindGPUGraphicsPipeline(render_pass, pass.pipeline);
+  pass.pipeline.bind(render_pass);
 
   rend::bindFragmentSamplers(render_pass, 0,
                              {{

@@ -4,26 +4,12 @@
 namespace candlewick {
 
 CommandBuffer::CommandBuffer(const Device &device) {
-  _cmdBuf = SDL_AcquireGPUCommandBuffer(device);
-}
-
-CommandBuffer::CommandBuffer(CommandBuffer &&other) noexcept
-    : _cmdBuf(other._cmdBuf) {
-  other._cmdBuf = nullptr;
-}
-
-CommandBuffer &CommandBuffer::operator=(CommandBuffer &&other) noexcept {
-  if (active()) {
-    this->cancel();
-  }
-  _cmdBuf = other._cmdBuf;
-  other._cmdBuf = nullptr;
-  return *this;
+  m_handle = SDL_AcquireGPUCommandBuffer(device);
 }
 
 bool CommandBuffer::cancel() noexcept {
-  bool ret = SDL_CancelGPUCommandBuffer(_cmdBuf);
-  _cmdBuf = nullptr;
+  bool ret = SDL_CancelGPUCommandBuffer(m_handle);
+  m_handle = nullptr;
   if (!ret) {
     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                 "Failed to cancel command buffer: %s", SDL_GetError());

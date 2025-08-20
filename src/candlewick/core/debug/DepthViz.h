@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Core.h"
-#include <SDL3/SDL_gpu.h>
+#include "../GraphicsPipeline.h"
 #include "../Camera.h"
+#include <SDL3/SDL_gpu.h>
 
 namespace candlewick {
 
@@ -16,7 +16,7 @@ struct DepthDebugPass {
   };
   SDL_GPUTexture *depthTexture;
   SDL_GPUSampler *sampler;
-  SDL_GPUGraphicsPipeline *pipeline;
+  GraphicsPipeline pipeline{NoInit};
 
   static DepthDebugPass create(const RenderContext &renderer,
                                SDL_GPUTexture *depthTexture);
@@ -29,10 +29,7 @@ inline void DepthDebugPass::release(SDL_GPUDevice *device) {
     SDL_ReleaseGPUSampler(device, sampler);
     sampler = NULL;
   }
-  if (pipeline) {
-    SDL_ReleaseGPUGraphicsPipeline(device, pipeline);
-    pipeline = NULL;
-  }
+  pipeline.release();
 }
 
 void renderDepthDebug(const RenderContext &renderer, CommandBuffer &cmdBuf,

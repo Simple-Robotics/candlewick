@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Core.h"
 #include "../Device.h"
 #include "../Collision.h"
+#include "../GraphicsPipeline.h"
 #include "../math_types.h"
 
 #include <entt/entity/registry.hpp>
@@ -12,8 +12,7 @@
 namespace candlewick {
 namespace frustum_debug {
 
-  SDL_GPUGraphicsPipeline *
-  createFrustumDebugPipeline(const RenderContext &renderer);
+  GraphicsPipeline createFrustumDebugPipeline(const RenderContext &renderer);
 
   void renderFrustum(CommandBuffer &cmdBuf, SDL_GPURenderPass *render_pass,
                      const Camera &mainCamera, const Camera &otherCam,
@@ -46,7 +45,7 @@ struct DebugBoundsComponent {
 class FrustumBoundsDebugSystem final {
   const RenderContext &renderer;
   const Device &device;
-  SDL_GPUGraphicsPipeline *pipeline;
+  GraphicsPipeline pipeline;
   entt::registry &_registry;
 
 public:
@@ -74,12 +73,10 @@ public:
 
   void render(CommandBuffer &cmdBuf, const Camera &camera);
 
-  void release() noexcept {
-    if (pipeline)
-      SDL_ReleaseGPUGraphicsPipeline(device, pipeline);
-  }
+  void release() noexcept { pipeline.release(); }
 
-  ~FrustumBoundsDebugSystem() { release(); }
+  void update() {}
 };
+static_assert(Scene<FrustumBoundsDebugSystem>);
 
 } // namespace candlewick

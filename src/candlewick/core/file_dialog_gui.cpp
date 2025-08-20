@@ -51,21 +51,6 @@ static const SDL_Folder g_dialog_file_type_folder[] = {
     SDL_FOLDER_VIDEOS,
 };
 
-void guiAddFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
-                      std::string &out) {
-  const char *initial_path =
-      SDL_GetUserFolder(g_dialog_file_type_folder[int(dialog_file_type)]);
-
-  auto [filters, nfilters] = g_file_filters[int(dialog_file_type)];
-
-  if (ImGui::Button("Select...")) {
-    SDL_ShowSaveFileDialog(fileCallbackImpl, &out, window, filters, nfilters,
-                           initial_path);
-  }
-  ImGui::SameLine();
-  ImGui::Text("%s", out.empty() ? "(none)" : out.c_str());
-}
-
 void generateMediaFilenameFromTimestamp(const char *prefix, std::string &out,
                                         const char *extension,
                                         DialogFileType file_type) {
@@ -79,5 +64,22 @@ void generateMediaFilenameFromTimestamp(const char *prefix, std::string &out,
   if (!view.empty())
     out = view;
 }
+
+namespace gui {
+  void addFileDialog(SDL_Window *window, DialogFileType dialog_file_type,
+                     std::string &out) {
+    const char *initial_path =
+        SDL_GetUserFolder(g_dialog_file_type_folder[int(dialog_file_type)]);
+
+    auto [filters, nfilters] = g_file_filters[int(dialog_file_type)];
+
+    if (ImGui::Button("Select...")) {
+      SDL_ShowSaveFileDialog(fileCallbackImpl, &out, window, filters, nfilters,
+                             initial_path);
+    }
+    ImGui::SameLine();
+    ImGui::Text("%s", out.empty() ? "(none)" : out.c_str());
+  }
+} // namespace gui
 
 } // namespace candlewick

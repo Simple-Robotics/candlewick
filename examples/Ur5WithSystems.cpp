@@ -49,14 +49,16 @@
 
 namespace pin = pinocchio;
 using namespace candlewick;
+using multibody::RobotDebugSystem;
 using multibody::RobotScene;
 using multibody::RobotSpec;
 
 /// Application constants
 
-constexpr Uint32 wWidth = 1920;
-constexpr Uint32 wHeight = 1050;
-constexpr float aspectRatio = float(wWidth) / float(wHeight);
+static std::array<Uint32, 2> wDims{1600u, 960u};
+const auto &[wWidth, wHeight] = wDims;
+
+static float aspectRatio;
 
 /// Application state
 
@@ -64,10 +66,7 @@ static Radf currentFov = 55.0_degf;
 static float nearZ = 0.01f;
 static float farZ = 10.f;
 static float currentOrthoScale = 1.f;
-static CylindricalCamera g_camera{{
-    .projection = perspectiveFromFov(currentFov, aspectRatio, nearZ, farZ),
-    .view = Eigen::Isometry3f{lookAt({2.0, 0, 2.}, Float3::Zero())},
-}};
+static CylindricalCamera g_camera;
 static CameraProjection g_cameraType = CameraProjection::PERSPECTIVE;
 static bool quitRequested = false;
 static bool showFrustum = false;
@@ -77,9 +76,6 @@ enum VizMode {
   LIGHT_DEBUG,
 };
 static VizMode g_showDebugViz = FULL_RENDER;
-
-static float pixelDensity;
-static float displayScale;
 
 static void updateFov(Radf newFov) {
   g_camera.camera.projection =
@@ -114,8 +110,7 @@ loadGeomObjFromFile(const char *name, std::string_view filename,
 
 void eventLoop(const RenderContext &renderer) {
   // update pixel density and display scale
-  pixelDensity = renderer.window.pixelDensity();
-  displayScale = renderer.window.displayScale();
+  float pixelDensity = renderer.window.pixelDensity();
   const float rotSensitivity = 5e-3f * pixelDensity;
   const float panSensitivity = 1e-2f * pixelDensity;
   SDL_Event event;
@@ -205,17 +200,16 @@ static void addTeapotGeometry(pin::GeometryModel &geom_model) {
   geom_model.addGeometryObject(convex_obj);
 }
 
-static void screenshot_button_callback(RenderContext &renderer,
-                                       media::TransferBufferPool &pool,
-                                       const char *filename) {
+static void screenshotButtonCallback(const RenderContext &renderer,
+                                     media::TransferBufferPool &pool,
+                                     const char *filename) {
   const auto &device = renderer.device;
   CommandBuffer command_buffer{device};
-  renderer.waitAndAcquireSwapchain(command_buffer);
 
   SDL_Log("Saving screenshot at %s", filename);
-  media::saveTextureToFile(command_buffer, device, pool, renderer.swapchain,
-                           renderer.getSwapchainTextureFormat(), wWidth,
-                           wHeight, filename);
+  media::saveTextureToFile(command_buffer, device, pool,
+                           renderer.resolvedColorTarget(),
+                           renderer.colorFormat(), wWidth, wHeight, filename);
 }
 
 static const RobotSpec ur_robot_spec =
@@ -227,15 +221,23 @@ static const RobotSpec ur_robot_spec =
     }
         .ensure_absolute_filepaths();
 
+static void initialize() {
+  aspectRatio = float(wWidth) / float(wHeight);
+  g_camera = CylindricalCamera{{
+      .projection = perspectiveFromFov(currentFov, aspectRatio, nearZ, farZ),
+      .view = Eigen::Isometry3f{lookAt({2.0, 0, 2.}, Float3::Zero())},
+  }};
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Ur5 example"};
   bool performRecording{false};
   RobotScene::Config robot_scene_config;
   robot_scene_config.triangle_has_prepass = true;
-  robot_scene_config.enable_normal_target = true;
 
   argv = app.ensure_utf8(argv);
   app.add_flag("-r,--record", performRecording, "Record output");
+  app.add_option("--dims", wDims, "Window dimensions.")->capture_default_str();
   CLI11_PARSE(app, argc, argv);
 
   if (!SDL_Init(SDL_INIT_VIDEO))
@@ -244,9 +246,11 @@ int main(int argc, char **argv) {
   // D16_UNORM works on macOS, D24_UNORM and D32_FLOAT break the depth prepass
   RenderContext renderer{
       Device{auto_detect_shader_format_subset(), false},
-      Window(__FILE__, wWidth, wHeight, 0),
+      Window(__FILE__, int(wWidth), int(wHeight),
+             SDL_WINDOW_HIGH_PIXEL_DENSITY),
       SDL_GPU_TEXTUREFORMAT_D16_UNORM,
   };
+  initialize();
 
   entt::registry registry{};
 
@@ -319,24 +323,25 @@ int main(int argc, char **argv) {
 
   // DEBUG SYSTEM
 
+  using namespace entt::literals;
   DebugScene debug_scene{registry, renderer};
   auto &robot_debug =
-      debug_scene.addSystem<multibody::RobotDebugSystem>(model, pin_data);
-  auto [triad_id, triad] = debug_scene.addTriad();
+      debug_scene.addSystem<RobotDebugSystem>("robot"_hs, model, pin_data);
   auto [grid_id, grid] = debug_scene.addLineGrid(0xE0A236ff_rgbaf);
   pin::FrameIndex ee_frame_id = model.getFrameId("ee_link");
+  robot_debug.addFrameTriad(0ul);
   robot_debug.addFrameTriad(ee_frame_id);
   robot_debug.addFrameVelocityArrow(ee_frame_id);
 
   DepthPass depthPass(renderer.device, plane_obj.mesh.layout(),
-                      renderer.depth_texture,
+                      renderer.depthTarget(),
                       {SDL_GPU_CULLMODE_NONE, 0.05f, 0.f, true, false});
   auto &shadowPassInfo = robot_scene.shadowPass;
   auto shadowDebugPass =
       DepthDebugPass::create(renderer, shadowPassInfo.shadowMap);
 
   auto depthDebugPass =
-      DepthDebugPass::create(renderer, renderer.depth_texture);
+      DepthDebugPass::create(renderer, renderer.depthTarget());
   DepthDebugPass::VizStyle depth_mode = DepthDebugPass::VIZ_GRAYSCALE;
 
   FrustumBoundsDebugSystem frustumBoundsDebug{registry, renderer};
@@ -353,7 +358,7 @@ int main(int argc, char **argv) {
         static bool show_plane_vis = true;
 
         if (show_about_window)
-          showCandlewickAboutWindow(&show_about_window);
+          gui::showCandlewickAboutWindow(&show_about_window);
         if (show_imgui_window)
           ImGui::ShowAboutWindow(&show_imgui_window);
 
@@ -372,7 +377,7 @@ int main(int argc, char **argv) {
         ImGui::Text("Video driver: %s", SDL_GetCurrentVideoDriver());
         ImGui::SameLine();
         ImGui::Text("Device driver: %s", r.device.driverName());
-        ImGui::Text("Display pixel density: %.2f / scale: %.2f",
+        ImGui::Text("Window pixel density: %.2f / display scale: %.2f",
                     r.window.pixelDensity(), r.window.displayScale());
         ImGui::SeparatorText("Camera");
         bool ortho_change, persp_change;
@@ -403,10 +408,9 @@ int main(int argc, char **argv) {
         }
 
         ImGui::SeparatorText("Env. status");
-        guiAddDisableCheckbox("Render plane", registry, plane_entity,
-                              show_plane_vis);
+        gui::addDisableCheckbox("Render plane", registry, plane_entity,
+                                show_plane_vis);
         ImGui::Checkbox("Render grid", &grid.enable);
-        ImGui::Checkbox("Render triad", &triad.enable);
         ImGui::Checkbox("Render frustum", &showFrustum);
 
         ImGui::Checkbox("Ambient occlusion (SSAO)",
@@ -427,7 +431,8 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Screenshots");
         static std::string scr_filename;
-        guiAddFileDialog(renderer.window, DialogFileType::IMAGES, scr_filename);
+        gui::addFileDialog(renderer.window, DialogFileType::IMAGES,
+                           scr_filename);
         if (ImGui::Button("Take screenshot")) {
           if (scr_filename.empty())
             generateMediaFilenameFromTimestamp("cdw_screenshot", scr_filename);
@@ -436,11 +441,11 @@ int main(int argc, char **argv) {
 
         ImGui::SeparatorText("Robot model");
         ImGui::SetItemTooltip("Information about the displayed robot model.");
-        multibody::guiAddPinocchioModelInfo(registry, model, geom_model);
+        multibody::gui::addPinocchioModelInfo(registry, model, geom_model);
 
         ImGui::SeparatorText("Lights");
-        guiAddLightControls(robot_scene.directionalLight,
-                            robot_scene.numLights());
+        gui::addLightControls(robot_scene.directionalLight,
+                              robot_scene.numLights());
 
         ImGui::Separator();
         ImGui::ColorEdit4("grid color", grid.colors[0].data(),
@@ -495,8 +500,8 @@ int main(int argc, char **argv) {
     pin::updateFramePlacements(model, pin_data);
     pin::updateGeometryPlacements(model, pin_data, geom_model, geom_data);
     q = qn;
+    robot_scene.update();
     debug_scene.update();
-    robot_scene.updateTransforms();
 
     // acquire command buffer and swapchain
     CommandBuffer command_buffer = renderer.acquireCommandBuffer();
@@ -538,22 +543,23 @@ int main(int argc, char **argv) {
       continue;
     }
 
+    renderer.presentToSwapchain(command_buffer);
     command_buffer.submit();
 
     if (performRecording) {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
       CommandBuffer command_buffer = renderer.acquireCommandBuffer();
-      auto swapchain_format = renderer.getSwapchainTextureFormat();
-      recorder.writeTextureToVideoFrame(command_buffer, renderer.device,
-                                        transfer_buffer_pool,
-                                        renderer.swapchain, swapchain_format);
+      recorder.writeTextureToFrame(command_buffer, renderer.device,
+                                   transfer_buffer_pool,
+                                   renderer.resolvedColorTarget());
 #endif
     }
     if (screenshot_filename) {
-      screenshot_button_callback(renderer, transfer_buffer_pool,
-                                 screenshot_filename);
+      screenshotButtonCallback(renderer, transfer_buffer_pool,
+                               screenshot_filename);
       screenshot_filename = nullptr;
     }
+
     frameNo++;
   }
 

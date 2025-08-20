@@ -21,9 +21,12 @@ struct TransformComponent : Mat4f {
   using Mat4f::operator=;
 };
 
+enum class RenderMode { FILL, LINE };
+
 struct MeshMaterialComponent {
   Mesh mesh;
   std::vector<PbrMaterial> materials;
+  RenderMode mode = RenderMode::FILL;
   MeshMaterialComponent(Mesh &&mesh, std::vector<PbrMaterial> &&materials)
       : mesh(std::move(mesh)), materials(std::move(materials)) {
     assert(mesh.numViews() == materials.size());

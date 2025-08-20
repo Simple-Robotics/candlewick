@@ -7,9 +7,9 @@
 namespace candlewick {
 
 class Texture {
-  SDL_GPUDevice *_device = nullptr;
-  SDL_GPUTexture *_texture = nullptr;
-  SDL_GPUTextureCreateInfo _description;
+  SDL_GPUDevice *m_device = nullptr;
+  SDL_GPUTexture *m_texture = nullptr;
+  SDL_GPUTextureCreateInfo m_description;
 
 public:
   Texture(NoInitT) {}
@@ -21,22 +21,28 @@ public:
   Texture(Texture &&other) noexcept;
   Texture &operator=(Texture &&other) noexcept;
 
-  operator SDL_GPUTexture *() const noexcept { return _texture; }
+  operator SDL_GPUTexture *() const noexcept { return m_texture; }
 
-  bool hasValue() const { return bool(_texture); }
-  const auto &description() const { return _description; }
-  SDL_GPUTextureType type() const { return _description.type; }
-  SDL_GPUTextureFormat format() const { return _description.format; }
-  SDL_GPUTextureUsageFlags usage() const { return _description.usage; }
-  Uint32 width() const { return _description.width; }
-  Uint32 height() const { return _description.height; }
-  Uint32 depth() const { return _description.layer_count_or_depth; }
-  Uint32 layerCount() const { return _description.layer_count_or_depth; }
+  bool operator==(const Texture &other) const noexcept {
+    return m_texture == other.m_texture;
+  }
+
+  const auto &description() const { return m_description; }
+  SDL_GPUTextureType type() const { return m_description.type; }
+  SDL_GPUTextureFormat format() const { return m_description.format; }
+  SDL_GPUTextureUsageFlags usage() const { return m_description.usage; }
+  Uint32 width() const { return m_description.width; }
+  Uint32 height() const { return m_description.height; }
+  Uint32 depth() const { return m_description.layer_count_or_depth; }
+  Uint32 layerCount() const { return m_description.layer_count_or_depth; }
+  SDL_GPUSampleCount sampleCount() const { return m_description.sample_count; }
 
   SDL_GPUBlitRegion blitRegion(Uint32 offset_x, Uint32 y_offset,
                                Uint32 layer_or_depth_plane = 0) const;
 
   Uint32 textureSize() const;
+
+  SDL_GPUDevice *device() const { return m_device; }
 
   void destroy() noexcept;
   ~Texture() noexcept { this->destroy(); }

@@ -14,7 +14,7 @@ namespace candlewick {
 
 MeshData loadAiMesh(const aiMesh *inMesh, const aiMatrix4x4 transform) {
   using IndexType = MeshData::IndexType;
-  const Uint32 expectedFaceSize = 3;
+  constexpr Uint32 expectedFaceSize = 3;
 
   std::vector<DefaultVertex> vertexData;
   std::vector<IndexType> indexData;
@@ -42,7 +42,8 @@ MeshData loadAiMesh(const aiMesh *inMesh, const aiMatrix4x4 transform) {
 
   for (Uint32 face_id = 0; face_id < inMesh->mNumFaces; face_id++) {
     const aiFace &f = inMesh->mFaces[face_id];
-    SDL_assert(f.mNumIndices == expectedFaceSize);
+    CANDLEWICK_ASSERT(f.mNumIndices == expectedFaceSize,
+                      "Invalid number of indices in aiFace (expected 3)");
     for (Uint32 ii = 0; ii < f.mNumIndices; ii++) {
       indexData[face_id * expectedFaceSize + ii] = f.mIndices[ii];
     }

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- core/DepthAndShadowPass : add support for multisampled depth/shadow passes
+- multibody : add MSAA support in `RobotScene` and `Visualizer`
+- core/RenderContext.h : implement move ctor and assignment op
+- multibody/Visualizer : working high DPI support
+- core/GraphicsPipeline : store pipeline metadata
+- core/Texture.h : add comparison operator
+- core/Texture.h : add `sampleCount()` getter
+- core : add RAII class `GraphicsPipeline`
+- multibody : add wireframe mode switch in Visualizer GUI
+- multibody/RobotDebug : add external forces to debug elts GUI
+- core/DebugScene : add getters for subsystems
+
+### Changed
+
+- multibody/RobotScene : always render to G-buffer normal map
+- core: move header `LoadCoalGeometries.h` and its functions to library core
+- multibody/Visualizer : rename a data member in Config
+- core/Device.h : implement move assignment operator
+- core/RenderContext : introduce intermediate color render target, start introducing MSAA texture buffers
+- core : move contents on `Scene.h` into `Core.h` header
+- multibody : better graphics pipeline management using RAII class
+- gui : Move all GUI functions into "gui" namespaces
+
+### Removed
+
+- Remove deprecated header `candlewick/multibody/LoadCoalPrimitives.h`
+
 ## [0.9.0] - 2025-08-12
 
 - utils/VideoRecorder : check filename extension (must be ".mp4")

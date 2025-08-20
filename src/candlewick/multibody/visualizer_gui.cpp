@@ -1,14 +1,18 @@
 #include "Visualizer.h"
-
-#include <string>
+#include "RobotDebug.h"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_log.h>
+
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <magic_enum/magic_enum_flags.hpp>
 
+#include <string>
+
 namespace candlewick::multibody {
+namespace core_gui = ::candlewick::gui;
+using namespace entt::literals;
 
 void guiAddCameraParams(CylindricalCamera &controller,
                         CameraControlParams &params) {
@@ -29,30 +33,6 @@ void guiAddCameraParams(CylindricalCamera &controller,
   }
 }
 
-void guiAddDebugMesh(DebugMeshComponent &dmc,
-                     bool enable_pipeline_switch = true) {
-  ImGui::Checkbox("##enabled", &dmc.enable);
-  Uint32 col_id = 0;
-  ImGuiColorEditFlags color_flags = ImGuiColorEditFlags_NoAlpha |
-                                    ImGuiColorEditFlags_NoSidePreview |
-                                    ImGuiColorEditFlags_NoInputs;
-  char label[32];
-  for (auto &col : dmc.colors) {
-    SDL_snprintf(label, sizeof(label), "##color##%u", col_id);
-    ImGui::SameLine();
-    ImGui::ColorEdit4(label, col.data(), color_flags);
-    col_id++;
-  }
-  if (enable_pipeline_switch) {
-    const char *names[] = {"FILL", "LINE"};
-    static_assert(IM_ARRAYSIZE(names) ==
-                  magic_enum::enum_count<DebugPipelines>());
-    ImGui::SameLine();
-    ImGui::Combo("Mode##pipeline", (int *)&dmc.pipeline_type, names,
-                 IM_ARRAYSIZE(names));
-  }
-}
-
 void Visualizer::guiCallbackImpl() {
 
   // Verify ABI compatibility between caller code and compiled version of Dear
@@ -63,7 +43,7 @@ void Visualizer::guiCallbackImpl() {
   if (show_imgui_about)
     ImGui::ShowAboutWindow(&show_imgui_about);
   if (show_our_about)
-    ::candlewick::showCandlewickAboutWindow(&show_our_about);
+    ::candlewick::gui::showCandlewickAboutWindow(&show_our_about);
 
   ImGuiWindowFlags window_flags = 0;
   window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
@@ -78,12 +58,13 @@ void Visualizer::guiCallbackImpl() {
   }
 
   ImGui::Text("Video driver: %s", SDL_GetCurrentVideoDriver());
-  ImGui::Text("Display pixel density: %.2f / scale: %.2f",
+  ImGui::Text("Window pixel density: %.2f / display scale: %.2f",
               renderer.window.pixelDensity(), renderer.window.displayScale());
   ImGui::Text("Device driver: %s", renderer.device.driverName());
 
   if (ImGui::CollapsingHeader("Lights and camera controls")) {
-    guiAddLightControls(robotScene.directionalLight, robotScene.numLights());
+    core_gui::addLightControls(robotScene.directionalLight,
+                               robotScene.numLights());
     guiAddCameraParams(controller, cameraParams);
   }
 
@@ -94,7 +75,7 @@ void Visualizer::guiCallbackImpl() {
       ImGui::Text("%s", name);
       auto &dmc = registry.get<DebugMeshComponent>(m_grid);
       ImGui::SameLine();
-      guiAddDebugMesh(dmc, false);
+      core_gui::addDebugMesh(dmc, false);
       ImGui::PopID();
     }
     ImGui::Checkbox("Ambient occlusion (SSAO)",
@@ -103,7 +84,11 @@ void Visualizer::guiCallbackImpl() {
 
   if (ImGui::CollapsingHeader("Robot model info",
                               ImGuiTreeNodeFlags_DefaultOpen)) {
-    guiAddPinocchioModelInfo(registry, m_model, visualModel());
+    gui::addPinocchioModelInfo(registry, m_model, visualModel());
+  }
+
+  if (auto robotDebug = debugScene.getSystem<RobotDebugSystem>("robot"_hs)) {
+    robotDebug->renderDebugGui("Robot debug");
   }
 
   if (ImGui::CollapsingHeader(
@@ -115,8 +100,8 @@ void Visualizer::guiCallbackImpl() {
           )) {
     ImGui::BeginChild("screenshot_taker", {0, 0},
                       ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
-    guiAddFileDialog(renderer.window, DialogFileType::IMAGES,
-                     m_currentScreenshotFilename);
+    core_gui::addFileDialog(renderer.window, DialogFileType::IMAGES,
+                            m_currentScreenshotFilename);
     if (ImGui::Button("Take screenshot")) {
       m_shouldScreenshot = true;
       if (m_currentScreenshotFilename.empty()) {
@@ -130,8 +115,8 @@ void Visualizer::guiCallbackImpl() {
 #ifdef CANDLEWICK_WITH_FFMPEG_SUPPORT
     ImGui::BeginChild("video_record", {0, 0},
                       ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
-    guiAddFileDialog(renderer.window, DialogFileType::VIDEOS,
-                     m_currentVideoFilename);
+    core_gui::addFileDialog(renderer.window, DialogFileType::VIDEOS,
+                            m_currentVideoFilename);
 
     ImGui::BeginDisabled(m_videoRecorder.isRecording());
     ImGui::SliderInt("bitrate", &m_videoSettings.bitRate, 2'000'000, 6'000'000);
@@ -159,20 +144,6 @@ void Visualizer::guiCallbackImpl() {
     ImGui::EndChild();
 #endif
   };
-
-  if (ImGui::CollapsingHeader("Robot debug")) {
-    auto view = registry.view<DebugMeshComponent, const PinFrameComponent>();
-    for (auto [ent, dmc, fc] : view.each()) {
-      auto frame_name = model().frames[fc].name.c_str();
-      char label[64];
-      SDL_snprintf(label, 64, "frame_%d", int(fc));
-      ImGui::PushID(label);
-      guiAddDebugMesh(dmc);
-      ImGui::SameLine();
-      ImGui::Text("%s", frame_name);
-      ImGui::PopID();
-    }
-  }
 
   ImGui::End();
 }

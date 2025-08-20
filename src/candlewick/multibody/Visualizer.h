@@ -52,11 +52,16 @@ void guiAddCameraParams(CylindricalCamera &controller,
 ///
 /// This visualizer is synchronous. The window is only updated when `display()`
 /// is called.
+///
+/// \note So far, this visualizer class does not support displaying visual and
+/// collision geometries simulatenously.
+///
+/// \todo Add support for displaying visual *and* collision geometries at the
+/// same time.
 class Visualizer final : public BaseVisualizer {
   bool m_showGui = true;
   bool m_shouldExit = false;
   entt::entity m_grid;
-  RobotDebugSystem *m_robotDebug = nullptr;
 
   void initialize();
 
@@ -86,7 +91,8 @@ public:
   struct Config {
     Uint32 width;
     Uint32 height;
-    SDL_GPUTextureFormat depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
+    SDL_GPUSampleCount sampleCount = SDL_GPU_SAMPLECOUNT_2;
+    SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
   };
 
   void resetCamera();

@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 ManifoldFR
+# Copyright (c) 2024-2025 Inria
 
 add_library(
   candlewick_core
@@ -9,10 +9,11 @@ add_library(
   candlewick/core/DebugScene.cpp
   candlewick/core/DepthAndShadowPass.cpp
   candlewick/core/Device.cpp
-  candlewick/core/math_util.cpp
   candlewick/core/errors.cpp
   candlewick/core/file_dialog_gui.cpp
   candlewick/core/GuiSystem.cpp
+  candlewick/core/LoadCoalGeometries.cpp
+  candlewick/core/math_util.cpp
   candlewick/core/Mesh.cpp
   candlewick/core/RenderContext.cpp
   candlewick/core/Shader.cpp
