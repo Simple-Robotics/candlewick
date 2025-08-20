@@ -43,8 +43,12 @@ include(cmake/apple.cmake)
 macro(remove_cxx_flag name)
   string(REPLACE ${name} "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endmacro()
+macro(add_cxx_flag name)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${name}$")
+endmacro()
 
 remove_cxx_flag(-pedantic)
+add_cxx_flag(-Wno-missing-field-initializers)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<CONFIG>/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/$<CONFIG>/lib)
