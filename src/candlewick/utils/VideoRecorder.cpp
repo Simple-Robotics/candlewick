@@ -7,6 +7,8 @@
 #include <SDL3/SDL_filesystem.h>
 #include <magic_enum/magic_enum.hpp>
 #include <filesystem>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/std.h>
 
 extern "C" {
 #include <libavutil/pixfmt.h>
@@ -279,7 +281,9 @@ namespace media {
       terminate_with_message("Recording stream already open.");
     }
 
-    SDL_Log("[VideoRecorder] Opening stream at %s", filename.data());
+    spdlog::info(
+        "[{}] Opening video stream at {:s} (fps = {:d}, bitrate = {:d}Mbps)",
+        typeid(*this), filename, settings.fps, settings.bitRate / 1000);
     m_width = width;
     m_height = height;
     if (settings.outputWidth == 0)
@@ -293,6 +297,8 @@ namespace media {
   Uint32 VideoRecorder::frameCounter() const { return m_impl->m_frameCounter; }
 
   void VideoRecorder::close() noexcept {
+    spdlog::info("[{}] Closing recording stream, wrote {:d} frames.",
+                 typeid(*this), frameCounter());
     if (m_impl)
       m_impl.reset();
   }

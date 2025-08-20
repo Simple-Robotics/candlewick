@@ -2,9 +2,8 @@
 
 #include "Core.h"
 #include <SDL3/SDL_gpu.h>
-#include <SDL3/SDL_log.h>
-#include <utility>
 #include <span>
+#include <spdlog/spdlog.h>
 
 namespace candlewick {
 
@@ -69,9 +68,9 @@ public:
 
   ~CommandBuffer() noexcept {
     if (active()) {
-      SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                  "CommandBuffer object is being destroyed while still active. "
-                  "It will be cancelled.");
+      spdlog::warn(
+          "CommandBuffer object is being destroyed while still active. "
+          "It will be cancelled.");
       [[maybe_unused]] bool ret = cancel();
       CANDLEWICK_ASSERT(ret, "Failed to cancel command buffer on cleanup.");
     }

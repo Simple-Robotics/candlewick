@@ -96,10 +96,11 @@ Candlewick depends mainly on:
 * [Eigen](https://gitlab.com/libeigen/eigen/) - Linear algebra
 * [Coal](https://github.com/coal-library/coal) - Collision detection, geometry primitives
 * [magic_enum](https://github.com/Neargye/magic_enum) - Enum reflection utilities
+* [spdlog](https://github.com/gabime/spdlog/) - Logging
 
 These dependencies can be installed from Conda as follows:
 ```bash
-conda install -c conda-forge sdl3 eigen coal magic_enum assimp entt nlohmann_json
+conda install -c conda-forge sdl3 eigen coal magic_enum assimp entt nlohmann_json spdlog
 ```
 
 Additionally, candlewick depends on the following bundled dependencies:

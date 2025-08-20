@@ -1,13 +1,13 @@
 #include "GuiSystem.h"
 
 #include <SDL3/SDL_filesystem.h>
-#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_dialog.h>
 
 #include <imgui.h>
 #include <chrono>
 #include <iomanip>
+#include <spdlog/spdlog.h>
 
 namespace candlewick {
 
@@ -31,11 +31,11 @@ static const std::pair<const SDL_DialogFileFilter *, int> g_file_filters[] = {
 static void fileCallbackImpl(void *userdata_, const char *const *filelist,
                              int) {
   if (!filelist) {
-    SDL_Log("An error occured: %s", SDL_GetError());
+    spdlog::error("An error occured: %s", SDL_GetError());
     return;
   } else if (!*filelist) {
-    SDL_Log("The user did not select any file.");
-    SDL_Log("Most likely, the dialog was canceled.");
+    spdlog::info("The user did not select any file.\n"
+                 "Most likely, the dialog was canceled.");
     return;
   }
 

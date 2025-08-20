@@ -46,13 +46,8 @@ add_library(
 
 target_link_libraries(
   candlewick_core
-  PUBLIC
-    SDL3::SDL3-shared
-    assimp::assimp
-    coal::coal
-    magic_enum::magic_enum
-    EnTT::EnTT
-  PRIVATE imgui_headers nlohmann_json::nlohmann_json
+  PUBLIC SDL3::SDL3-shared assimp::assimp coal::coal EnTT::EnTT spdlog::spdlog
+  PRIVATE imgui_headers nlohmann_json::nlohmann_json magic_enum::magic_enum
 )
 target_compile_definitions(
   candlewick_core
@@ -102,7 +97,7 @@ if(BUILD_PINOCCHIO_VISUALIZER)
       candlewick_core
       pinocchio::pinocchio_default
       pinocchio::pinocchio_visualizers
-    PRIVATE imgui_headers
+    PRIVATE imgui_headers magic_enum::magic_enum
   )
   target_link_libraries(${PROJECT_NAME} INTERFACE candlewick_multibody)
 

@@ -94,10 +94,6 @@ void RobotDebugSystem::update() {
     auto view = reg.group<ExternalForceComponent>();
     for (auto [ent, arrow] : view.each()) {
       if (--arrow.lifetime <= 0) {
-#ifndef NDEBUG
-        SDL_Log("Force arrow for frame %zu has expired... destroy.",
-                arrow.frame_id);
-#endif
         reg.destroy(ent);
       }
     }

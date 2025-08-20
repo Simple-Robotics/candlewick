@@ -1,10 +1,10 @@
-#include "Renderer.h"
+#include "RenderContext.h"
 #include "errors.h"
 #include <magic_enum/magic_enum.hpp>
 
 #include <utility>
+#include <fmt/ranges.h>
 #include <SDL3/SDL_init.h>
-#include <SDL3/SDL_log.h>
 
 namespace candlewick {
 RenderContext::RenderContext(Device &&device_, Window &&window_,
@@ -20,14 +20,43 @@ bool RenderContext::waitAndAcquireSwapchain(CommandBuffer &command_buffer) {
   CANDLEWICK_ASSERT(SDL_IsMainThread(),
                     "Can only acquire swapchain from main thread.");
   return SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, window,
-                                               &swapchain, NULL, NULL);
+                                               &swapchain, nullptr, nullptr);
 }
 
 bool RenderContext::acquireSwapchain(CommandBuffer &command_buffer) {
   CANDLEWICK_ASSERT(SDL_IsMainThread(),
                     "Can only acquire swapchain from main thread.");
   return SDL_AcquireGPUSwapchainTexture(command_buffer, window, &swapchain,
-                                        NULL, NULL);
+                                        nullptr, nullptr);
+}
+
+std::string format_texture_usage(SDL_GPUTextureUsageFlags flags) {
+  std::vector<std::string_view> elts;
+#define _c(usage)                                                              \
+  if ((flags & SDL_GPU_TEXTUREUSAGE_##usage) == SDL_GPU_TEXTUREUSAGE_##usage)  \
+  elts.push_back(#usage)
+
+  _c(SAMPLER);
+  _c(COLOR_TARGET);
+  _c(DEPTH_STENCIL_TARGET);
+  _c(GRAPHICS_STORAGE_READ);
+  _c(COMPUTE_STORAGE_READ);
+  _c(COMPUTE_STORAGE_WRITE);
+  _c(COMPUTE_STORAGE_SIMULTANEOUS_READ_WRITE);
+
+  return fmt::format("{}", fmt::join(elts, " | "));
+#undef _c
+}
+
+static void log_texture_creation(const Texture &tex,
+                                 const char *nameOverride = nullptr) {
+  spdlog::debug("Created {:d} x {:d} texture \'{:s}\'", tex.width(),
+                tex.height(),
+                (nameOverride != nullptr) ? nameOverride : tex.name());
+  spdlog::debug(" > format {:>45s}, samples {:d}, usage {:<s}",
+                magic_enum::enum_name(tex.format()),
+                sdlSampleToValue(tex.sampleCount()),
+                format_texture_usage(tex.usage()));
 }
 
 void RenderContext::createRenderTargets(
@@ -46,6 +75,7 @@ void RenderContext::createRenderTargets(
       .props = 0,
   };
   colorBuffer = Texture(device, colorInfo, "Main color target");
+  log_texture_creation(colorBuffer);
 
   if (suggested_depth_format == SDL_GPU_TEXTUREFORMAT_INVALID)
     return;
@@ -71,8 +101,7 @@ void RenderContext::createRenderTargets(
   }
 
   depthBuffer = Texture(this->device, depthInfo, "Main depth target");
-  SDL_Log("Created depth texture of format %s, size %d x %d\n",
-          magic_enum::enum_name(depthInfo.format).data(), width, height);
+  log_texture_creation(depthBuffer);
 }
 
 void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {
@@ -93,13 +122,15 @@ void RenderContext::createMsaaTargets(SDL_GPUSampleCount samples) {
                                          samples)) {
     terminate_with_message("Unsupported sample count for MSAA color target.");
   }
-  colorMsaa = Texture(device, msaaColorInfo, "MSAA color target");
+  colorMsaa = Texture(device, msaaColorInfo, "Color target [MSAA]");
+  log_texture_creation(colorMsaa);
 
   if (hasDepthTexture()) {
     // overwrite current depth texture to make it Msaa
     auto depthInfo = depthBuffer.description();
     depthInfo.sample_count = samples;
     depthBuffer = Texture(device, depthInfo, "Main depth target [MSAA]");
+    log_texture_creation(depthBuffer);
   }
 }
 

@@ -81,7 +81,7 @@ public:
       m_msaaEnabled = true;
       createMsaaTargets(samples);
       if (int sample_size = sdlSampleToValue(samples)) {
-        SDL_Log("MSAA enabled with %d samples", sample_size);
+        spdlog::info("MSAA enabled with {:d} samples", sample_size);
       } else {
         terminate_with_message("Unrecognized sample count {:d}", sample_size);
       }
@@ -93,7 +93,7 @@ public:
   void disableMSAA() {
     m_msaaEnabled = false;
     colorMsaa.destroy();
-    SDL_Log("MSAA disabled.");
+    spdlog::info("MSAA disabled");
   }
 
   bool initialized() const { return bool(device); }

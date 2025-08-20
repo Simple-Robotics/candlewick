@@ -14,6 +14,8 @@
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
 
+#include <spdlog/cfg/env.h>
+
 namespace cdw = candlewick;
 namespace pin = pinocchio;
 using namespace cdw::runtime;
@@ -63,13 +65,14 @@ bool handle_first_message(ApplicationContext &app_ctx) {
       // send response only when models loaded.
       sock.send(zmq::str_buffer("ok"));
 
-      SDL_Log("Loaded model with %d joints", app_ctx.model.njoints);
-      SDL_Log("Loaded geometry model with %zd gobjs",
-              app_ctx.visual_model.ngeoms);
+      spdlog::info("Loaded model with {:d} joints", app_ctx.model.njoints);
+      spdlog::info("Loaded geometry model with {:d} gobjs",
+                   app_ctx.visual_model.ngeoms);
       return true;
     } else {
-      SDL_Log("First message must have header \'%s\', got \'%s\'. Retry.",
-              CMD_send_models.data(), msg_header.data());
+      spdlog::error(
+          "First message must have header \'{:s}\', got \'{:s}\'. Retry.",
+          CMD_send_models, msg_header);
       continue;
     }
   }
@@ -150,7 +153,9 @@ void run_main_loop(Visualizer &viz, ApplicationContext &app_ctx) {
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
+  spdlog::cfg::load_env_levels();
+  spdlog::set_pattern(">>> [%T] [%^%l%$] %v");
   CLI::App app{"Candlewick visualizer runtime"};
   argv = app.ensure_utf8(argv);
 
@@ -175,9 +180,9 @@ int main(int argc, char **argv) {
 
   std::string endpoint;
   endpoint = sync_sock.get(zmq::sockopt::last_endpoint);
-  SDL_Log("ZMQ endpoint (setup): %s", endpoint.c_str());
+  spdlog::info("ZMQ endpoint (setup): {:s}", endpoint);
   endpoint = state_sock.get(zmq::sockopt::last_endpoint);
-  SDL_Log("ZMQ endpoint (state): %s", endpoint.c_str());
+  spdlog::info("ZMQ endpoint (state): {:s}", endpoint);
 
   // Handle first message
   bool loaded_models = handle_first_message(app_ctx);

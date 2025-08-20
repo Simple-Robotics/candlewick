@@ -9,6 +9,8 @@
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
 
+#include <spdlog/cfg/env.h>
+
 using namespace candlewick::multibody;
 using candlewick::sdlSampleToValue;
 using pinocchio::visualizers::Vector3;
@@ -40,7 +42,7 @@ static void addBall(pin::GeometryModel &geom_model) {
   geom_model.addGeometryObject(object);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
   CLI::App app{"Visualizer example"};
   argv = app.ensure_utf8(argv);
   std::array<Uint32, 2> window_dims{1920u, 1080u};
@@ -67,6 +69,9 @@ int main(int argc, char **argv) {
 
   CLI11_PARSE(app, argc, argv);
 
+  spdlog::cfg::load_env_levels();
+  spdlog::set_pattern(">>> [%T] [%^%l%$] %v");
+  spdlog::info("Robot spec:\n{}", ur_robot_spec);
   pin::Model model;
   pin::GeometryModel geom_model;
   loadModels(ur_robot_spec, model, &geom_model, NULL);

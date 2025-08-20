@@ -4,8 +4,6 @@
 #include <utility>
 #endif
 
-#include <SDL3/SDL_log.h>
-#include <SDL3/SDL_assert.h>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -70,14 +68,8 @@ terminate_with_message(std::source_location, std::string_view, Ts &&...)
     -> terminate_with_message<Ts...>;
 
 [[noreturn]]
-inline void unreachable_with_message(
+void unreachable_with_message(
     std::string_view msg,
-    std::source_location location = std::source_location::current()) {
-  SDL_LogError(
-      SDL_LOG_CATEGORY_APPLICATION, "%s",
-      detail::error_message_format(location.function_name(), "{:s}", msg)
-          .c_str());
-  ::candlewick::unreachable();
-}
+    std::source_location location = std::source_location::current());
 
 } // namespace candlewick

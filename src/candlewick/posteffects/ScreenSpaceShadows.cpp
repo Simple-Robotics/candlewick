@@ -6,8 +6,6 @@
 #include "../core/Shader.h"
 #include "../core/Camera.h"
 
-#include <SDL3/SDL_log.h>
-
 namespace candlewick {
 namespace effects {
   ScreenSpaceShadowPass::ScreenSpaceShadowPass(const RenderContext &renderer,

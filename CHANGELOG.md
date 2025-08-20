@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- multibody/RobotScene : move `invalid_enum()` back to cpp file
 - multibody/RobotScene : always render to G-buffer normal map
 - core: move header `LoadCoalGeometries.h` and its functions to library core
 - multibody/Visualizer : rename a data member in Config
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove deprecated header `candlewick/core/Renderer.h`
 - Remove deprecated header `candlewick/multibody/LoadCoalPrimitives.h`
 
 ## [0.9.0] - 2025-08-12
