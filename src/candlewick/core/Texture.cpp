@@ -12,15 +12,19 @@ Texture::Texture(const Device &device, SDL_GPUTextureCreateInfo texture_desc,
     : m_device(device)
     , m_texture(nullptr)
     , m_description(std::move(texture_desc)) {
+  if (!m_description.props)
+    m_description.props = SDL_CreateProperties();
+  if (name != nullptr) {
+    SDL_SetStringProperty(m_description.props,
+                          SDL_PROP_GPU_TEXTURE_CREATE_NAME_STRING, name);
+  }
   if (!(m_texture = SDL_CreateGPUTexture(m_device, &m_description))) {
     std::string msg = std::format("Failed to create texture with format (%s)",
                                   magic_enum::enum_name(m_description.format));
     if (name)
-      msg += std::format(" (name %s)", name);
+      msg += std::format(" (name {:s})", name);
     throw RAIIException(std::move(msg));
   }
-  if (name != nullptr)
-    SDL_SetGPUTextureName(m_device, m_texture, name);
 }
 
 Texture::Texture(Texture &&other) noexcept

@@ -36,6 +36,10 @@ public:
   Uint32 depth() const { return m_description.layer_count_or_depth; }
   Uint32 layerCount() const { return m_description.layer_count_or_depth; }
   SDL_GPUSampleCount sampleCount() const { return m_description.sample_count; }
+  std::string_view name() const {
+    return SDL_GetStringProperty(
+        m_description.props, SDL_PROP_GPU_TEXTURE_CREATE_NAME_STRING, "(null)");
+  }
 
   SDL_GPUBlitRegion blitRegion(Uint32 offset_x, Uint32 y_offset,
                                Uint32 layer_or_depth_plane = 0) const;
