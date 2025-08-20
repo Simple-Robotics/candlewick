@@ -283,7 +283,7 @@ namespace media {
 
     spdlog::info(
         "[{}] Opening video stream at {:s} (fps = {:d}, bitrate = {:d}Mbps)",
-        typeid(*this), filename, settings.fps, settings.bitRate / 1000i);
+        typeid(*this), filename, settings.fps, settings.bitRate / 1000);
     m_width = width;
     m_height = height;
     if (settings.outputWidth == 0)
