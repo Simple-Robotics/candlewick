@@ -1,3 +1,4 @@
+/// \copyright Copyright (c) 2025 INRIA
 #pragma once
 
 #include "candlewick/core/errors.h"
@@ -9,7 +10,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
-#include <fmt/std.h>
+#include <spdlog/fmt/std.h>
 
 namespace candlewick::multibody {
 namespace pin = pinocchio;

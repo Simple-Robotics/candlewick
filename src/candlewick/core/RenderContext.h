@@ -93,7 +93,7 @@ public:
   void disableMSAA() {
     m_msaaEnabled = false;
     colorMsaa.destroy();
-    spdlog::info("MSAA disabled.");
+    spdlog::info("MSAA disabled");
   }
 
   bool initialized() const { return bool(device); }

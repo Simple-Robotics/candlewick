@@ -249,7 +249,6 @@ bool Visualizer::stopRecording() {
   if (!m_videoRecorder.isRecording())
     return false;
   m_currentVideoFilename.clear();
-  spdlog::info("Wrote {:d} frames.", m_videoRecorder.frameCounter());
   m_videoRecorder.close();
   return true;
 #else
