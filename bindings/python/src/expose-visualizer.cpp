@@ -32,9 +32,11 @@ void exposeVisualizer() {
   eigenpy::OptionalConverter<float, std::optional>::registration();
   eigenpy::detail::NoneToPython<std::nullopt_t>::registration();
 
-  bp::class_<Visualizer::Config>("VisualizerConfig", bp::init<>("self"_a))
+  bp::class_<Visualizer::Config>("VisualizerConfig", bp::no_init)
       .def_readwrite("width", &Visualizer::Config::width)
-      .def_readwrite("height", &Visualizer::Config::height);
+      .def_readwrite("height", &Visualizer::Config::height)
+      .def(bp::init<>("self"_a))
+      .def(bp::init<Uint32, Uint32>(("self"_a, "width", "height")));
 
   bp::class_<Visualizer, boost::noncopyable>("Visualizer", bp::no_init)
       .def(bp::init<Visualizer::Config, const pin::Model &,
