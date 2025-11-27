@@ -8,6 +8,7 @@
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
+#include <CLI/ExtraValidators.hpp>
 
 #include <spdlog/cfg/env.h>
 
