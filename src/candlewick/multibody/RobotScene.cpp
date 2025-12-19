@@ -596,8 +596,10 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   if (transparent) {
     auto *pipeline =
         m_pipelines.get({PIPELINE_TRIANGLEMESH, true, RenderMode::FILL});
-    if (!pipeline)
+    if (!pipeline) {
+      SDL_EndGPURenderPass(render_pass);
       return;
+    }
     pipeline->bind(render_pass);
     for (entt::entity ent :
          view | m_registry.view<entt::entity>(entt::exclude<Opaque>)) {
