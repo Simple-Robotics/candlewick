@@ -94,6 +94,8 @@ constexpr Uint64 vertexElementSize(SDL_GPUVertexElementFormat format) {
   case SDL_GPU_VERTEXELEMENTFORMAT_USHORT4_NORM:
   case SDL_GPU_VERTEXELEMENTFORMAT_HALF4:
     return 64ul;
+  default:
+    return 0l;
   }
 }
 

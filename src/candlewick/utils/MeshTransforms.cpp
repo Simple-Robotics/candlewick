@@ -87,10 +87,12 @@ MeshData mergeMeshes(std::span<const MeshData> meshes) {
   // 1. check coherence of primitives
   SDL_GPUPrimitiveType primitiveType = meshes[0].primitiveType;
   auto layout = meshes[0].layout;
+#ifndef NDEBUG
   for (const MeshData &m : meshes) {
     assert(m.primitiveType == primitiveType);
     assert(m.layout == layout);
   }
+#endif
   auto [indexCount, vertexCount] = detail::mergeCalcIndexVertexCount(meshes);
   std::vector<char> vertexData;
   vertexData.resize(vertexCount * layout.vertexSize());
