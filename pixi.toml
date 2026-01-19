@@ -58,7 +58,7 @@ configure-new-version = { cmd = [
   "cmake",
   "-GNinja",
   "-B",
-  "build",
+  "build-new-version",
   "-S",
   ".",
   "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
