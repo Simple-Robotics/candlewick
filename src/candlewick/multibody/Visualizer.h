@@ -132,6 +132,10 @@ public:
 
   void processEvents();
 
+  void toggleGui(std::optional<bool> value = std::nullopt) noexcept {
+    m_showGui = value.value_or(!m_showGui);
+  }
+
   [[nodiscard]] bool shouldExit() const noexcept { return m_shouldExit; }
 
   void takeScreenshot(std::string_view filename);
