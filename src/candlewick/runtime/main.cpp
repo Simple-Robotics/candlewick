@@ -31,6 +31,7 @@ CANDLEWICK_RUNTIME_DEFINE_COMMAND(reset_camera);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(start_recording);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(stop_recording);
 CANDLEWICK_RUNTIME_DEFINE_COMMAND(clean);
+CANDLEWICK_RUNTIME_DEFINE_COMMAND(toggle_gui);
 
 using RowMat4d = Eigen::Matrix<pin::context::Scalar, 4, 4, Eigen::RowMajor>;
 
@@ -94,6 +95,9 @@ void pull_socket_router(Visualizer &viz, std::span<zmq::message_t, 2> msgs,
     sync_sock.send(zmq::str_buffer("ok"));
   } else if (header == CMD_clean) {
     viz.clean();
+    sync_sock.send(zmq::str_buffer("ok"));
+  } else if (header == CMD_toggle_gui) {
+    viz.toggleGui();
     sync_sock.send(zmq::str_buffer("ok"));
   } else if (header == CMD_send_models) {
     sync_sock.send(

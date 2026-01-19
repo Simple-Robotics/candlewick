@@ -49,11 +49,6 @@ def send_models(sock: zmq.Socket, model_str, geom_str):
     return sock.recv()
 
 
-def send_state(sock: zmq.Socket, q: np.ndarray, v: np.ndarray | None = None):
-    payload = _encoder.encode((q, v))
-    sock.send_multipart([b"state_update", payload])
-
-
 def send_cam_pose(sock: zmq.Socket, M: np.ndarray):
     assert sock.socket_type == zmq.REQ
     assert M.shape == (4, 4)
@@ -114,7 +109,8 @@ class AsyncVisualizer(BaseVisualizer):
         assert q.size == self.model.nq
         if v is not None:
             assert v.size == self.model.nv
-        send_state(self.publisher, q, v)
+        payload = _encoder.encode((q, v))
+        self.sync_sock.send_multipart([b"state_update", payload])
 
     def clean(self):
         """Clean the robot from the renderer. Equivalent to `viz.clean()` on the synchronous `Visualizer` class."""
@@ -126,6 +122,11 @@ class AsyncVisualizer(BaseVisualizer):
         self.clean()
         self.publisher.close()
         self.sync_sock.close()
+
+    def toggleGui(self):
+        self.sync_sock.send_multipart([b"toggle_gui", b""])
+        response = self.sync_sock.recv().decode()
+        assert response == "ok"
 
     def displayCollisions(self, visibility):
         raise NotImplementedError()
