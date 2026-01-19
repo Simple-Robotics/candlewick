@@ -6,6 +6,6 @@ authors:
 - family-names: "Jallet"
   given-names: "Wilson"
   orcid: "https://orcid.org/0000-0001-8222-2739"
-version: 0.10.0
-date-released: "2025-08-20"
+version: 0.10.1
+date-released: "2026-01-19"
 url: "https://github.com/Simple-Robotics/candlewick"
