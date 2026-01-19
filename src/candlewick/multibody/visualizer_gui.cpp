@@ -7,8 +7,6 @@
 #include <imgui_impl_sdl3.h>
 #include <magic_enum/magic_enum_flags.hpp>
 
-#include <string>
-
 namespace candlewick::multibody {
 namespace core_gui = ::candlewick::gui;
 using namespace entt::literals;

@@ -30,6 +30,7 @@ void exposeVisualizer() {
   eigenpy::OptionalConverter<ConstVectorRef, std::optional>::registration();
   eigenpy::OptionalConverter<Vector3, std::optional>::registration();
   eigenpy::OptionalConverter<float, std::optional>::registration();
+  eigenpy::OptionalConverter<bool, std::optional>::registration();
   eigenpy::detail::NoneToPython<std::nullopt_t>::registration();
 
   bp::class_<Visualizer::Config>("VisualizerConfig", bp::no_init)
@@ -50,6 +51,10 @@ void exposeVisualizer() {
       .def_readonly("renderer", &Visualizer::renderer)
       .def_readwrite("worldSceneBounds", &Visualizer::worldSceneBounds)
       .def("resetCamera", &Visualizer::resetCamera, ("self"_a))
+      .def("toggleGui", &Visualizer::toggleGui,
+           ("self"_a, "value"_a = std::nullopt),
+           "Toggle the GUI on and off. Passing no value will toggle. Passing a "
+           "value will override.")
       .DEF_PROP_PROXY(device)
       .def(
           "takeScreenshot",
