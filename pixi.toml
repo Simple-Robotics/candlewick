@@ -13,7 +13,7 @@ ninja = ">=1.13.1"
 cxx-compiler = ">=1.11.0"
 pkg-config = ">=0.29.2"
 ccache = ">=4.11.3"
-sdl3 = ">=3.2.12,<4"
+sdl3 = ">=3.2.30,<4"
 magic_enum = ">=0.9.7,<0.10"
 entt = ">=3.15.0,<4"
 nlohmann_json = ">=3.12.0,<4"
@@ -47,7 +47,31 @@ clean = { cmd = "rm -rf build" }
 doc = { cmd = "cmake --build build --target doc", depends-on = ["configure"] }
 
 [feature.ffmpeg.dependencies]
-ffmpeg = ">=7"
+ffmpeg = ">=8.0.1,<9"
+
+# Increment the version number with CANDLEWICK_VERSION variable
+[feature.new-version.dependencies]
+tomlkit = ">=0.13.2"
+
+[feature.new-version.tasks]
+configure-new-version = { cmd = [
+  "cmake",
+  "-GNinja",
+  "-B",
+  "build",
+  "-S",
+  ".",
+  "-DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX",
+  "-DCMAKE_BUILD_TYPE=$CANDLEWICK_BUILD_TYPE",
+  "-DBUILD_PYTHON_INTERFACE=ON",
+  "-DGENERATE_PYTHON_STUBS=ON",
+  "-DBUILD_PINOCCHIO_VISUALIZER=ON",
+  "-DBUILD_VISUALIZER_RUNTIME=ON",
+  "-DBUILD_TESTING=$CANDLEWICK_BUILD_TESTS",
+] }
+release-new-version = { cmd = "VERSION=$CANDLEWICK_VERSION cmake --build build-new-version --target release", depends-on = [
+  "configure-new-version",
+] }
 
 [feature.pinocchio.dependencies]
 pinocchio = ">=3.5"
@@ -60,7 +84,7 @@ cppzmq = ">=4.10.0,<5"
 pyzmq = ">=27.0.0,<28"
 msgspec = ">=0.19.0,<0.20"
 msgpack-cxx = ">=7.0.0,<8"
-cli11 = "<2.5"
+cli11 = ">=2.6.0,<3"
 
 [feature.runtime.activation]
 env = { CANDLEWICK_BUILD_VISUALIZER_RUNTIME = "ON" }
@@ -75,7 +99,7 @@ env = { CANDLEWICK_BUILD_TESTS = "ON" }
 doxygen = "*"
 
 [environments]
-pinocchio = { features = ["pinocchio", "runtime", "ffmpeg"] }
+pinocchio = { features = ["pinocchio", "runtime", "ffmpeg"], solve-group = "pinocchio" }
 # test core
 test = { features = ["test"] }
 # test pinocchio, no ffmpeg
@@ -83,4 +107,10 @@ test-no-ffmpeg = { features = ["pinocchio", "test"] }
 # test all (pinocchio + ffmpeg)
 test-all = { features = ["pinocchio", "runtime", "ffmpeg", "test"]}
 # doc environment
+new-version = { features = [
+  "new-version",
+  "pinocchio",
+  "ffmpeg",
+  "runtime",
+] , solve-group = "pinocchio"}
 doc = { features = ["doc", "default"] }
