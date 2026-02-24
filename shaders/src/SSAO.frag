@@ -8,18 +8,20 @@ layout(set=2, binding=0) uniform sampler2D depthTex;
 layout(set=2, binding=1) uniform sampler2D normalMap;
 layout(set=2, binding=2) uniform sampler2D ssaoNoise;
 
-const int SSAO_KERNEL_SIZE = 16;
+// Maximum number of kernel samples; actual count is camera.kernelSize.
+const int SSAO_MAX_KERNEL_SIZE = 64;
 const float SSAO_RADIUS = 1.0;
 const float SSAO_BIAS = 0.01;
 const float SSAO_INTENSITY = 1.5;
 
 layout(set=3, binding=0) uniform SSAOParams {
-    vec4 samples[SSAO_KERNEL_SIZE];
+    vec4 samples[SSAO_MAX_KERNEL_SIZE];
 } kernel;
 
 layout(set=3, binding=1) uniform Camera {
     mat4 projection;
     mat4 projectionInverse;
+    uint kernelSize;
 } camera;
 
 vec3 getViewPos(float depth, vec2 uv) {
@@ -51,7 +53,7 @@ float calculatePixelAO(vec2 uv) {
 
     // accumulate occlusion
     float occlusion = 0.0;
-    for(int i = 0; i < SSAO_KERNEL_SIZE; i++) {
+    for(int i = 0; i < int(camera.kernelSize); i++) {
         // get sample position
         vec3 samplePos = TBN * kernel.samples[i].xyz; // Rotate sample vector
         samplePos = viewPos + samplePos * SSAO_RADIUS;         // Move it to view-space position
@@ -72,7 +74,7 @@ float calculatePixelAO(vec2 uv) {
         occlusion += (sampleViewPos.z >= samplePos.z + SSAO_BIAS ? 1.0 : 0.0) * rangeCheck;
     }
 
-    occlusion = 1.0 - (occlusion / SSAO_KERNEL_SIZE) * SSAO_INTENSITY;
+    occlusion = 1.0 - (occlusion / float(camera.kernelSize)) * SSAO_INTENSITY;
     return occlusion;
 }
 

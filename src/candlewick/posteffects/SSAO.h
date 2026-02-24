@@ -13,6 +13,7 @@ namespace ssao {
     SDL_GPUSampler *texSampler = nullptr;
     GraphicsPipeline pipeline{NoInit};
     Texture ssaoMap{NoInit};
+    Uint32 kernelSize = 16u;
     struct SsaoNoise {
       Texture tex{NoInit};
       SDL_GPUSampler *sampler = nullptr;
@@ -25,7 +26,7 @@ namespace ssao {
 
     SsaoPass(NoInitT) {}
     SsaoPass(const RenderContext &renderer, SDL_GPUTexture *inNormalMap,
-             SDL_GPUTexture *inDepthTex);
+             SDL_GPUTexture *inDepthTex, Uint32 kernelSize = 16u);
 
     SsaoPass(SsaoPass &&other) noexcept;
     SsaoPass &operator=(SsaoPass &&other) noexcept;

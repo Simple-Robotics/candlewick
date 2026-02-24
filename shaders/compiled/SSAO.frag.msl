@@ -9,11 +9,12 @@ struct Camera
 {
     float4x4 projection;
     float4x4 projectionInverse;
+    uint kernelSize;
 };
 
 struct SSAOParams
 {
-    float4 samples[16];
+    float4 samples[64];
 };
 
 struct main0_out
@@ -62,20 +63,20 @@ float calculatePixelAO(thread const float2& uv, constant Camera& camera, texture
     float3 bitangent = cross(tangent, viewNormal);
     float3x3 TBN = float3x3(float3(tangent), float3(bitangent), float3(viewNormal));
     float occlusion = 0.0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < int(camera.kernelSize); i++)
     {
         float3 samplePos = TBN * kernel0.samples[i].xyz;
         samplePos = viewPos + (samplePos * 1.0);
         float4 offset = camera.projection * float4(samplePos, 1.0);
-        float _197 = offset.w;
-        float4 _198 = offset;
-        float2 _201 = _198.xy / float2(_197);
-        offset.x = _201.x;
-        offset.y = _201.y;
-        float4 _206 = offset;
-        float2 _211 = (_206.xy * 0.5) + float2(0.5);
-        offset.x = _211.x;
-        offset.y = _211.y;
+        float _201 = offset.w;
+        float4 _202 = offset;
+        float2 _205 = _202.xy / float2(_201);
+        offset.x = _205.x;
+        offset.y = _205.y;
+        float4 _210 = offset;
+        float2 _215 = (_210.xy * 0.5) + float2(0.5);
+        offset.x = _215.x;
+        offset.y = _215.y;
         float sampleDepth = depthTex.sample(depthTexSmplr, offset.xy).x;
         float param_3 = sampleDepth;
         float2 param_4 = offset.xy;
@@ -83,7 +84,7 @@ float calculatePixelAO(thread const float2& uv, constant Camera& camera, texture
         float rangeCheck = smoothstep(0.0, 1.0, 1.0 / abs((viewPos.z - sampleViewPos.z) - 0.00999999977648258209228515625));
         occlusion += (float(sampleViewPos.z >= (samplePos.z + 0.00999999977648258209228515625)) * rangeCheck);
     }
-    occlusion = 1.0 - ((occlusion / 16.0) * 1.5);
+    occlusion = 1.0 - ((occlusion / float(camera.kernelSize)) * 1.5);
     return occlusion;
 }
 
@@ -94,4 +95,3 @@ fragment main0_out main0(main0_in in [[stage_in]], constant SSAOParams& kernel0 
     out.aoValue = calculatePixelAO(param, camera, depthTex, depthTexSmplr, ssaoNoise, ssaoNoiseSmplr, normalMap, normalMapSmplr, kernel0);
     return out;
 }
-
