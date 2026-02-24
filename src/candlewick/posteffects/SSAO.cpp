@@ -14,8 +14,13 @@ namespace ssao {
 
   float lerp(float a, float b, float f) { return a + f * (b - a); }
 
+  inline bool isPowerOfTwo(size_t n) { 
+    return (n > 0) && ((n & (n-1)) == 0);
+  }
+
   // https://sudonull.com/post/102169-Normal-oriented-Hemisphere-SSAO-for-Dummies
-  std::vector<GpuVec4> generateSsaoKernel(size_t kernelSize = 64ul) {
+  std::vector<GpuVec4> generateSsaoKernel(size_t kernelSize) {
+    assert(isPowerOfTwo(kernelSize));
     std::random_device rd;
     Uint32 seed = rd();
     std::mt19937 gen{seed};
@@ -27,8 +32,7 @@ namespace ssao {
     for (size_t i = 0; i < kernelSize; i++) {
       GpuVec3 sample;
       sample.setRandom();
-      sample.head<2>() *= 2.f;
-      sample.head<2>().array() -= 1.f;
+      sample.head<2>() = 2.f * sample.head<2>() - GpuVec2::Ones();;
       sample.normalize();
       sample *= rfloat(gen);
 
@@ -42,7 +46,7 @@ namespace ssao {
     return kernel;
   }
 
-  static const std::vector KERNEL_SAMPLES = generateSsaoKernel();
+  static const std::vector g_kernelSamples = generateSsaoKernel(16ul);
 
   Texture create_noise_texture(const Device &device, Uint32 size) {
     return Texture{device,
@@ -214,7 +218,10 @@ namespace ssao {
   }
 
   void SsaoPass::render(CommandBuffer &cmdBuf, const Camera &camera) {
-    GpuMat4 proj = camera.projection;
+    struct CameraUniforms {
+      GpuMat4 projection;
+      GpuMat4 projectionInverse;
+    } cameraUniforms{camera.projection, camera.projection.inverse()};
     SDL_GPUColorTargetInfo color_info{
         .texture = ssaoMap,
         .layer_or_depth_plane = 0,
@@ -232,10 +239,10 @@ namespace ssao {
             {.texture = ssaoNoise.tex, .sampler = ssaoNoise.sampler},
         });
     auto SAMPLES_PAYLOAD_BYTES =
-        Uint32(KERNEL_SAMPLES.size() * sizeof(GpuVec4));
+        Uint32(g_kernelSamples.size() * sizeof(GpuVec4));
     cmdBuf
-        .pushFragmentUniformRaw(0, KERNEL_SAMPLES.data(), SAMPLES_PAYLOAD_BYTES)
-        .pushFragmentUniform(1, proj);
+        .pushFragmentUniformRaw(0, g_kernelSamples.data(), SAMPLES_PAYLOAD_BYTES)
+        .pushFragmentUniform(1, cameraUniforms);
     pipeline.bind(render_pass);
     SDL_DrawGPUPrimitives(render_pass, 6, 1, 0, 0);
     SDL_EndGPURenderPass(render_pass);

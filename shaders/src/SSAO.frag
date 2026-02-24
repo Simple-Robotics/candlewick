@@ -8,7 +8,7 @@ layout(set=2, binding=0) uniform sampler2D depthTex;
 layout(set=2, binding=1) uniform sampler2D normalMap;
 layout(set=2, binding=2) uniform sampler2D ssaoNoise;
 
-const int SSAO_KERNEL_SIZE = 64;
+const int SSAO_KERNEL_SIZE = 16;
 const float SSAO_RADIUS = 1.0;
 const float SSAO_BIAS = 0.01;
 const float SSAO_INTENSITY = 1.5;
@@ -19,11 +19,12 @@ layout(set=3, binding=0) uniform SSAOParams {
 
 layout(set=3, binding=1) uniform Camera {
     mat4 projection;
+    mat4 projectionInverse;
 } camera;
 
 vec3 getViewPos(float depth, vec2 uv) {
     vec4 clipPos = vec4(uv * 2.0 - 1.0, depth, 1.0);
-    vec4 viewPos = inverse(camera.projection) * clipPos;
+    vec4 viewPos = camera.projectionInverse * clipPos;
     return viewPos.xyz / viewPos.w;
 }
 
