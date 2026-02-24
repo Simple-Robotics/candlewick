@@ -10,10 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Expose `Visualizer.toggleGui(value=None)` (https://github.com/Simple-Robotics/candlewick/pull/102)
+- Add option to set SSAO effect kernel size in Visualizer and RobotScene (C++/Python) (https://github.com/Simple-Robotics/candlewick/pull/105)
 
 ### Changed
 
 - Move cpp examples to their own directory (https://github.com/Simple-Robotics/candlewick/pull/103)
+- Improved performance of SSAO effect (https://github.com/Simple-Robotics/candlewick/pull/105)
+
+### Fixed
+
+- Fixed visual effects with SSAO + MSAA. Have SSAO sample from resolved multisampled depth texture (https://github.com/Simple-Robotics/candlewick/pull/105)
 
 ## [0.10.1] - 2026-01-19
 
