@@ -14,8 +14,13 @@ namespace ssao {
 
   float lerp(float a, float b, float f) { return a + f * (b - a); }
 
+  inline bool isPowerOfTwo(size_t n) { return (n > 0) && ((n & (n - 1)) == 0); }
+
   // https://sudonull.com/post/102169-Normal-oriented-Hemisphere-SSAO-for-Dummies
-  std::vector<GpuVec4> generateSsaoKernel(size_t kernelSize = 64ul) {
+  std::vector<GpuVec4> generateSsaoKernel(size_t kernelSize) {
+    if (!isPowerOfTwo(kernelSize))
+      terminate_with_message(
+          "Kernel size must be a power of two. (Current: {:d})", kernelSize);
     std::random_device rd;
     Uint32 seed = rd();
     std::mt19937 gen{seed};
@@ -27,8 +32,7 @@ namespace ssao {
     for (size_t i = 0; i < kernelSize; i++) {
       GpuVec3 sample;
       sample.setRandom();
-      sample.head<2>() *= 2.f;
-      sample.head<2>().array() -= 1.f;
+      sample.head<2>() = 2.f * sample.head<2>() - GpuVec2::Ones();
       sample.normalize();
       sample *= rfloat(gen);
 
@@ -42,7 +46,9 @@ namespace ssao {
     return kernel;
   }
 
-  static const std::vector KERNEL_SAMPLES = generateSsaoKernel();
+  // Maximum-size kernel shared across all SsaoPass instances.
+  // Each pass uses only its configured kernelSize samples.
+  static const std::vector g_maxKernelSamples = generateSsaoKernel(64ul);
 
   Texture create_noise_texture(const Device &device, Uint32 size) {
     return Texture{device,
@@ -126,6 +132,7 @@ namespace ssao {
       , texSampler(other.texSampler)
       , pipeline(std::move(other.pipeline))
       , ssaoMap(std::move(other.ssaoMap))
+      , kernelSize(other.kernelSize)
       , ssaoNoise(std::move(other.ssaoNoise))
       , blurPipeline(std::move(other.blurPipeline))
       , blurPass1Tex(std::move(other.blurPass1Tex)) {
@@ -142,6 +149,7 @@ namespace ssao {
       _c(texSampler);
       _c(pipeline);
       _c(ssaoMap);
+      _c(kernelSize);
       _c(ssaoNoise);
       _c(blurPipeline);
       _c(blurPass1Tex);
@@ -152,10 +160,12 @@ namespace ssao {
     return *this;
   }
 
-  SsaoPass::SsaoPass(const RenderContext &renderer, SDL_GPUTexture *normalMap)
+  SsaoPass::SsaoPass(const RenderContext &renderer, SDL_GPUTexture *normalMap,
+                     SDL_GPUTexture *depthTex, Uint32 kernelSize_)
       : _device(renderer.device)
-      , inDepthMap(renderer.depthTarget())
-      , inNormalMap(normalMap) {
+      , inDepthMap(depthTex)
+      , inNormalMap(normalMap)
+      , kernelSize(kernelSize_) {
     const auto &device = renderer.device;
 
     SDL_GPUSamplerCreateInfo samplers_ci{
@@ -215,7 +225,14 @@ namespace ssao {
   }
 
   void SsaoPass::render(CommandBuffer &cmdBuf, const Camera &camera) {
-    GpuMat4 proj = camera.projection;
+    // std140 layout: two mat4 (128 bytes) + uint (4 bytes) padded to 144 bytes.
+    struct CameraUniforms {
+      GpuMat4 projection;
+      GpuMat4 projectionInverse;
+      Uint32 kernelSize;
+      Uint32 _pad[3];
+    } cameraUniforms{
+        camera.projection, camera.projection.inverse(), this->kernelSize, {}};
     SDL_GPUColorTargetInfo color_info{
         .texture = ssaoMap,
         .layer_or_depth_plane = 0,
@@ -233,10 +250,11 @@ namespace ssao {
             {.texture = ssaoNoise.tex, .sampler = ssaoNoise.sampler},
         });
     auto SAMPLES_PAYLOAD_BYTES =
-        Uint32(KERNEL_SAMPLES.size() * sizeof(GpuVec4));
+        Uint32(g_maxKernelSamples.size() * sizeof(GpuVec4));
     cmdBuf
-        .pushFragmentUniformRaw(0, KERNEL_SAMPLES.data(), SAMPLES_PAYLOAD_BYTES)
-        .pushFragmentUniform(1, proj);
+        .pushFragmentUniformRaw(0, g_maxKernelSamples.data(),
+                                SAMPLES_PAYLOAD_BYTES)
+        .pushFragmentUniform(1, cameraUniforms);
     pipeline.bind(render_pass);
     SDL_DrawGPUPrimitives(render_pass, 6, 1, 0, 0);
     SDL_EndGPURenderPass(render_pass);

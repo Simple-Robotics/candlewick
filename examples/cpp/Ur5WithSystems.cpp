@@ -231,13 +231,16 @@ static void initialize() {
 
 int main(int argc, char **argv) {
   CLI::App app{"Ur5 example"};
-  bool performRecording{false};
+  bool performRecording = false;
   RobotScene::Config robot_scene_config;
   robot_scene_config.triangle_has_prepass = true;
 
   argv = app.ensure_utf8(argv);
   app.add_flag("-r,--record", performRecording, "Record output");
   app.add_option("--dims", wDims, "Window dimensions.")->capture_default_str();
+  app.add_option("--ssao-kernel-size", robot_scene_config.ssao_kernel_size,
+                 "Number of SSAO kernel samples (max 64).")
+      ->capture_default_str();
   CLI11_PARSE(app, argc, argv);
 
   if (!SDL_Init(SDL_INIT_VIDEO))

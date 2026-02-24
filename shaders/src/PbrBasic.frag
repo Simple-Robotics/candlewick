@@ -45,6 +45,8 @@ layout(location=0) out vec4 fragColor;
 #ifdef HAS_G_BUFFER
     // output normals for post-effects
     layout(location=1) out vec2 outNormal;
+    // output NDC depth for post-effects (avoids sampling MSAA depth texture)
+    layout(location=2) out float outDepth;
 #endif
 
 #ifdef HAS_SHADOW_MAPS
@@ -137,5 +139,6 @@ void main() {
     fragColor = vec4(color, material.baseColor.a);
 #ifdef HAS_G_BUFFER
         outNormal = fragViewNormal.rg;
+        outDepth = gl_FragCoord.z;
 #endif
 }

@@ -1,1 +1,1 @@
-{ "samplers": 3, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 2 }
+{ "samplers": 3, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 2, "inputs": [{ "name": "inUV", "type": "float2", "location": 0 }], "outputs": [{ "name": "aoValue", "type": "float", "location": 0 }] }

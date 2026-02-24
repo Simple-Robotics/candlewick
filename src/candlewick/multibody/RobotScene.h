@@ -115,6 +115,7 @@ namespace multibody {
       bool enable_shadows = true;
       bool enable_ssao = true;
       bool triangle_has_prepass = false;
+      Uint32 ssao_kernel_size = 16u;
       ShadowPassConfig shadow_config;
     };
 
@@ -159,6 +160,9 @@ namespace multibody {
     struct GBuffer {
       Texture normalMap{NoInit};
       Texture resolveNormalMap{NoInit};
+      // Depth copy as color target (avoids sampling MSAA depth stencil texture)
+      Texture depthCopyTex{NoInit};
+      Texture resolveDepthCopyTex{NoInit};
 
       // WBOIT buffers
       Texture accumTexture{NoInit};
@@ -176,6 +180,8 @@ namespace multibody {
         auto *device = normalMap.device();
         normalMap.destroy();
         resolveNormalMap.destroy();
+        depthCopyTex.destroy();
+        resolveDepthCopyTex.destroy();
         accumTexture.destroy();
         revealTexture.destroy();
         resolveAccumTexture.destroy();
