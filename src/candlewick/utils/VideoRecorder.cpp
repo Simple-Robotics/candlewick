@@ -297,10 +297,11 @@ namespace media {
   Uint32 VideoRecorder::frameCounter() const { return m_impl->m_frameCounter; }
 
   void VideoRecorder::close() noexcept {
-    spdlog::info("[{}] Closing recording stream, wrote {:d} frames.",
-                 typeid(*this), frameCounter());
-    if (m_impl)
+    if (m_impl) {
+      spdlog::info("[{}] Closing recording stream, wrote {:d} frames.",
+                   typeid(*this), m_impl->m_frameCounter);
       m_impl.reset();
+    }
   }
 
   VideoRecorder::~VideoRecorder() = default;
