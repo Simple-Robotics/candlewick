@@ -178,8 +178,8 @@ int main(int argc, char *argv[]) {
   ApplicationContext app_ctx;
   zmq::socket_t &sync_sock = app_ctx.sync_sock;
   zmq::socket_t &state_sock = app_ctx.state_sock;
-  sync_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port));
-  state_sock.bind(std::format("tcp://{:s}:{:d}", hostname, port + 2));
+  sync_sock.bind(fmt::format("tcp://{:s}:{:d}", hostname, port));
+  state_sock.bind(fmt::format("tcp://{:s}:{:d}", hostname, port + 2));
   state_sock.set(zmq::sockopt::subscribe, CMD_state_update);
 
   std::string endpoint;

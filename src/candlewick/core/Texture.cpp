@@ -3,8 +3,6 @@
 #include "errors.h"
 #include <magic_enum/magic_enum.hpp>
 
-#include <format>
-
 namespace candlewick {
 
 Texture::Texture(const Device &device, SDL_GPUTextureCreateInfo texture_desc,
@@ -19,10 +17,9 @@ Texture::Texture(const Device &device, SDL_GPUTextureCreateInfo texture_desc,
                           SDL_PROP_GPU_TEXTURE_CREATE_NAME_STRING, name);
   }
   if (!(m_texture = SDL_CreateGPUTexture(m_device, &m_description))) {
-    std::string msg = std::format("Failed to create texture with format (%s)",
-                                  magic_enum::enum_name(m_description.format));
-    if (name)
-      msg += std::format(" (name {:s})", name);
+    auto msg = fmt::format(
+        "Failed to create texture with format ({:s}), name ({:s})",
+        magic_enum::enum_name(m_description.format), name ? name : "null");
     throw RAIIException(std::move(msg));
   }
 }

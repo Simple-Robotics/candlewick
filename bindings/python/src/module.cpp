@@ -1,6 +1,7 @@
 #include "fwd.hpp"
 #include "candlewick/config.h"
 #include "candlewick/core/Shader.h"
+#include "candlewick/core/errors.h"
 
 #include <SDL3/SDL_init.h>
 
@@ -22,8 +23,8 @@ BOOST_PYTHON_MODULE(pycandlewick) {
   current_scope.attr("__version__") = bp::str(CANDLEWICK_VERSION);
 
   if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
-    throw std::runtime_error(std::format(
-        "Failed to initialize SDL subsystems: \'%s\'", SDL_GetError()));
+    terminate_with_message("Failed to initialize SDL subsystems: \'{:s}\'",
+                           SDL_GetError());
   }
   bp::def("setShadersDirectory", &setShadersDirectory, ("path"_a));
   bp::def("currentShaderDirectory", &currentShaderDirectory);
