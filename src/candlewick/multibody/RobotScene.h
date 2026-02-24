@@ -115,6 +115,7 @@ namespace multibody {
       bool enable_shadows = true;
       bool enable_ssao = true;
       bool triangle_has_prepass = false;
+      Uint32 ssao_kernel_size = 16u;
       ShadowPassConfig shadow_config;
     };
 

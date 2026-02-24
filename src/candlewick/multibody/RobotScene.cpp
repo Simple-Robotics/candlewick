@@ -323,7 +323,8 @@ void RobotScene::ensurePipelinesExist(
       if (!ssaoPass.pipeline.initialized()) {
         ssaoPass = ssao::SsaoPass(
             m_renderer, has_msaa ? gBuffer.resolveNormalMap : gBuffer.normalMap,
-            has_msaa ? gBuffer.resolveDepthCopyTex : gBuffer.depthCopyTex);
+            has_msaa ? gBuffer.resolveDepthCopyTex : gBuffer.depthCopyTex,
+            m_config.ssao_kernel_size);
       }
       // configure shadow pass
       if (enable_shadows && !shadowPass.initialized()) {
