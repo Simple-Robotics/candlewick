@@ -36,6 +36,10 @@ void exposeVisualizer() {
   bp::class_<Visualizer::Config>("VisualizerConfig", bp::no_init)
       .def_readwrite("width", &Visualizer::Config::width)
       .def_readwrite("height", &Visualizer::Config::height)
+      .def_readwrite("sampleCount", &Visualizer::Config::sampleCount,
+                     "MSAA sample count.")
+      .def_readwrite("ssaoKernelSize", &Visualizer::Config::ssaoKernelSize,
+                     "Kernel size for the SSAO effect.")
       .def(bp::init<>("self"_a))
       .def(bp::init<Uint32, Uint32>(("self"_a, "width", "height")));
 

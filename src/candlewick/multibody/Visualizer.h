@@ -63,7 +63,7 @@ class Visualizer final : public BaseVisualizer {
   bool m_shouldExit = false;
   entt::entity m_grid;
 
-  void initialize();
+  void initialize(Uint32 ssaoKernelSize);
 
   void render();
 
@@ -93,6 +93,7 @@ public:
     Uint32 height;
     SDL_GPUSampleCount sampleCount = SDL_GPU_SAMPLECOUNT_2;
     SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_D16_UNORM;
+    Uint32 ssaoKernelSize = 16u;
   };
 
   void resetCamera();

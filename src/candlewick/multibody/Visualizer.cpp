@@ -60,7 +60,7 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , m_videoRecorder{NoInit}
 #endif
 {
-  this->initialize();
+  this->initialize(config.ssaoKernelSize);
 }
 
 Visualizer::Visualizer(const Config &config, const pin::Model &model,
@@ -78,12 +78,13 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , m_videoRecorder{NoInit}
 #endif
 {
-  this->initialize();
+  this->initialize(config.ssaoKernelSize);
 }
 
-void Visualizer::initialize() {
+void Visualizer::initialize(Uint32 ssaoKernelSize) {
   RobotScene::Config rconfig;
   rconfig.enable_shadows = true;
+  rconfig.ssao_kernel_size = ssaoKernelSize;
   robotScene.setConfig(rconfig);
 
   robotScene.directionalLight = {

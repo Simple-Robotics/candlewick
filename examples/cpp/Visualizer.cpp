@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
       {"2", SDL_GPU_SAMPLECOUNT_2},
       {"4", SDL_GPU_SAMPLECOUNT_4},
       {"8", SDL_GPU_SAMPLECOUNT_8}};
+  Uint32 ssaoKernelSize = 16u;
   const auto transform_validator =
       CLI::IsMember(sample_count_map) & CLI::Transformer(sample_count_map);
 
@@ -67,6 +68,8 @@ int main(int argc, char *argv[]) {
       })
       ->transform(transform_validator)
       ->capture_default_str();
+  app.add_option("--ssao-kernel-size", ssaoKernelSize,
+                 "Size of the SSAO effect kernel.");
 
   CLI11_PARSE(app, argc, argv);
 
