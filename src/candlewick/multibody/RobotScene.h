@@ -159,6 +159,9 @@ namespace multibody {
     struct GBuffer {
       Texture normalMap{NoInit};
       Texture resolveNormalMap{NoInit};
+      // Depth copy as color target (avoids sampling MSAA depth stencil texture)
+      Texture depthCopyTex{NoInit};
+      Texture resolveDepthCopyTex{NoInit};
 
       // WBOIT buffers
       Texture accumTexture{NoInit};
@@ -176,6 +179,8 @@ namespace multibody {
         auto *device = normalMap.device();
         normalMap.destroy();
         resolveNormalMap.destroy();
+        depthCopyTex.destroy();
+        resolveDepthCopyTex.destroy();
         accumTexture.destroy();
         revealTexture.destroy();
         resolveAccumTexture.destroy();

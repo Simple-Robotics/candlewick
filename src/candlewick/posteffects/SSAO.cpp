@@ -152,10 +152,9 @@ namespace ssao {
     return *this;
   }
 
-  SsaoPass::SsaoPass(const RenderContext &renderer, SDL_GPUTexture *normalMap)
-      : _device(renderer.device)
-      , inDepthMap(renderer.depthTarget())
-      , inNormalMap(normalMap) {
+  SsaoPass::SsaoPass(const RenderContext &renderer, SDL_GPUTexture *normalMap,
+                     SDL_GPUTexture *depthTex)
+      : _device(renderer.device), inDepthMap(depthTex), inNormalMap(normalMap) {
     const auto &device = renderer.device;
 
     SDL_GPUSamplerCreateInfo samplers_ci{

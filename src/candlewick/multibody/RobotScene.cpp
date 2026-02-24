@@ -200,6 +200,23 @@ void RobotScene::initGBuffer() {
           },
           "GBuffer [Normal map]");
 
+  std::tie(gBuffer.depthCopyTex, gBuffer.resolveDepthCopyTex) =
+      createTextureWithMultisampledVariant(
+          device(),
+          {
+              .type = SDL_GPU_TEXTURETYPE_2D,
+              .format = SDL_GPU_TEXTUREFORMAT_R32_FLOAT,
+              .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
+                       SDL_GPU_TEXTUREUSAGE_SAMPLER,
+              .width = Uint32(width),
+              .height = Uint32(height),
+              .layer_count_or_depth = 1,
+              .num_levels = 1,
+              .sample_count = sample_count,
+              .props = 0,
+          },
+          "GBuffer [Depth copy]");
+
   std::tie(gBuffer.accumTexture, gBuffer.resolveAccumTexture) =
       createTextureWithMultisampledVariant(
           device(),
@@ -304,9 +321,9 @@ void RobotScene::ensurePipelinesExist(
     // handle other pipelines for effects
     if (key.type == PIPELINE_TRIANGLEMESH) {
       if (!ssaoPass.pipeline.initialized()) {
-        ssaoPass =
-            ssao::SsaoPass(m_renderer, has_msaa ? gBuffer.resolveNormalMap
-                                                : gBuffer.normalMap);
+        ssaoPass = ssao::SsaoPass(
+            m_renderer, has_msaa ? gBuffer.resolveNormalMap : gBuffer.normalMap,
+            has_msaa ? gBuffer.resolveDepthCopyTex : gBuffer.depthCopyTex);
       }
       // configure shadow pass
       if (enable_shadows && !shadowPass.initialized()) {
@@ -412,7 +429,7 @@ getOpaqueRenderPass(const RenderContext &renderer,
                     CommandBuffer &command_buffer, SDL_GPULoadOp color_load_op,
                     SDL_GPULoadOp depth_load_op, bool has_normals_target,
                     const RobotScene::GBuffer &gbuffer) {
-  SDL_GPUColorTargetInfo color_targets[2];
+  SDL_GPUColorTargetInfo color_targets[3];
   SDL_zero(color_targets);
   color_targets[0].texture = renderer.colorTarget();
   color_targets[0].load_op = color_load_op;
@@ -436,8 +453,16 @@ getOpaqueRenderPass(const RenderContext &renderer,
       color_targets[1].resolve_texture = gbuffer.resolveNormalMap;
       color_targets[1].store_op = SDL_GPU_STOREOP_RESOLVE;
     }
+    color_targets[2].texture = gbuffer.depthCopyTex;
+    color_targets[2].load_op = SDL_GPU_LOADOP_CLEAR;
+    color_targets[2].store_op = SDL_GPU_STOREOP_STORE;
+    color_targets[2].cycle = false;
+    if (renderer.msaaEnabled()) {
+      color_targets[2].resolve_texture = gbuffer.resolveDepthCopyTex;
+      color_targets[2].store_op = SDL_GPU_STOREOP_RESOLVE;
+    }
   }
-  Uint32 num_color_targets = has_normals_target ? 2 : 1;
+  Uint32 num_color_targets = has_normals_target ? 3 : 1;
   return SDL_BeginGPURenderPass(command_buffer, color_targets,
                                 num_color_targets, &depth_target);
 }
@@ -717,7 +742,7 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
   auto fragmentShader =
       Shader::fromMetadata(device(), pipe_config.fragment_shader_path);
 
-  SDL_GPUColorTargetDescription color_targets[2];
+  SDL_GPUColorTargetDescription color_targets[3];
   SDL_zero(color_targets);
   color_targets[0].format = render_target_format;
   color_targets[0].blend_state = {
@@ -797,6 +822,10 @@ RobotScene::createRenderPipeline(const PipelineKey &key,
       };
 
       desc.depth_stencil_state.enable_depth_write = false;
+    } else {
+      // Opaque triangle mesh: add depth copy as 3rd G-buffer color target
+      color_targets[2].format = gBuffer.depthCopyTex.format();
+      desc.target_info.num_color_targets = 3;
     }
 
     spdlog::info(" > transparency:  {}", transparent);

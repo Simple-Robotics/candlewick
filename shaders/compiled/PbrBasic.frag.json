@@ -1,1 +1,1 @@
-{ "samplers": 2, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 4 }
+{ "samplers": 2, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 4, "inputs": [{ "name": "fragLightPos", "type": "float3", "location": 2 }, { "name": "fragViewNormal", "type": "float3", "location": 1 }, { "name": "fragViewPos", "type": "float3", "location": 0 }], "outputs": [{ "name": "fragColor", "type": "float4", "location": 0 }, { "name": "outNormal", "type": "float2", "location": 1 }, { "name": "outDepth", "type": "float", "location": 2 }] }

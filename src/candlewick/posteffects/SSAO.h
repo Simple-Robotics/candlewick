@@ -24,7 +24,8 @@ namespace ssao {
     Texture blurPass1Tex{NoInit};
 
     SsaoPass(NoInitT) {}
-    SsaoPass(const RenderContext &renderer, SDL_GPUTexture *normalMap);
+    SsaoPass(const RenderContext &renderer, SDL_GPUTexture *inNormalMap,
+             SDL_GPUTexture *inDepthTex);
 
     SsaoPass(SsaoPass &&other) noexcept;
     SsaoPass &operator=(SsaoPass &&other) noexcept;
