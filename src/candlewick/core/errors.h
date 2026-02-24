@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <format>
+#include <fmt/core.h>
 #include <source_location>
 
 namespace candlewick {
@@ -33,13 +33,13 @@ namespace detail {
 
   std::string _error_message_impl(std::string_view fname,
                                   std::string_view fmtstr,
-                                  std::format_args args);
+                                  fmt::format_args args);
 
   template <typename... Ts>
   std::string error_message_format(std::string_view fname,
                                    std::string_view _fmtstr, Ts &&...args) {
     return _error_message_impl(fname.data(), _fmtstr,
-                               std::make_format_args(args...));
+                               fmt::make_format_args(args...));
   }
 
 } // namespace detail

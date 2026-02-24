@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Move cpp examples to their own directory (https://github.com/Simple-Robotics/candlewick/pull/103)
 - Improved performance of SSAO effect (https://github.com/Simple-Robotics/candlewick/pull/105)
+- Use `fmt::format` instead of `std::format` since we depend on spdlog (https://github.com/Simple-Robotics/candlewick/pull/106)
+- Fix instances of not using formatting in call to `terminate_with_message` (https://github.com/Simple-Robotics/candlewick/pull/106)
 
 ### Fixed
 

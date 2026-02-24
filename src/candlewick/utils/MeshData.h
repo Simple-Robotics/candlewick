@@ -108,8 +108,7 @@ public:
     if (auto attr = layout.getAttribute(loc)) {
       return this->getAttribute<T>(*attr);
     }
-    terminate_with_message(
-        std::format("Vertex attribute {:d} not found.", Uint16(loc)));
+    terminate_with_message("Vertex attribute {:d} not found.", Uint32(loc));
   }
 
   template <typename T>
@@ -117,8 +116,7 @@ public:
     if (auto attr = layout.getAttribute(loc)) {
       return this->getAttribute<T>(*attr);
     }
-    terminate_with_message(
-        std::format("Vertex attribute {:d} not found.", Uint16(loc)));
+    terminate_with_message("Vertex attribute {:d} not found.", Uint32(loc));
   }
 
   std::span<const char> vertexData() const { return m_vertexData; }

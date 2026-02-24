@@ -63,7 +63,7 @@ class Visualizer final : public BaseVisualizer {
   bool m_shouldExit = false;
   entt::entity m_grid;
 
-  void initialize(Uint32 ssaoKernelSize);
+  void initialize(const RobotScene::Config &rconfig);
 
   void render();
 

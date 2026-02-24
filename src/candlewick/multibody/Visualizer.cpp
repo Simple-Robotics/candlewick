@@ -31,6 +31,14 @@ const char *sdlMouseButtonToString(Uint8 button) {
 
 namespace candlewick::multibody {
 
+static RobotScene::Config
+_make_robot_scene_config(const Visualizer::Config &config) {
+  RobotScene::Config rconfig;
+  rconfig.enable_shadows = true;
+  rconfig.ssao_kernel_size = config.ssaoKernelSize;
+  return rconfig;
+}
+
 static RenderContext _create_renderer(const Visualizer::Config &config,
                                       SDL_WindowFlags flags = 0) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -60,7 +68,7 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , m_videoRecorder{NoInit}
 #endif
 {
-  this->initialize(config.ssaoKernelSize);
+  this->initialize(_make_robot_scene_config(config));
 }
 
 Visualizer::Visualizer(const Config &config, const pin::Model &model,
@@ -78,13 +86,10 @@ Visualizer::Visualizer(const Config &config, const pin::Model &model,
     , m_videoRecorder{NoInit}
 #endif
 {
-  this->initialize(config.ssaoKernelSize);
+  this->initialize(_make_robot_scene_config(config));
 }
 
-void Visualizer::initialize(Uint32 ssaoKernelSize) {
-  RobotScene::Config rconfig;
-  rconfig.enable_shadows = true;
-  rconfig.ssao_kernel_size = ssaoKernelSize;
+void Visualizer::initialize(const RobotScene::Config &rconfig) {
   robotScene.setConfig(rconfig);
 
   robotScene.directionalLight = {
