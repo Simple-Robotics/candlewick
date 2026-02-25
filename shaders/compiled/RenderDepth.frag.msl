@@ -1,135 +1,226 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct CameraParams
+#line 17 "shaders/src/utils.slang"
+float linearizeDepthOrtho_0(float depth_0, float zNear_0, float zFar_0)
 {
-    int mode;
-    float near;
-    float far;
-    uint isOrtho;
-};
 
-struct main0_out
-{
-    float4 outColor [[color(0)]];
-};
-
-struct main0_in
-{
-    float2 inUV [[user(locn0)]];
-};
-
-static inline __attribute__((always_inline))
-float linearizeDepthOrtho(thread const float& depth, thread const float& zNear, thread const float& zFar)
-{
-    return zNear + (depth * (zFar - zNear));
+#line 18
+    return zNear_0 + depth_0 * (zFar_0 - zNear_0);
 }
 
-static inline __attribute__((always_inline))
-float linearizeDepth(thread const float& depth, thread const float& zNear, thread const float& zFar)
+
+#line 12
+float linearizeDepth_0(float depth_1, float zNear_1, float zFar_1)
 {
-    float z_ndc = (2.0 * depth) - 1.0;
-    return ((2.0 * zNear) * zFar) / ((zFar + zNear) - (z_ndc * (zFar - zNear)));
+    return 2.0 * zNear_1 * zFar_1 / (zFar_1 + zNear_1 - (2.0 * depth_1 - 1.0) * (zFar_1 - zNear_1));
 }
 
-static inline __attribute__((always_inline))
-float3 visualizeDepthGrayscale(thread const float& depth, constant CameraParams& _62)
+
+#line 9 "shaders/src/RenderDepth.frag.slang"
+struct CameraParams_0
 {
-    float lin;
-    if (_62.isOrtho == 1u)
+    int mode_0;
+    float near_0;
+    float far_0;
+    uint isOrtho_0;
+};
+
+
+#line 5176 "core.meta.slang"
+struct KernelContext_0
+{
+    texture2d<float, access::sample> depthTex_texture_0;
+    sampler depthTex_sampler_0;
+    CameraParams_0 constant* camera_0;
+};
+
+
+#line 18 "shaders/src/RenderDepth.frag.slang"
+float3 visualizeDepthGrayscale_0(float depth_2, KernelContext_0 thread* kernelContext_0)
+{
+
+#line 18
+    float lin_0;
+
+    if((kernelContext_0->camera_0->isOrtho_0) == 1U)
     {
-        float param = depth;
-        float param_1 = _62.near;
-        float param_2 = _62.far;
-        lin = linearizeDepthOrtho(param, param_1, param_2);
+
+#line 20
+        lin_0 = linearizeDepthOrtho_0(depth_2, kernelContext_0->camera_0->near_0, kernelContext_0->camera_0->far_0);
+
+#line 20
     }
     else
     {
-        float param_3 = depth;
-        float param_4 = _62.near;
-        float param_5 = _62.far;
-        lin = linearizeDepth(param_3, param_4, param_5);
+
+#line 20
+        lin_0 = linearizeDepth_0(depth_2, kernelContext_0->camera_0->near_0, kernelContext_0->camera_0->far_0);
+
+#line 20
     }
-    float norm = (lin - _62.near) / (_62.far - _62.near);
-    return float3(norm);
+
+#line 26
+    return float3(((lin_0 - kernelContext_0->camera_0->near_0) / (kernelContext_0->camera_0->far_0 - kernelContext_0->camera_0->near_0))) ;
 }
 
-static inline __attribute__((always_inline))
-float3 visualizeDepthHeatmap(thread const float& depth, constant CameraParams& _62)
+float3 visualizeDepthHeatmap_0(float depth_3, KernelContext_0 thread* kernelContext_1)
 {
-    float lin;
-    if (_62.isOrtho == 1u)
+
+#line 29
+    float lin_1;
+
+    if((kernelContext_1->camera_0->isOrtho_0) == 1U)
     {
-        float param = depth;
-        float param_1 = _62.near;
-        float param_2 = _62.far;
-        lin = linearizeDepthOrtho(param, param_1, param_2);
+
+#line 31
+        lin_1 = linearizeDepthOrtho_0(depth_3, kernelContext_1->camera_0->near_0, kernelContext_1->camera_0->far_0);
+
+#line 31
     }
     else
     {
-        float param_3 = depth;
-        float param_4 = _62.near;
-        float param_5 = _62.far;
-        lin = linearizeDepth(param_3, param_4, param_5);
+
+#line 31
+        lin_1 = linearizeDepth_0(depth_3, kernelContext_1->camera_0->near_0, kernelContext_1->camera_0->far_0);
+
+#line 31
     }
-    float normalized = (lin - _62.near) / (_62.far - _62.near);
-    float3 color;
-    if (normalized < 0.25)
+
+#line 36
+    float normalized_0 = (lin_1 - kernelContext_1->camera_0->near_0) / (kernelContext_1->camera_0->far_0 - kernelContext_1->camera_0->near_0);
+
+#line 36
+    float3 color_0;
+
+
+    if(normalized_0 < 0.25)
     {
-        float t = normalized / 0.25;
-        color = mix(float3(0.0, 0.0, 1.0), float3(0.0, 1.0, 1.0), float3(t));
+
+#line 39
+        color_0 = mix(float3(0.0, 0.0, 1.0), float3(0.0, 1.0, 1.0), float3((normalized_0 / 0.25)) );
+
+#line 39
     }
     else
     {
-        if (normalized < 0.5)
+        if(normalized_0 < 0.5)
         {
-            float t_1 = (normalized - 0.25) / 0.25;
-            color = mix(float3(0.0, 1.0, 1.0), float3(0.0, 1.0, 0.0), float3(t_1));
+
+#line 42
+            color_0 = mix(float3(0.0, 1.0, 1.0), float3(0.0, 1.0, 0.0), float3(((normalized_0 - 0.25) / 0.25)) );
+
+#line 42
         }
         else
         {
-            if (normalized < 0.75)
+            if(normalized_0 < 0.75)
             {
-                float t_2 = (normalized - 0.5) / 0.25;
-                color = mix(float3(0.0, 1.0, 0.0), float3(1.0, 1.0, 0.0), float3(t_2));
+
+#line 45
+                color_0 = mix(float3(0.0, 1.0, 0.0), float3(1.0, 1.0, 0.0), float3(((normalized_0 - 0.5) / 0.25)) );
+
+#line 45
             }
             else
             {
-                float t_3 = (normalized - 0.75) / 0.25;
-                color = mix(float3(1.0, 1.0, 0.0), float3(1.0, 0.0, 0.0), float3(t_3));
+
+#line 45
+                color_0 = mix(float3(1.0, 1.0, 0.0), float3(1.0, 0.0, 0.0), float3(((normalized_0 - 0.75) / 0.25)) );
+
+#line 45
             }
+
+#line 42
         }
+
+#line 39
     }
-    return color;
+
+#line 52
+    return color_0;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant CameraParams& _62 [[buffer(0)]], texture2d<float> depthTex [[texture(0)]], sampler depthTexSmplr [[sampler(0)]])
+
+#line 52
+struct pixelOutput_0
 {
-    main0_out out = {};
-    float depth = depthTex.sample(depthTexSmplr, in.inUV).x;
-    float3 color;
-    switch (_62.mode)
+    float4 output_0 [[color(0)]];
+};
+
+
+#line 52
+struct pixelInput_0
+{
+    float2 inUV_0 [[user(_SLANG_ATTR)]];
+};
+
+
+#line 56
+[[fragment]] pixelOutput_0 main_0(pixelInput_0 _S1 [[stage_in]], texture2d<float, access::sample> depthTex_texture_1 [[texture(0)]], sampler depthTex_sampler_1 [[sampler(0)]], CameraParams_0 constant* camera_1 [[buffer(0)]])
+{
+
+#line 56
+    thread KernelContext_0 kernelContext_2;
+
+#line 56
+    (&kernelContext_2)->depthTex_texture_0 = depthTex_texture_1;
+
+#line 56
+    (&kernelContext_2)->depthTex_sampler_0 = depthTex_sampler_1;
+
+#line 56
+    (&kernelContext_2)->camera_0 = camera_1;
+    ;
+
+#line 57
+    float depth_4 = (((&kernelContext_2)->depthTex_texture_0).sample(((&kernelContext_2)->depthTex_sampler_0), (_S1.inUV_0))).x;
+
+#line 57
+    float3 color_1;
+
+
+    switch((&kernelContext_2)->camera_0->mode_0)
     {
-        case 0:
+    case int(0):
         {
-            float param = depth;
-            color = visualizeDepthGrayscale(param, _62);
+
+#line 60
+            float3 _S2 = visualizeDepthGrayscale_0(depth_4, &kernelContext_2);
+
+#line 60
+            color_1 = _S2;
+
+
             break;
         }
-        case 1:
+    case int(1):
         {
-            float param_1 = depth;
-            color = visualizeDepthHeatmap(param_1, _62);
+
+#line 63
+            float3 _S3 = visualizeDepthHeatmap_0(depth_4, &kernelContext_2);
+
+#line 63
+            color_1 = _S3;
+
+
+            break;
+        }
+    default:
+        {
+
+#line 66
+            color_1 = float3(int3(int(0)) );
+
+
             break;
         }
     }
-    out.outColor.x = color.x;
-    out.outColor.y = color.y;
-    out.outColor.z = color.z;
-    out.outColor.w = 1.0;
-    return out;
+
+#line 69
+    pixelOutput_0 _S4 = { float4(color_1, 1.0) };
+
+    return _S4;
 }

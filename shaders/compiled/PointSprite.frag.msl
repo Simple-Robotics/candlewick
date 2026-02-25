@@ -1,25 +1,35 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct main0_out
+#line 2 "shaders/src/PointSprite.frag.slang"
+struct pixelOutput_0
 {
-    float4 fragColor [[color(0)]];
+    float4 output_0 [[color(0)]];
 };
 
-struct main0_in
+
+#line 2
+struct pixelInput_0
 {
-    float4 pointColor [[user(locn0)]];
+    float4 pointColor_0 [[user(_SLANG_ATTR)]];
 };
 
-fragment main0_out main0(main0_in in [[stage_in]], float2 gl_PointCoord [[point_coord]])
+
+#line 2
+[[fragment]] pixelOutput_0 main_0(pixelInput_0 _S1 [[stage_in]], float2 pointCoord_0 [[point_coord]])
 {
-    main0_out out = {};
-    if (length(gl_PointCoord - float2(0.5)) > 0.5)
+    if((length(pointCoord_0 - float2(0.5) )) > 0.5)
     {
+
+#line 4
         discard_fragment();
+
+#line 4
     }
-    out.fragColor = in.pointColor;
-    return out;
+
+#line 4
+    pixelOutput_0 _S2 = { _S1.pointColor_0 };
+    return _S2;
 }

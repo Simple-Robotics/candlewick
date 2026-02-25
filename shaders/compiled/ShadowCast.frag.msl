@@ -1,16 +1,18 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
-
-struct main0_out
+struct pixelOutput_0
 {
-    float gl_FragDepth [[depth(any)]];
+    float output_0 [[color(0)]];
 };
 
-fragment main0_out main0(float4 gl_FragCoord [[position]])
+
+#line 2 "shaders/src/ShadowCast.frag.slang"
+[[fragment]] pixelOutput_0 main_0(float4 fragCoord_0 [[position]])
 {
-    main0_out out = {};
-    out.gl_FragDepth = gl_FragCoord.z;
-    return out;
+
+#line 2
+    pixelOutput_0 _S1 = { fragCoord_0.z };
+    return _S1;
 }

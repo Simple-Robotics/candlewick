@@ -1,96 +1,162 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-#pragma clang diagnostic ignored "-Wmissing-braces"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-template<typename T, size_t Num>
-struct spvUnsafeArray
+#line 17 "shaders/src/PbrBasic.vert.slang"
+struct main_Result_0
 {
-    T elements[Num ? Num : 1];
-
-    thread T& operator [] (size_t pos) thread
-    {
-        return elements[pos];
-    }
-    constexpr const thread T& operator [] (size_t pos) const thread
-    {
-        return elements[pos];
-    }
-
-    device T& operator [] (size_t pos) device
-    {
-        return elements[pos];
-    }
-    constexpr const device T& operator [] (size_t pos) const device
-    {
-        return elements[pos];
-    }
-
-    constexpr const constant T& operator [] (size_t pos) const constant
-    {
-        return elements[pos];
-    }
-
-    threadgroup T& operator [] (size_t pos) threadgroup
-    {
-        return elements[pos];
-    }
-    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
-    {
-        return elements[pos];
-    }
+    float3 fragViewPos_0 [[user(_SLANG_ATTR)]];
+    float3 fragViewNormal_0 [[user(_SLANG_ATTR_1)]];
+    array<float3, int(4)> fragLightPos_0 [[user(_SLANG_ATTR_2)]];
+    float4 position_0 [[position]];
 };
 
-struct TranformBlock
+
+#line 17
+struct vertexInput_0
 {
-    float4x4 modelView;
-    float4x4 mvp;
-    float3x3 normalMatrix;
+    float3 inPosition_0 [[attribute(0)]];
+    float3 inNormal_0 [[attribute(1)]];
 };
 
-struct LightBlockV
+
+#line 17
+struct _MatrixStorage_float4x4_ColMajornatural_0
 {
-    float4x4 mvp[4];
-    int numLights;
+    array<float4, int(4)> data_0;
 };
 
-struct main0_out
+
+#line 17
+struct _MatrixStorage_float3x3_ColMajornatural_0
 {
-    float3 fragViewPos [[user(locn0)]];
-    float3 fragViewNormal [[user(locn1)]];
-    float3 fragLightPos_0 [[user(locn2)]];
-    float3 fragLightPos_1 [[user(locn3)]];
-    float3 fragLightPos_2 [[user(locn4)]];
-    float3 fragLightPos_3 [[user(locn5)]];
-    float4 gl_Position [[position, invariant]];
+    array<float3, int(3)> data_1;
 };
 
-struct main0_in
+
+#line 17
+struct TranformBlock_natural_0
 {
-    float3 inPosition [[attribute(0)]];
-    float3 inNormal [[attribute(1)]];
+    _MatrixStorage_float4x4_ColMajornatural_0 modelView_0;
+    _MatrixStorage_float4x4_ColMajornatural_0 mvp_0;
+    _MatrixStorage_float3x3_ColMajornatural_0 normalMatrix_0;
 };
 
-vertex main0_out main0(main0_in in [[stage_in]], constant TranformBlock& _25 [[buffer(0)]], constant LightBlockV& lights [[buffer(1)]])
+
+#line 5176 "core.meta.slang"
+struct _Array_natural_matrixx3Cfloatx2C4x2C4x3E4_0
 {
-    main0_out out = {};
-    spvUnsafeArray<float3, 4> fragLightPos = {};
-    float4 hp = float4(in.inPosition, 1.0);
-    out.fragViewPos = float3((_25.modelView * hp).xyz);
-    out.fragViewNormal = fast::normalize(_25.normalMatrix * in.inNormal);
-    float4 _53 = _25.mvp * hp;
-    out.gl_Position = _53;
-    for (uint i = 0u; i < uint(lights.numLights); i++)
+    array<_MatrixStorage_float4x4_ColMajornatural_0, int(4)> data_2;
+};
+
+
+#line 5176
+struct LightBlockV_natural_0
+{
+    _Array_natural_matrixx3Cfloatx2C4x2C4x3E4_0 mvp_1;
+    int numLights_0;
+};
+
+
+#line 17 "shaders/src/PbrBasic.vert.slang"
+struct VSOutput_0
+{
+    float3 fragViewPos_1;
+    float3 fragViewNormal_1;
+    array<float3, int(4)> fragLightPos_1;
+    float4 position_1;
+};
+
+
+#line 17
+struct KernelContext_0
+{
+    TranformBlock_natural_0 constant* transform_0;
+    LightBlockV_natural_0 constant* lights_0;
+};
+
+
+#line 17
+[[vertex]] main_Result_0 main_0(vertexInput_0 _S1 [[stage_in]], TranformBlock_natural_0 constant* transform_1 [[buffer(0)]], LightBlockV_natural_0 constant* lights_1 [[buffer(1)]])
+{
+
+#line 17
+    VSOutput_0 _S2;
+
+#line 17
+    thread KernelContext_0 kernelContext_0;
+
+#line 17
+    (&kernelContext_0)->transform_0 = transform_1;
+
+#line 17
+    (&kernelContext_0)->lights_0 = lights_1;
+
+#line 17
+    for(;;)
     {
-        float4 flps = lights.mvp[i] * hp;
-        fragLightPos[i] = flps.xyz / float3(flps.w);
+
+#line 28
+        float4 hp_0 = float4(_S1.inPosition_0, 1.0);
+
+#line 27
+        thread VSOutput_0 output_0;
+
+        (&output_0)->fragViewPos_1 = (((hp_0) * (matrix<float,int(4),int(4)> ((&kernelContext_0)->transform_0->modelView_0.data_0[int(0)][int(0)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(1)][int(0)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(2)][int(0)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(3)][int(0)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(0)][int(1)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(1)][int(1)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(2)][int(1)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(3)][int(1)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(0)][int(2)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(1)][int(2)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(2)][int(2)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(3)][int(2)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(0)][int(3)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(1)][int(3)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(2)][int(3)], (&kernelContext_0)->transform_0->modelView_0.data_0[int(3)][int(3)])))).xyz;
+        (&output_0)->fragViewNormal_1 = normalize((((_S1.inNormal_0) * (matrix<float,int(3),int(3)> ((&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(0)][int(0)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(1)][int(0)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(2)][int(0)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(0)][int(1)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(1)][int(1)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(2)][int(1)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(0)][int(2)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(1)][int(2)], (&kernelContext_0)->transform_0->normalMatrix_0.data_1[int(2)][int(2)])))));
+        (&output_0)->position_1 = (((hp_0) * (matrix<float,int(4),int(4)> ((&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(3)]))));
+
+#line 31
+        uint i_0 = 0U;
+
+        for(;;)
+        {
+
+#line 33
+            if(i_0 < uint((&kernelContext_0)->lights_0->numLights_0))
+            {
+            }
+            else
+            {
+
+#line 33
+                break;
+            }
+
+#line 34
+            float4 flps_0 = (((hp_0) * (matrix<float,int(4),int(4)> ((&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(0)][int(0)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(1)][int(0)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(2)][int(0)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(3)][int(0)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(0)][int(1)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(1)][int(1)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(2)][int(1)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(3)][int(1)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(0)][int(2)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(1)][int(2)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(2)][int(2)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(3)][int(2)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(0)][int(3)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(1)][int(3)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(2)][int(3)], (&(&kernelContext_0)->lights_0->mvp_1)->data_2[i_0].data_0[int(3)][int(3)]))));
+            (&output_0)->fragLightPos_1[i_0] = flps_0.xyz / float3(flps_0.w) ;
+
+#line 33
+            i_0 = i_0 + 1U;
+
+#line 33
+        }
+
+#line 33
+        _S2 = output_0;
+
+
+
+        break;
     }
-    out.fragLightPos_0 = fragLightPos[0];
-    out.fragLightPos_1 = fragLightPos[1];
-    out.fragLightPos_2 = fragLightPos[2];
-    out.fragLightPos_3 = fragLightPos[3];
-    return out;
+
+#line 37
+    thread main_Result_0 _S3;
+
+#line 37
+    (&_S3)->fragViewPos_0 = _S2.fragViewPos_1;
+
+#line 37
+    (&_S3)->fragViewNormal_0 = _S2.fragViewNormal_1;
+
+#line 37
+    (&_S3)->fragLightPos_0 = _S2.fragLightPos_1;
+
+#line 37
+    (&_S3)->position_0 = _S2.position_1;
+
+#line 37
+    return _S3;
 }

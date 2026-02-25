@@ -1,21 +1,27 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct main0_out
+#line 2 "shaders/src/SolidColor.frag.slang"
+struct pixelOutput_0
 {
-    float4 FragColor [[color(0)]];
+    float4 output_0 [[color(0)]];
 };
 
-struct main0_in
+
+#line 2
+struct pixelInput_0
 {
-    float4 Color [[user(locn0)]];
+    float4 Color_0 [[user(_SLANG_ATTR)]];
 };
 
-fragment main0_out main0(main0_in in [[stage_in]])
+
+#line 2
+[[fragment]] pixelOutput_0 main_0(pixelInput_0 _S1 [[stage_in]])
 {
-    main0_out out = {};
-    out.FragColor = in.Color;
-    return out;
+
+#line 2
+    pixelOutput_0 _S2 = { _S1.Color_0 };
+    return _S2;
 }

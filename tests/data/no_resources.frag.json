@@ -1,0 +1,4 @@
+{
+    "parameters": [],
+    "entryPoints": [{"name": "fragmentMain", "stage": "fragment"}]
+}

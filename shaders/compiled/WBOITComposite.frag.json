@@ -1,1 +1,93 @@
-{ "samplers": 2, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 0, "inputs": [], "outputs": [{ "name": "outColor", "type": "float4", "location": 0 }] }
+{
+    "parameters": [
+        {
+            "name": "accumTexture",
+            "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "multisample": true,
+                "combined": true,
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                }
+            }
+        },
+        {
+            "name": "revealTexture",
+            "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "multisample": true,
+                "combined": true,
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 1,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                }
+            }
+        }
+    ],
+    "entryPoints": [
+        {
+            "name": "main",
+            "stage": "fragment",
+            "parameters": [
+                {
+                    "name": "fragCoord",
+                    "semanticName": "SV_POSITION",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    }
+                },
+                {
+                    "name": "sampleIndex",
+                    "semanticName": "SV_SAMPLEINDEX",
+                    "type": {
+                        "kind": "scalar",
+                        "scalarType": "uint32"
+                    }
+                }
+            ],
+            "usesAnySampleRateInput": true,
+            "result": {
+                "stage": "fragment",
+                "binding": {"kind": "varyingOutput", "index": 0},
+                "semanticName": "SV_TARGET",
+                "type": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                }
+            },
+            "bindings": [
+                {
+                    "name": "accumTexture",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0, "used": 1}
+                },
+                {
+                    "name": "revealTexture",
+                    "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1, "used": 1}
+                }
+            ]
+        }
+    ],
+    "bindlessSpaceIndex": 0
+}

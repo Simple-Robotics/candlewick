@@ -1,97 +1,228 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct Camera
+#line 90 "core"
+struct _MatrixStorage_float4x4_ColMajornatural_0
 {
-    float4x4 projection;
-    float4x4 projectionInverse;
-    uint kernelSize;
+    array<float4, int(4)> data_0;
 };
 
-struct SSAOParams
+
+#line 90
+struct Camera_natural_0
 {
-    float4 samples[64];
+    _MatrixStorage_float4x4_ColMajornatural_0 projection_0;
+    _MatrixStorage_float4x4_ColMajornatural_0 projectionInverse_0;
+    uint kernelSize_0;
 };
 
-struct main0_out
+
+#line 10 "shaders/src/SSAO.frag.slang"
+struct SSAOParams_0
 {
-    float aoValue [[color(0)]];
+    array<float4, int(64)> samples_0;
 };
 
-struct main0_in
+
+#line 10
+struct KernelContext_0
 {
-    float2 inUV [[user(locn0)]];
+    texture2d<float, access::sample> depthTex_texture_0;
+    sampler depthTex_sampler_0;
+    Camera_natural_0 constant* camera_0;
+    texture2d<float, access::sample> normalMap_texture_0;
+    sampler normalMap_sampler_0;
+    texture2d<float, access::sample> ssaoNoise_texture_0;
+    sampler ssaoNoise_sampler_0;
+    SSAOParams_0 constant* kernel_0;
 };
 
-static inline __attribute__((always_inline))
-float3 getViewPos(thread const float& depth, thread const float2& uv, constant Camera& camera)
+
+float3 getViewPos_0(float depth_0, float2 uv_0, KernelContext_0 thread* kernelContext_0)
 {
-    float4 clipPos = float4((uv * 2.0) - float2(1.0), depth, 1.0);
-    float4 viewPos = camera.projectionInverse * clipPos;
-    return viewPos.xyz / float3(viewPos.w);
+    float4 viewPos_0 = (((float4(uv_0 * float2(2.0)  - float2(1.0) , depth_0, 1.0)) * (matrix<float,int(4),int(4)> (kernelContext_0->camera_0->projectionInverse_0.data_0[int(0)][int(0)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(1)][int(0)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(2)][int(0)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(3)][int(0)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(0)][int(1)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(1)][int(1)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(2)][int(1)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(3)][int(1)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(0)][int(2)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(1)][int(2)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(2)][int(2)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(3)][int(2)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(0)][int(3)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(1)][int(3)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(2)][int(3)], kernelContext_0->camera_0->projectionInverse_0.data_0[int(3)][int(3)]))));
+    return viewPos_0.xyz / float3(viewPos_0.w) ;
 }
 
-static inline __attribute__((always_inline))
-float3 sampleNoiseTexture(thread float2& uv, texture2d<float> depthTex, sampler depthTexSmplr, texture2d<float> ssaoNoise, sampler ssaoNoiseSmplr)
+float3 sampleNoiseTexture_0(float2 uv_1, KernelContext_0 thread* kernelContext_1)
 {
-    float2 viewport = float2(int2(depthTex.get_width(), depthTex.get_height()));
-    float2 noiseScale = viewport / float2(4.0);
-    uv *= noiseScale;
-    return float3(ssaoNoise.sample(ssaoNoiseSmplr, uv).xy, 0.0);
+
+#line 29
+    texture2d<float, access::sample> _S1 = kernelContext_1->depthTex_texture_0;
+    thread uint dW_0;
+
+#line 30
+    thread uint dH_0;
+
+#line 30
+    (*((kernelContext_1->depthTex_sampler_0)) = (_S1).get_width(0)),(*((&dW_0)) = (_S1).get_height(0));
+
+
+
+    float2 _S2 = uv_1 * (float2(float(dW_0), float(dH_0)) / float2(4.0) );
+    ;
+
+#line 35
+    return float3(((kernelContext_1->ssaoNoise_texture_0).sample((kernelContext_1->ssaoNoise_sampler_0), (_S2))).xy, 0.0);
 }
 
-static inline __attribute__((always_inline))
-float calculatePixelAO(thread const float2& uv, constant Camera& camera, texture2d<float> depthTex, sampler depthTexSmplr, texture2d<float> ssaoNoise, sampler ssaoNoiseSmplr, texture2d<float> normalMap, sampler normalMapSmplr, constant SSAOParams& kernel0)
+float calculatePixelAO_0(float2 uv_2, KernelContext_0 thread* kernelContext_2)
 {
-    float depth = depthTex.sample(depthTexSmplr, uv).x;
-    float param = depth;
-    float2 param_1 = uv;
-    float3 viewPos = getViewPos(param, param_1, camera);
-    float2 _107 = normalMap.sample(normalMapSmplr, uv).xy;
-    float3 viewNormal;
-    viewNormal.x = _107.x;
-    viewNormal.y = _107.y;
-    viewNormal.z = sqrt(1.0 - dot(viewNormal.xy, viewNormal.xy));
-    float2 param_2 = uv;
-    float3 _125 = sampleNoiseTexture(param_2, depthTex, depthTexSmplr, ssaoNoise, ssaoNoiseSmplr);
-    float3 randVec = _125;
-    float3 tangent = fast::normalize(randVec - (viewNormal * dot(randVec, viewNormal)));
-    float3 bitangent = cross(tangent, viewNormal);
-    float3x3 TBN = float3x3(float3(tangent), float3(bitangent), float3(viewNormal));
-    float occlusion = 0.0;
-    for (int i = 0; i < int(camera.kernelSize); i++)
+
+#line 39
+    ;
+
+#line 39
+    float3 _S3 = getViewPos_0(((kernelContext_2->depthTex_texture_0).sample((kernelContext_2->depthTex_sampler_0), (uv_2))).x, uv_2, kernelContext_2);
+
+
+    ;
+
+#line 41
+    thread float3 viewNormal_0;
+    viewNormal_0.xy = ((kernelContext_2->normalMap_texture_0).sample((kernelContext_2->normalMap_sampler_0), (uv_2))).xy;
+    viewNormal_0.z = sqrt(1.0 - dot(viewNormal_0.xy, viewNormal_0.xy));
+
+#line 43
+    float3 _S4 = sampleNoiseTexture_0(uv_2, kernelContext_2);
+
+#line 48
+    float3 tangent_0 = normalize(_S4 - viewNormal_0 * float3(dot(_S4, viewNormal_0)) );
+    float3 _S5 = cross(tangent_0, viewNormal_0);
+
+#line 49
+    int i_0 = int(0);
+
+#line 49
+    float occlusion_0 = 0.0;
+
+#line 54
+    for(;;)
     {
-        float3 samplePos = TBN * kernel0.samples[i].xyz;
-        samplePos = viewPos + (samplePos * 1.0);
-        float4 offset = camera.projection * float4(samplePos, 1.0);
-        float _201 = offset.w;
-        float4 _202 = offset;
-        float2 _205 = _202.xy / float2(_201);
-        offset.x = _205.x;
-        offset.y = _205.y;
-        float4 _210 = offset;
-        float2 _215 = (_210.xy * 0.5) + float2(0.5);
-        offset.x = _215.x;
-        offset.y = _215.y;
-        float sampleDepth = depthTex.sample(depthTexSmplr, offset.xy).x;
-        float param_3 = sampleDepth;
-        float2 param_4 = offset.xy;
-        float3 sampleViewPos = getViewPos(param_3, param_4, camera);
-        float rangeCheck = smoothstep(0.0, 1.0, 1.0 / abs((viewPos.z - sampleViewPos.z) - 0.00999999977648258209228515625));
-        occlusion += (float(sampleViewPos.z >= (samplePos.z + 0.00999999977648258209228515625)) * rangeCheck);
+
+#line 54
+        if(i_0 < int(kernelContext_2->camera_0->kernelSize_0))
+        {
+        }
+        else
+        {
+
+#line 54
+            break;
+        }
+        float3 samplePos_0 = _S3 + (((matrix<float,int(3),int(3)> (tangent_0, _S5, viewNormal_0)) * (kernelContext_2->kernel_0->samples_0[i_0].xyz)));
+
+        float4 _S6 = (((float4(samplePos_0, 1.0)) * (matrix<float,int(4),int(4)> (kernelContext_2->camera_0->projection_0.data_0[int(0)][int(0)], kernelContext_2->camera_0->projection_0.data_0[int(1)][int(0)], kernelContext_2->camera_0->projection_0.data_0[int(2)][int(0)], kernelContext_2->camera_0->projection_0.data_0[int(3)][int(0)], kernelContext_2->camera_0->projection_0.data_0[int(0)][int(1)], kernelContext_2->camera_0->projection_0.data_0[int(1)][int(1)], kernelContext_2->camera_0->projection_0.data_0[int(2)][int(1)], kernelContext_2->camera_0->projection_0.data_0[int(3)][int(1)], kernelContext_2->camera_0->projection_0.data_0[int(0)][int(2)], kernelContext_2->camera_0->projection_0.data_0[int(1)][int(2)], kernelContext_2->camera_0->projection_0.data_0[int(2)][int(2)], kernelContext_2->camera_0->projection_0.data_0[int(3)][int(2)], kernelContext_2->camera_0->projection_0.data_0[int(0)][int(3)], kernelContext_2->camera_0->projection_0.data_0[int(1)][int(3)], kernelContext_2->camera_0->projection_0.data_0[int(2)][int(3)], kernelContext_2->camera_0->projection_0.data_0[int(3)][int(3)]))));
+
+#line 58
+        thread float4 offset_0 = _S6;
+        offset_0.xy = _S6.xy / float2(_S6.w) ;
+
+#line 59
+        float2 _S7 = float2(0.5) ;
+        offset_0.xy = offset_0.xy * _S7 + _S7;
+
+        float2 _S8 = offset_0.xy;
+
+#line 62
+        ;
+
+#line 62
+        float3 _S9 = getViewPos_0(((kernelContext_2->depthTex_texture_0).sample((kernelContext_2->depthTex_sampler_0), (_S8))).x, offset_0.xy, kernelContext_2);
+
+
+        float _S10 = _S9.z;
+
+#line 65
+        float rangeCheck_0 = smoothstep(0.0, 1.0, 1.0 / abs(_S3.z - _S10 - 0.00999999977648258));
+
+#line 65
+        float _S11;
+        if(_S10 >= (samplePos_0.z + 0.00999999977648258))
+        {
+
+#line 66
+            _S11 = 1.0;
+
+#line 66
+        }
+        else
+        {
+
+#line 66
+            _S11 = 0.0;
+
+#line 66
+        }
+
+#line 66
+        float occlusion_1 = occlusion_0 + _S11 * rangeCheck_0;
+
+#line 54
+        i_0 = i_0 + int(1);
+
+#line 54
+        occlusion_0 = occlusion_1;
+
+#line 54
     }
-    occlusion = 1.0 - ((occlusion / float(camera.kernelSize)) * 1.5);
-    return occlusion;
+
+#line 70
+    return 1.0 - occlusion_0 / float(kernelContext_2->camera_0->kernelSize_0) * 1.5;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant SSAOParams& kernel0 [[buffer(0)]], constant Camera& camera [[buffer(1)]], texture2d<float> depthTex [[texture(0)]], texture2d<float> normalMap [[texture(1)]], texture2d<float> ssaoNoise [[texture(2)]], sampler depthTexSmplr [[sampler(0)]], sampler normalMapSmplr [[sampler(1)]], sampler ssaoNoiseSmplr [[sampler(2)]])
+
+#line 70
+struct pixelOutput_0
 {
-    main0_out out = {};
-    float2 param = in.inUV;
-    out.aoValue = calculatePixelAO(param, camera, depthTex, depthTexSmplr, ssaoNoise, ssaoNoiseSmplr, normalMap, normalMapSmplr, kernel0);
-    return out;
+    float output_0 [[color(0)]];
+};
+
+
+#line 70
+struct pixelInput_0
+{
+    float2 inUV_0 [[user(_SLANG_ATTR)]];
+};
+
+
+#line 74
+[[fragment]] pixelOutput_0 main_0(pixelInput_0 _S12 [[stage_in]], texture2d<float, access::sample> depthTex_texture_1 [[texture(0)]], sampler depthTex_sampler_1 [[sampler(0)]], Camera_natural_0 constant* camera_1 [[buffer(1)]], texture2d<float, access::sample> normalMap_texture_1 [[texture(1)]], sampler normalMap_sampler_1 [[sampler(1)]], texture2d<float, access::sample> ssaoNoise_texture_1 [[texture(2)]], sampler ssaoNoise_sampler_1 [[sampler(2)]], SSAOParams_0 constant* kernel_1 [[buffer(0)]])
+{
+
+#line 74
+    thread KernelContext_0 kernelContext_3;
+
+#line 74
+    (&kernelContext_3)->depthTex_texture_0 = depthTex_texture_1;
+
+#line 74
+    (&kernelContext_3)->depthTex_sampler_0 = depthTex_sampler_1;
+
+#line 74
+    (&kernelContext_3)->camera_0 = camera_1;
+
+#line 74
+    (&kernelContext_3)->normalMap_texture_0 = normalMap_texture_1;
+
+#line 74
+    (&kernelContext_3)->normalMap_sampler_0 = normalMap_sampler_1;
+
+#line 74
+    (&kernelContext_3)->ssaoNoise_texture_0 = ssaoNoise_texture_1;
+
+#line 74
+    (&kernelContext_3)->ssaoNoise_sampler_0 = ssaoNoise_sampler_1;
+
+#line 74
+    (&kernelContext_3)->kernel_0 = kernel_1;
+
+#line 74
+    float _S13 = calculatePixelAO_0(_S12.inUV_0, &kernelContext_3);
+
+#line 74
+    pixelOutput_0 _S14 = { _S13 };
+    return _S14;
 }

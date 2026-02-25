@@ -1,107 +1,255 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct ShadowParams
+#line 90 "core"
+struct _MatrixStorage_float4x4_ColMajornatural_0
 {
-    float4x4 projection;
-    float4x4 invProjection;
-    packed_float3 lightDir;
-    float maxDistance;
-    int numSteps;
+    array<float4, int(4)> data_0;
 };
 
-struct main0_out
+
+#line 90
+struct ShadowParams_natural_0
 {
-    float fragShadow [[color(0)]];
+    _MatrixStorage_float4x4_ColMajornatural_0 projection_0;
+    _MatrixStorage_float4x4_ColMajornatural_0 invProjection_0;
+    float3 lightDir_0;
+    float maxDistance_0;
+    int numSteps_0;
 };
 
-struct main0_in
+
+#line 5176 "core.meta.slang"
+struct KernelContext_0
 {
-    float2 fragUV [[user(locn0)]];
+    texture2d<float, access::sample> depthTexture_texture_0;
+    sampler depthTexture_sampler_0;
+    ShadowParams_natural_0 constant* shadow_0;
 };
 
-static inline __attribute__((always_inline))
-float3 computeViewPos(thread const float3& ndcPos, constant ShadowParams& _56)
+
+#line 18 "shaders/src/ScreenSpaceShadows.frag.slang"
+float3 computeViewPos_0(float3 ndcPos_0, KernelContext_0 thread* kernelContext_0)
 {
-    float4 viewPos = _56.invProjection * float4(ndcPos, 1.0);
-    return viewPos.xyz / float3(viewPos.w);
+
+#line 19
+    float4 viewPos_0 = (((float4(ndcPos_0, 1.0)) * (matrix<float,int(4),int(4)> (kernelContext_0->shadow_0->invProjection_0.data_0[int(0)][int(0)], kernelContext_0->shadow_0->invProjection_0.data_0[int(1)][int(0)], kernelContext_0->shadow_0->invProjection_0.data_0[int(2)][int(0)], kernelContext_0->shadow_0->invProjection_0.data_0[int(3)][int(0)], kernelContext_0->shadow_0->invProjection_0.data_0[int(0)][int(1)], kernelContext_0->shadow_0->invProjection_0.data_0[int(1)][int(1)], kernelContext_0->shadow_0->invProjection_0.data_0[int(2)][int(1)], kernelContext_0->shadow_0->invProjection_0.data_0[int(3)][int(1)], kernelContext_0->shadow_0->invProjection_0.data_0[int(0)][int(2)], kernelContext_0->shadow_0->invProjection_0.data_0[int(1)][int(2)], kernelContext_0->shadow_0->invProjection_0.data_0[int(2)][int(2)], kernelContext_0->shadow_0->invProjection_0.data_0[int(3)][int(2)], kernelContext_0->shadow_0->invProjection_0.data_0[int(0)][int(3)], kernelContext_0->shadow_0->invProjection_0.data_0[int(1)][int(3)], kernelContext_0->shadow_0->invProjection_0.data_0[int(2)][int(3)], kernelContext_0->shadow_0->invProjection_0.data_0[int(3)][int(3)]))));
+    return viewPos_0.xyz / float3(viewPos_0.w) ;
 }
 
-static inline __attribute__((always_inline))
-bool isCoordsInRange(thread const float2& uv)
+
+#line 7 "shaders/src/utils.slang"
+bool isCoordsInRange_0(float2 uv_0)
 {
-    bool _26 = uv.x >= 0.0;
-    bool _33;
-    if (_26)
+
+#line 8
+    float _S1 = uv_0.x;
+
+#line 8
+    bool _S2;
+
+#line 8
+    if(_S1 >= 0.0)
     {
-        _33 = uv.y >= 0.0;
+
+#line 8
+        _S2 = (uv_0.y) >= 0.0;
+
+#line 8
     }
     else
     {
-        _33 = _26;
+
+#line 8
+        _S2 = false;
+
+#line 8
     }
-    bool _40;
-    if (_33)
+
+#line 8
+    if(_S2)
     {
-        _40 = uv.x <= 1.0;
+
+#line 8
+        _S2 = _S1 <= 1.0;
+
+#line 8
     }
     else
     {
-        _40 = _33;
+
+#line 8
+        _S2 = false;
+
+#line 8
     }
-    bool _46;
-    if (_40)
+    if(_S2)
     {
-        _46 = uv.y <= 1.0;
+
+#line 9
+        _S2 = (uv_0.y) <= 1.0;
+
+#line 9
     }
     else
     {
-        _46 = _40;
+
+#line 9
+        _S2 = false;
+
+#line 9
     }
-    return _46;
+
+#line 8
+    return _S2;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant ShadowParams& _56 [[buffer(0)]], texture2d<float> depthTexture [[texture(0)]], sampler depthTextureSmplr [[sampler(0)]])
+
+#line 8
+struct pixelOutput_0
 {
-    main0_out out = {};
-    float depth = depthTexture.sample(depthTextureSmplr, in.fragUV).x;
-    if (depth >= 1.0)
+    float output_0 [[color(0)]];
+};
+
+
+#line 8
+struct pixelInput_0
+{
+    float2 fragUV_0 [[user(_SLANG_ATTR)]];
+};
+
+
+#line 24 "shaders/src/ScreenSpaceShadows.frag.slang"
+[[fragment]] pixelOutput_0 main_0(pixelInput_0 _S3 [[stage_in]], texture2d<float, access::sample> depthTexture_texture_1 [[texture(0)]], sampler depthTexture_sampler_1 [[sampler(0)]], ShadowParams_natural_0 constant* shadow_1 [[buffer(0)]])
+{
+
+#line 24
+    thread KernelContext_0 kernelContext_1;
+
+#line 24
+    (&kernelContext_1)->depthTexture_texture_0 = depthTexture_texture_1;
+
+#line 24
+    (&kernelContext_1)->depthTexture_sampler_0 = depthTexture_sampler_1;
+
+#line 24
+    (&kernelContext_1)->shadow_0 = shadow_1;
+    ;
+
+#line 25
+    float depth_0 = (((&kernelContext_1)->depthTexture_texture_0).sample(((&kernelContext_1)->depthTexture_sampler_0), (_S3.fragUV_0))).x;
+
+    if(depth_0 >= 1.0)
     {
-        out.fragShadow = 1.0;
-        return out;
+
+#line 27
+        pixelOutput_0 _S4 = { 1.0 };
+        return _S4;
     }
-    float3 ndcPos = float3((in.fragUV * 2.0) - float2(1.0), depth);
-    float3 param = ndcPos;
-    float3 viewPos = computeViewPos(param, _56);
-    float3 rayPos = viewPos;
-    float stepSize = 0.0500000007450580596923828125 / float(_56.numSteps);
-    float3 toLight = fast::normalize(-float3(_56.lightDir));
-    float3 rayStep = toLight * stepSize;
-    float occlusion = 0.0;
-    for (int i = 0; i < _56.numSteps; i++)
+
+#line 28
+    float occlusion_0;
+
+#line 28
+    float3 _S5 = computeViewPos_0(float3(_S3.fragUV_0 * float2(2.0)  - float2(1.0) , depth_0), &kernelContext_1);
+
+#line 38
+    float3 _S6 = normalize(- (&kernelContext_1)->shadow_0->lightDir_0) * float3((0.05000000074505806 / float((&kernelContext_1)->shadow_0->numSteps_0))) ;
+
+#line 38
+    int i_0 = int(0);
+
+#line 38
+    float3 rayPos_0 = _S5;
+
+#line 43
+    for(;;)
     {
-        rayPos += rayStep;
-        float4 projectedPos = _56.projection * float4(rayPos, 1.0);
-        float3 screenPos = projectedPos.xyz / float3(projectedPos.w);
-        float2 rayUV = float2(0.5) + (screenPos.xy * 0.5);
-        float rayDepth = screenPos.z;
-        float sceneDepth = depthTexture.sample(depthTextureSmplr, rayUV).x;
-        float2 param_1 = rayUV;
-        if (!isCoordsInRange(param_1))
+
+#line 43
+        if(i_0 < ((&kernelContext_1)->shadow_0->numSteps_0))
         {
+        }
+        else
+        {
+
+#line 43
+            occlusion_0 = 0.0;
+
+#line 43
             break;
         }
-        float depthDelta = (rayDepth - sceneDepth) - 0.001000000047497451305389404296875;
-        if ((depthDelta >= 0.0) && (depthDelta < 0.0199999995529651641845703125))
+
+#line 44
+        float3 rayPos_1 = rayPos_0 + _S6;
+
+        float4 projectedPos_0 = (((float4(rayPos_1, 1.0)) * (matrix<float,int(4),int(4)> ((&kernelContext_1)->shadow_0->projection_0.data_0[int(0)][int(0)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(1)][int(0)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(2)][int(0)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(3)][int(0)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(0)][int(1)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(1)][int(1)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(2)][int(1)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(3)][int(1)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(0)][int(2)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(1)][int(2)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(2)][int(2)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(3)][int(2)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(0)][int(3)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(1)][int(3)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(2)][int(3)], (&kernelContext_1)->shadow_0->projection_0.data_0[int(3)][int(3)]))));
+        float3 screenPos_0 = projectedPos_0.xyz / float3(projectedPos_0.w) ;
+
+#line 47
+        float2 _S7 = float2(0.5) ;
+
+        float2 rayUV_0 = _S7 + screenPos_0.xy * _S7;
+        float rayDepth_0 = screenPos_0.z;
+        ;
+
+#line 51
+        float sceneDepth_0 = (((&kernelContext_1)->depthTexture_texture_0).sample(((&kernelContext_1)->depthTexture_sampler_0), (rayUV_0))).x;
+
+        if(!isCoordsInRange_0(rayUV_0))
         {
-            occlusion = 1.0;
+
+#line 53
+            occlusion_0 = 0.0;
             break;
         }
+
+        float depthDelta_0 = rayDepth_0 - sceneDepth_0 - 0.00100000004749745;
+
+#line 57
+        bool _S8;
+
+        if(depthDelta_0 >= 0.0)
+        {
+
+#line 59
+            _S8 = depthDelta_0 < 0.01999999955296516;
+
+#line 59
+        }
+        else
+        {
+
+#line 59
+            _S8 = false;
+
+#line 59
+        }
+
+#line 59
+        if(_S8)
+        {
+
+#line 59
+            occlusion_0 = 1.0;
+
+            break;
+        }
+
+#line 43
+        i_0 = i_0 + int(1);
+
+#line 43
+        rayPos_0 = rayPos_1;
+
+#line 43
     }
-    out.fragShadow = 1.0 - occlusion;
-    return out;
+
+#line 43
+    pixelOutput_0 _S9 = { 1.0 - occlusion_0 };
+
+#line 65
+    return _S9;
 }

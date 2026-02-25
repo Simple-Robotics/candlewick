@@ -1,1 +1,36 @@
-{ "samplers": 0, "storage_textures": 0, "storage_buffers": 0, "uniform_buffers": 0 }
+{
+    "parameters": [
+
+    ],
+    "entryPoints": [
+        {
+            "name": "main",
+            "stage": "fragment",
+            "parameters": [
+                {
+                    "name": "fragCoord",
+                    "semanticName": "SV_POSITION",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    }
+                }
+            ],
+            "result": {
+                "semanticName": "SV_DEPTH",
+                "type": {
+                    "kind": "scalar",
+                    "scalarType": "float32"
+                }
+            },
+            "bindings": [
+
+            ]
+        }
+    ],
+    "bindlessSpaceIndex": 0
+}

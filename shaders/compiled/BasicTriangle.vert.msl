@@ -1,39 +1,88 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct main0_out
+#line 1 "shaders/src/BasicTriangle.vert.slang"
+struct main_Result_0
 {
-    float4 outColor [[user(locn0)]];
-    float4 gl_Position [[position]];
+    float4 outColor_0 [[user(_SLANG_ATTR)]];
+    float4 position_0 [[position]];
 };
 
-vertex main0_out main0(uint gl_VertexIndex [[vertex_id]])
+
+#line 1
+struct VSOutput_0
 {
-    main0_out out = {};
-    float2 pos;
-    if (int(gl_VertexIndex) == 0)
+    float4 outColor_1;
+    float4 position_1;
+};
+
+
+
+[[vertex]] main_Result_0 main_0(uint vertexID_0 [[vertex_id]])
+{
+
+#line 8
+    thread VSOutput_0 output_0;
+
+#line 8
+    float2 pos_0;
+
+    if(vertexID_0 == 0U)
     {
-        pos = float2(-1.0);
-        out.outColor = float4(1.0, 0.0, 0.0, 1.0);
+
+#line 11
+        float2 _S1 = float2(-1.0, -1.0);
+        (&output_0)->outColor_1 = float4(1.0, 0.0, 0.0, 1.0);
+
+#line 12
+        pos_0 = _S1;
+
+#line 10
     }
     else
     {
-        if (int(gl_VertexIndex) == 1)
+        if(vertexID_0 == 1U)
         {
-            pos = float2(1.0, -1.0);
-            out.outColor = float4(0.0, 1.0, 0.0, 1.0);
+
+#line 14
+            float2 _S2 = float2(1.0, -1.0);
+            (&output_0)->outColor_1 = float4(0.0, 1.0, 0.0, 1.0);
+
+#line 15
+            pos_0 = _S2;
+
+#line 13
         }
         else
         {
-            if (int(gl_VertexIndex) == 2)
-            {
-                pos = float2(0.0, 1.0);
-                out.outColor = float4(0.0, 0.0, 1.0, 1.0);
-            }
+
+            float2 _S3 = float2(0.0, 1.0);
+            (&output_0)->outColor_1 = float4(0.0, 0.0, 1.0, 1.0);
+
+#line 18
+            pos_0 = _S3;
+
+#line 13
         }
+
+#line 10
     }
-    out.gl_Position = float4(pos, 0.0, 1.0);
-    return out;
+
+#line 20
+    (&output_0)->position_1 = float4(pos_0, 0.0, 1.0);
+    VSOutput_0 _S4 = output_0;
+
+#line 21
+    thread main_Result_0 _S5;
+
+#line 21
+    (&_S5)->outColor_0 = _S4.outColor_1;
+
+#line 21
+    (&_S5)->position_0 = _S4.position_1;
+
+#line 21
+    return _S5;
 }

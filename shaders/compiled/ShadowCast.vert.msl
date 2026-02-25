@@ -1,28 +1,41 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct CameraBlock
+#line 90 "core"
+struct vertexOutput_0
 {
-    float4x4 mvp;
+    float4 output_0 [[position]];
 };
 
-struct main0_out
+
+#line 8 "shaders/src/ShadowCast.vert.slang"
+struct vertexInput_0
 {
-    float4 gl_Position [[position, invariant]];
+    float3 inPosition_0 [[attribute(0)]];
 };
 
-struct main0_in
+
+#line 8
+struct _MatrixStorage_float4x4_ColMajornatural_0
 {
-    float3 inPosition [[attribute(0)]];
+    array<float4, int(4)> data_0;
 };
 
-vertex main0_out main0(main0_in in [[stage_in]], constant CameraBlock& _16 [[buffer(0)]])
+
+#line 8
+struct CameraBlock_natural_0
 {
-    main0_out out = {};
-    float4 _28 = float4(in.inPosition, 1.0);
-    float4 _29 = _16.mvp * _28;
-    out.gl_Position = _29;
-    return out;
+    _MatrixStorage_float4x4_ColMajornatural_0 mvp_0;
+};
+
+
+#line 8
+[[vertex]] vertexOutput_0 main_0(vertexInput_0 _S1 [[stage_in]], CameraBlock_natural_0 constant* camera_0 [[buffer(0)]])
+{
+
+#line 8
+    vertexOutput_0 _S2 = { (((float4(_S1.inPosition_0, 1.0)) * (matrix<float,int(4),int(4)> (camera_0->mvp_0.data_0[int(0)][int(0)], camera_0->mvp_0.data_0[int(1)][int(0)], camera_0->mvp_0.data_0[int(2)][int(0)], camera_0->mvp_0.data_0[int(3)][int(0)], camera_0->mvp_0.data_0[int(0)][int(1)], camera_0->mvp_0.data_0[int(1)][int(1)], camera_0->mvp_0.data_0[int(2)][int(1)], camera_0->mvp_0.data_0[int(3)][int(1)], camera_0->mvp_0.data_0[int(0)][int(2)], camera_0->mvp_0.data_0[int(1)][int(2)], camera_0->mvp_0.data_0[int(2)][int(2)], camera_0->mvp_0.data_0[int(3)][int(2)], camera_0->mvp_0.data_0[int(0)][int(3)], camera_0->mvp_0.data_0[int(1)][int(3)], camera_0->mvp_0.data_0[int(2)][int(3)], camera_0->mvp_0.data_0[int(3)][int(3)])))) };
+    return _S2;
 }
