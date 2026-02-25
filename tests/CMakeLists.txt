@@ -12,4 +12,5 @@ add_candlewick_test(TestMeshData.cpp)
 add_candlewick_test(TestStrided.cpp)
 add_candlewick_test(TestShaderMetadata.cpp)
 target_compile_definitions(TestShaderMetadata PRIVATE
-  CANDLEWICK_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+  CANDLEWICK_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+  CANDLEWICK_COMPILED_SHADERS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../shaders/compiled")
