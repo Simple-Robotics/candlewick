@@ -110,11 +110,10 @@ Shader::Config loadShaderMetadata(const char *filename) {
         param.at("type").at("kind").get_ref<const std::string &>();
     if (kind == "constantBuffer") {
       config.uniform_buffers++;
-    } else if (kind == "samplerState" || kind == "samplerComparisonState") {
-      // Each samplerState corresponds to one SDL_GPUTextureSamplerBinding slot.
-      // Note: may need revisiting once shaders with textures are migrated, to
-      // verify whether Slang emits paired "texture"+"samplerState" entries or a
-      // single combined entry.
+    } else if (kind == "resource" &&
+               param.at("type").value("combined", false)) {
+      // Slang emits "resource" + "combined": true for Sampler2D / Sampler2DShadow.
+      // Each such entry corresponds to one SDL_GPUTextureSamplerBinding slot.
       config.samplers++;
     } else if (kind == "rwTexture") {
       config.storage_textures++;

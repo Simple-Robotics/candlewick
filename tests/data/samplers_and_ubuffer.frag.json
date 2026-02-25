@@ -3,12 +3,14 @@
         {
             "name": "shadowMap",
             "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0},
-            "type": {"kind": "samplerComparisonState"}
+            "type": {"kind": "resource", "baseShape": "texture2D", "combined": true,
+                     "resultType": {"kind": "scalar", "scalarType": "float32"}}
         },
         {
             "name": "ssaoTex",
             "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1},
-            "type": {"kind": "samplerState"}
+            "type": {"kind": "resource", "baseShape": "texture2D", "combined": true,
+                     "resultType": {"kind": "vector", "elementCount": 4, "elementType": {"kind": "scalar", "scalarType": "float32"}}}
         },
         {
             "name": "material",
