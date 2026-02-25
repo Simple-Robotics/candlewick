@@ -3,6 +3,7 @@
 
 #include "Core.h"
 #include <SDL3/SDL_gpu.h>
+#include <string>
 
 namespace candlewick {
 
@@ -13,8 +14,6 @@ constexpr const char *g_default_shader_dir = CANDLEWICK_SHADER_BIN_DIR;
 void setShadersDirectory(const char *path);
 /// \brief Get the current (global) directory where shaders are found.
 const char *currentShaderDirectory();
-
-SDL_GPUShaderStage detect_shader_stage(const char *filename);
 
 const char *shader_format_name(SDL_GPUShaderFormat shader_format);
 
@@ -27,6 +26,8 @@ struct Shader {
   /// \brief %Shader configuration: number of uniforms, texture samplers,
   /// storage textures and storage buffers.
   struct Config {
+    SDL_GPUShaderStage stage;
+    std::string entry_point;
     Uint32 uniform_buffers;
     Uint32 samplers;
     Uint32 storage_textures = 0;

@@ -18,5 +18,5 @@
             "type": {"kind": "constantBuffer"}
         }
     ],
-    "entryPoints": []
+    "entryPoints": [{"name": "main", "stage": "fragment"}]
 }

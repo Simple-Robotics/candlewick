@@ -13,18 +13,6 @@ std::string g_shader_dir = g_default_shader_dir;
 void setShadersDirectory(const char *path) { g_shader_dir = path; }
 const char *currentShaderDirectory() { return g_shader_dir.c_str(); }
 
-SDL_GPUShaderStage detect_shader_stage(const char *filename) {
-  SDL_GPUShaderStage stage;
-  if (SDL_strstr(filename, ".vert"))
-    stage = SDL_GPU_SHADERSTAGE_VERTEX;
-  else if (SDL_strstr(filename, ".frag"))
-    stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
-  else {
-    stage = SDL_GPUShaderStage(-1);
-  }
-  return stage;
-}
-
 struct ShaderCode {
   Uint8 *data;
   size_t size;
@@ -50,11 +38,7 @@ ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
 }
 
 Shader::Shader(const Device &device, const char *filename, const Config &config)
-    : _shader(nullptr), _device(device) {
-  _stage = detect_shader_stage(filename);
-  if (_stage < 0)
-    terminate_with_message("Failed to infer shader stage for filename {:s}",
-                           filename);
+    : _shader(nullptr), _device(device), _stage(config.stage) {
 
   SDL_GPUShaderFormat supported_formats = device.shaderFormats();
   SDL_GPUShaderFormat target_format = SDL_GPU_SHADERFORMAT_INVALID;
@@ -64,11 +48,13 @@ Shader::Shader(const Device &device, const char *filename, const Config &config)
   if (supported_formats & SDL_GPU_SHADERFORMAT_SPIRV) {
     target_format = SDL_GPU_SHADERFORMAT_SPIRV;
     shader_ext = "spv";
-    entry_point = "main";
+    entry_point = config.entry_point.c_str();
   } else if (supported_formats & SDL_GPU_SHADERFORMAT_MSL) {
     target_format = SDL_GPU_SHADERFORMAT_MSL;
     shader_ext = "msl";
-    entry_point = "main_0";
+    // Slang renames 'main' to 'main_0' in MSL since 'main' is reserved
+    entry_point =
+        (config.entry_point == "main") ? "main_0" : config.entry_point.c_str();
   } else {
     throw RAIIException(
         "Failed to load shader: no available supported shader format.");
@@ -104,7 +90,26 @@ Shader::Config loadShaderMetadata(const char *filename) {
   auto data = loadShaderFile(filename, "json");
   auto json = nlohmann::json::parse(data.data, data.data + data.size);
 
+  const auto &entry_points = json.at("entryPoints");
+  if (entry_points.size() != 1)
+    terminate_with_message("Expected exactly 1 entry point in '{:s}', got {:d}",
+                           filename, entry_points.size());
+
+  const auto &ep = entry_points[0];
+  const auto &stage_str = ep.at("stage").get_ref<const std::string &>();
+
+  SDL_GPUShaderStage stage{};
+  if (stage_str == "vertex")
+    stage = SDL_GPU_SHADERSTAGE_VERTEX;
+  else if (stage_str == "fragment")
+    stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
+  else
+    terminate_with_message("Unsupported shader stage '{:s}' in '{:s}'",
+                           stage_str, filename);
+
   Shader::Config config{};
+  config.stage = stage;
+  config.entry_point = ep.at("name").get<std::string>();
   for (const auto &param : json.at("parameters")) {
     const auto &kind =
         param.at("type").at("kind").get_ref<const std::string &>();
