@@ -1,2 +1,4 @@
 # run clang formatting (ManifoldFR 2025-05-13)
 e1a864ca76047c7338214ee00d9a63de1c7a70d8
+# pre-commit run all (ManifoldFR 2026-02-25)
+4cef3d72d4e6320d6aece567eed4a52019f97699
