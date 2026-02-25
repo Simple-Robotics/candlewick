@@ -33,7 +33,7 @@ struct ShaderCode {
   ShaderCode(ShaderCode &&) = delete;
   ShaderCode &operator=(const ShaderCode &) = delete;
   ShaderCode &operator=(ShaderCode &&) = delete;
-  ~ShaderCode() { SDL_free(data); }
+  ~ShaderCode() noexcept { SDL_free(data); }
 };
 
 ShaderCode loadShaderFile(const char *filename, const char *shader_ext) {
