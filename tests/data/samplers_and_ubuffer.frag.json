@@ -1,0 +1,20 @@
+{
+    "parameters": [
+        {
+            "name": "shadowMap",
+            "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 0},
+            "type": {"kind": "samplerComparisonState"}
+        },
+        {
+            "name": "ssaoTex",
+            "binding": {"kind": "descriptorTableSlot", "space": 2, "index": 1},
+            "type": {"kind": "samplerState"}
+        },
+        {
+            "name": "material",
+            "binding": {"kind": "descriptorTableSlot", "space": 3, "index": 0},
+            "type": {"kind": "constantBuffer"}
+        }
+    ],
+    "entryPoints": []
+}

@@ -1,0 +1,10 @@
+{
+    "parameters": [
+        {
+            "name": "transform",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+            "type": {"kind": "constantBuffer"}
+        }
+    ],
+    "entryPoints": []
+}
