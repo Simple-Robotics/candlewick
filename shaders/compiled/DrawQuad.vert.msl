@@ -45,4 +45,3 @@ struct VSOutput_0
 #line 26
     return _S1;
 }
-

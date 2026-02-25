@@ -224,4 +224,3 @@ struct pixelInput_0
 
     return _S4;
 }
-

@@ -150,4 +150,3 @@ struct VSOutput_0
 #line 73
     return _S3;
 }
-

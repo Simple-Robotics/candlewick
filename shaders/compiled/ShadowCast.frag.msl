@@ -16,4 +16,3 @@ struct pixelOutput_0
     pixelOutput_0 _S1 = { fragCoord_0.z };
     return _S1;
 }
-

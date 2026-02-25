@@ -70,4 +70,3 @@ struct VSOutput_0
 #line 18
     return _S2;
 }
-

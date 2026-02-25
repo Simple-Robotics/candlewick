@@ -119,4 +119,3 @@ struct KernelContext_0
 #line 24
     return _S7;
 }
-

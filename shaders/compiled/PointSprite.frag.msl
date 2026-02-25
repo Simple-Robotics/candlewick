@@ -33,4 +33,3 @@ struct pixelInput_0
     pixelOutput_0 _S2 = { _S1.pointColor_0 };
     return _S2;
 }
-

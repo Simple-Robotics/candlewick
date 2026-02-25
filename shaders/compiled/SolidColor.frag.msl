@@ -25,4 +25,3 @@ struct pixelInput_0
     pixelOutput_0 _S2 = { _S1.Color_0 };
     return _S2;
 }
-

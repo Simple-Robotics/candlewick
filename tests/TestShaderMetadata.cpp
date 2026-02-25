@@ -42,7 +42,8 @@ GTEST_TEST(TestShaderMetadataReal, SSAOblur_frag) {
   EXPECT_EQ(config.storage_buffers, 0u);
 }
 
-// PbrBasic.frag: Sampler2DShadow + Sampler2D + 4 UBOs (material, light, params, shadowAtlas)
+// PbrBasic.frag: Sampler2DShadow + Sampler2D + 4 UBOs (material, light, params,
+// shadowAtlas)
 GTEST_TEST(TestShaderMetadataReal, PbrBasic_frag) {
   setShadersDirectory(CANDLEWICK_COMPILED_SHADERS_DIR);
   auto config = loadShaderMetadata("PbrBasic.frag");

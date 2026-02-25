@@ -86,4 +86,3 @@ struct VSOutput_0
 #line 21
     return _S5;
 }
-

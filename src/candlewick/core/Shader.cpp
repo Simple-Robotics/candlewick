@@ -112,8 +112,9 @@ Shader::Config loadShaderMetadata(const char *filename) {
       config.uniform_buffers++;
     } else if (kind == "resource" &&
                param.at("type").value("combined", false)) {
-      // Slang emits "resource" + "combined": true for Sampler2D / Sampler2DShadow.
-      // Each such entry corresponds to one SDL_GPUTextureSamplerBinding slot.
+      // Slang emits "resource" + "combined": true for Sampler2D /
+      // Sampler2DShadow. Each such entry corresponds to one
+      // SDL_GPUTextureSamplerBinding slot.
       config.samplers++;
     } else if (kind == "rwTexture") {
       config.storage_textures++;

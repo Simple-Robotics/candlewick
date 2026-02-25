@@ -226,4 +226,3 @@ struct pixelInput_0
     pixelOutput_0 _S14 = { _S13 };
     return _S14;
 }
-

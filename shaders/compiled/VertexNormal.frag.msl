@@ -25,4 +25,3 @@ struct pixelInput_0
     pixelOutput_0 _S2 = { float4(_S1.f_normal_0, 0.0) };
     return _S2;
 }
-

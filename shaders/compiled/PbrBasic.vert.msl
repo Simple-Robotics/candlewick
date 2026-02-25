@@ -160,4 +160,3 @@ struct KernelContext_0
 #line 37
     return _S3;
 }
-

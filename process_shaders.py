@@ -81,16 +81,18 @@ for stage_file in stage_files:
     # Strip trailing .slang: "PbrBasic.vert.slang" -> "PbrBasic.vert"
     base_name = stage_file.name.removesuffix(".slang")
 
-    spv_file  = SHADER_OUT_DIR / (base_name + ".spv")
-    msl_file  = SHADER_OUT_DIR / (base_name + ".msl")
+    spv_file = SHADER_OUT_DIR / (base_name + ".spv")
+    msl_file = SHADER_OUT_DIR / (base_name + ".msl")
     json_file = SHADER_OUT_DIR / (base_name + ".json")
 
     base_cmd = [
         "slangc",
         f"-I{SHADER_SRC_DIR}",
         stage_file,
-        "-stage", stage,
-        "-entry", "main",
+        "-stage",
+        stage,
+        "-entry",
+        "main",
     ]
 
     print(f"\n--- {stage_file.name} ---")

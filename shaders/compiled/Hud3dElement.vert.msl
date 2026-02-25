@@ -39,4 +39,3 @@ struct TranformBlock_natural_0
     vertexOutput_0 _S2 = { (((float4(_S1.inPosition_0, 1.0)) * (matrix<float,int(4),int(4)> (transform_0->mvp_0.data_0[int(0)][int(0)], transform_0->mvp_0.data_0[int(1)][int(0)], transform_0->mvp_0.data_0[int(2)][int(0)], transform_0->mvp_0.data_0[int(3)][int(0)], transform_0->mvp_0.data_0[int(0)][int(1)], transform_0->mvp_0.data_0[int(1)][int(1)], transform_0->mvp_0.data_0[int(2)][int(1)], transform_0->mvp_0.data_0[int(3)][int(1)], transform_0->mvp_0.data_0[int(0)][int(2)], transform_0->mvp_0.data_0[int(1)][int(2)], transform_0->mvp_0.data_0[int(2)][int(2)], transform_0->mvp_0.data_0[int(3)][int(2)], transform_0->mvp_0.data_0[int(0)][int(3)], transform_0->mvp_0.data_0[int(1)][int(3)], transform_0->mvp_0.data_0[int(2)][int(3)], transform_0->mvp_0.data_0[int(3)][int(3)])))) };
     return _S2;
 }
-

@@ -80,4 +80,3 @@ struct KernelContext_0
 
     return _S7;
 }
-
