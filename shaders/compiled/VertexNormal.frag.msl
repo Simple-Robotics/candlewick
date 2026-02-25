@@ -1,23 +1,28 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct main0_out
+#line 2 "shaders/src/VertexNormal.frag.slang"
+struct pixelOutput_0
 {
-    float4 FragColor [[color(0)]];
+    float4 output_0 [[color(0)]];
 };
 
-struct main0_in
+
+#line 2
+struct pixelInput_0
 {
-    float3 f_normal [[user(locn0)]];
+    float3 f_normal_0 [[user(_SLANG_ATTR)]];
 };
 
-fragment main0_out main0(main0_in in [[stage_in]])
+
+#line 2
+[[fragment]] pixelOutput_0 main_0(pixelInput_0 _S1 [[stage_in]])
 {
-    main0_out out = {};
-    out.FragColor.x = in.f_normal.x;
-    out.FragColor.y = in.f_normal.y;
-    out.FragColor.z = in.f_normal.z;
-    return out;
+
+#line 2
+    pixelOutput_0 _S2 = { float4(_S1.f_normal_0, 0.0) };
+    return _S2;
 }
+

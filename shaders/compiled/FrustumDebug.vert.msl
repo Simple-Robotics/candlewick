@@ -1,118 +1,153 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-#pragma clang diagnostic ignored "-Wmissing-braces"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-template<typename T, size_t Num>
-struct spvUnsafeArray
+#line 11 "shaders/src/FrustumDebug.vert.slang"
+constant array<uint, int(24)> LINE_INDICES_0 = { 0U, 1U, 0U, 2U, 2U, 3U, 1U, 3U, 4U, 5U, 4U, 6U, 6U, 7U, 5U, 7U, 0U, 4U, 1U, 5U, 2U, 6U, 3U, 7U };
+
+#line 29
+float4 getNDCCorner_0(uint idx_0)
 {
-    T elements[Num ? Num : 1];
 
-    thread T& operator [] (size_t pos) thread
-    {
-        return elements[pos];
-    }
-    constexpr const thread T& operator [] (size_t pos) const thread
-    {
-        return elements[pos];
-    }
-
-    device T& operator [] (size_t pos) device
-    {
-        return elements[pos];
-    }
-    constexpr const device T& operator [] (size_t pos) const device
-    {
-        return elements[pos];
-    }
-
-    constexpr const constant T& operator [] (size_t pos) const constant
-    {
-        return elements[pos];
-    }
-
-    threadgroup T& operator [] (size_t pos) threadgroup
-    {
-        return elements[pos];
-    }
-    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
-    {
-        return elements[pos];
-    }
-};
-
-struct DebugTransform
-{
-    float4x4 invProj;
-    float4x4 mvp;
-    float4 color;
-    float3 eyePos;
-};
-
-constant spvUnsafeArray<uint, 24> _58 = spvUnsafeArray<uint, 24>({ 0u, 1u, 0u, 2u, 2u, 3u, 1u, 3u, 4u, 5u, 4u, 6u, 6u, 7u, 5u, 7u, 0u, 4u, 1u, 5u, 2u, 6u, 3u, 7u });
-
-struct main0_out
-{
-    float4 outColor [[user(locn0)]];
-    float4 gl_Position [[position]];
-};
-
-static inline __attribute__((always_inline))
-float4 getNDCCorner(thread const uint& idx)
-{
-    return float4((2.0 * float(idx & 1u)) - 1.0, (2.0 * float((idx >> uint(1)) & 1u)) - 1.0, (2.0 * float((idx >> uint(2)) & 1u)) - 1.0, 1.0);
+#line 30
+    return float4(2.0 * float(idx_0 & 1U) - 1.0, 2.0 * float((idx_0 >> 1U) & 1U) - 1.0, 2.0 * float((idx_0 >> 2U) & 1U) - 1.0, 1.0);
 }
 
-vertex main0_out main0(constant DebugTransform& _74 [[buffer(0)]], uint gl_VertexIndex [[vertex_id]])
+
+#line 90 "core"
+struct main_Result_0
 {
-    main0_out out = {};
-    if (int(gl_VertexIndex) < 24)
+    float4 outColor_0 [[user(_SLANG_ATTR)]];
+    float4 position_0 [[position]];
+};
+
+
+#line 90
+struct _MatrixStorage_float4x4_ColMajornatural_0
+{
+    array<float4, int(4)> data_0;
+};
+
+
+#line 1 "shaders/src/FrustumDebug.vert.slang"
+struct DebugTransform_natural_0
+{
+    _MatrixStorage_float4x4_ColMajornatural_0 invProj_0;
+    _MatrixStorage_float4x4_ColMajornatural_0 mvp_0;
+    float4 color_0;
+    float3 eyePos_0;
+};
+
+
+#line 5176 "core.meta.slang"
+struct KernelContext_0
+{
+    DebugTransform_natural_0 constant* transform_0;
+};
+
+
+#line 38 "shaders/src/FrustumDebug.vert.slang"
+struct VSOutput_0
+{
+    float4 outColor_1;
+    float4 position_1;
+};
+
+
+#line 444 "core"
+[[vertex]] main_Result_0 main_0(uint vertexID_0 [[vertex_id]], DebugTransform_natural_0 constant* transform_1 [[buffer(0)]])
+{
+
+#line 444
+    thread KernelContext_0 kernelContext_0;
+
+#line 444
+    (&kernelContext_0)->transform_0 = transform_1;
+
+#line 45 "shaders/src/FrustumDebug.vert.slang"
+    thread VSOutput_0 output_0;
+    (&output_0)->outColor_1 = transform_1->color_0;
+
+    if(vertexID_0 < 24U)
     {
-        uint cornerIdx = _58[int(gl_VertexIndex)];
-        uint param = cornerIdx;
-        float4 ndc = getNDCCorner(param);
-        float4 viewPos = _74.invProj * ndc;
-        viewPos /= float4(viewPos.w);
-        out.gl_Position = _74.mvp * viewPos;
+
+        float4 viewPos_0 = (((getNDCCorner_0(LINE_INDICES_0[vertexID_0])) * (matrix<float,int(4),int(4)> ((&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(3)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(3)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(3)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(3)]))));
+
+        (&output_0)->position_1 = (((viewPos_0 / float4(viewPos_0.w) ) * (matrix<float,int(4),int(4)> ((&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(3)]))));
+
+#line 48
     }
     else
     {
-        if (int(gl_VertexIndex) < 30)
+
+
+
+        if(vertexID_0 < 30U)
         {
-            uint axisIdx = uint((int(gl_VertexIndex) - 24) / 2);
-            uint pointIdx = uint(int(gl_VertexIndex) & 1);
-            float size = 0.100000001490116119384765625;
-            float3 offset = float3(0.0);
-            float _121;
-            if (pointIdx == 0u)
+
+#line 55
+            uint axisIdx_0 = (vertexID_0 - 24U) / 2U;
+            uint pointIdx_0 = vertexID_0 & 1U;
+
+            thread float3 offset_0 = float3(0.0) ;
+
+#line 58
+            float _S1;
+            if(pointIdx_0 == 0U)
             {
-                _121 = -size;
+
+#line 59
+                _S1 = -0.10000000149011612;
+
+#line 59
             }
             else
             {
-                _121 = size;
+
+#line 59
+                _S1 = 0.10000000149011612;
+
+#line 59
             }
-            offset[axisIdx] = _121;
-            out.gl_Position = _74.mvp * float4(_74.eyePos + offset, 1.0);
+
+#line 59
+            offset_0[axisIdx_0] = _S1;
+            (&output_0)->position_1 = (((float4((&kernelContext_0)->transform_0->eyePos_0 + offset_0, 1.0)) * (matrix<float,int(4),int(4)> ((&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(3)]))));
+
+#line 54
         }
         else
         {
-            uint lineIdx = uint((int(gl_VertexIndex) - 30) / 2);
-            uint pointIdx_1 = uint(int(gl_VertexIndex) & 1);
-            uint edgeNum = (lineIdx + pointIdx_1) % 4u;
-            uint near = edgeNum;
-            uint far = near + 4u;
-            uint param_1 = near;
-            uint param_2 = far;
-            float4 center = mix(getNDCCorner(param_1), getNDCCorner(param_2), float4(0.5));
-            float4 viewPos_1 = _74.invProj * center;
-            viewPos_1 /= float4(viewPos_1.w);
-            out.gl_Position = _74.mvp * viewPos_1;
+
+#line 65
+            uint edgeNum_0 = ((vertexID_0 - 30U) / 2U + (vertexID_0 & 1U)) % 4U;
+
+
+
+            float4 viewPos_1 = (((mix(getNDCCorner_0(edgeNum_0), getNDCCorner_0(edgeNum_0 + 4U), float4(0.5) )) * (matrix<float,int(4),int(4)> ((&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(0)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(1)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(2)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(0)][int(3)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(1)][int(3)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(2)][int(3)], (&kernelContext_0)->transform_0->invProj_0.data_0[int(3)][int(3)]))));
+
+            (&output_0)->position_1 = (((viewPos_1 / float4(viewPos_1.w) ) * (matrix<float,int(4),int(4)> ((&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(0)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(1)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(2)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(0)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(1)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(2)][int(3)], (&kernelContext_0)->transform_0->mvp_0.data_0[int(3)][int(3)]))));
+
+#line 54
         }
+
+#line 48
     }
-    out.outColor = _74.color;
-    return out;
+
+#line 73
+    VSOutput_0 _S2 = output_0;
+
+#line 73
+    thread main_Result_0 _S3;
+
+#line 73
+    (&_S3)->outColor_0 = _S2.outColor_1;
+
+#line 73
+    (&_S3)->position_0 = _S2.position_1;
+
+#line 73
+    return _S3;
 }
+

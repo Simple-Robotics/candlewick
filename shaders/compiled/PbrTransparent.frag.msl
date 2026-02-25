@@ -1,181 +1,205 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct PbrMaterial
+#line 17 "shaders/src/pbr_lighting.slang"
+float distributionGGX_0(float3 normal_0, float3 H_0, float roughness_0)
 {
-    float4 baseColor;
-    float metalness;
-    float roughness;
-    float ao;
-};
 
-struct LightBlock
-{
-    float3 direction[4];
-    float3 color[4];
-    float4 intensity[4];
-    int numLights;
-};
+#line 18
+    float a_0 = roughness_0 * roughness_0;
+    float a2_0 = a_0 * a_0;
+    float _S1 = max(dot(normal_0, H_0), 0.0);
 
-struct PbrMaterial_1
-{
-    float4 baseColor;
-    float metalness;
-    float roughness;
-    float ao;
-};
 
-struct Material
-{
-    PbrMaterial_1 material;
-};
+    float denom_0 = _S1 * _S1 * (a2_0 - 1.0) + 1.0;
 
-struct EffectParams
-{
-    uint useSsao;
-};
 
-struct main0_out
-{
-    float4 accum [[color(0)]];
-    float reveal [[color(1)]];
-};
-
-struct main0_in
-{
-    float3 fragViewPos [[user(locn0)]];
-    float3 fragViewNormal [[user(locn1)]];
-};
-
-static inline __attribute__((always_inline))
-float distributionGGX(thread const float3& normal, thread const float3& H, thread const float& roughness)
-{
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = fast::max(dot(normal, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-    float denom = (NdotH2 * (a2 - 1.0)) + 1.0;
-    denom = (3.1415927410125732421875 * denom) * denom;
-    return a2 / denom;
+    return a2_0 / (3.14159274101257324 * denom_0 * denom_0);
 }
 
-static inline __attribute__((always_inline))
-float geometrySchlickGGX(thread const float& NdotV, thread const float& roughness)
+
+float geometrySchlickGGX_0(float NdotV_0, float roughness_1)
 {
-    float r = roughness + 1.0;
-    float k = (r * r) / 8.0;
-    float num = NdotV;
-    float denom = (NdotV * (1.0 - k)) + k;
-    return num / denom;
+
+#line 31
+    float r_0 = roughness_1 + 1.0;
+    float k_0 = r_0 * r_0 / 8.0;
+    return NdotV_0 / (NdotV_0 * (1.0 - k_0) + k_0);
 }
 
-static inline __attribute__((always_inline))
-float geometrySmith(thread const float3& normal, thread const float3& V, thread const float3& L, thread const float& roughness)
+float geometrySmith_0(float3 normal_1, float3 V_0, float3 L_0, float roughness_2)
 {
-    float NdotV = fast::max(dot(normal, V), 0.0);
-    float NdotL = fast::max(dot(normal, L), 0.0);
-    float param = NdotV;
-    float param_1 = roughness;
-    float ggx2 = geometrySchlickGGX(param, param_1);
-    float param_2 = NdotL;
-    float param_3 = roughness;
-    float ggx1 = geometrySchlickGGX(param_2, param_3);
-    return ggx1 * ggx2;
+
+
+
+    return geometrySchlickGGX_0(max(dot(normal_1, L_0), 0.0), roughness_2) * geometrySchlickGGX_0(max(dot(normal_1, V_0), 0.0), roughness_2);
 }
 
-static inline __attribute__((always_inline))
-float3 fresnelSchlick(thread const float& cosTheta, thread const float3& F0)
+
+#line 12
+float3 fresnelSchlick_0(float cosTheta_0, float3 F0_0)
 {
-    return F0 + ((float3(1.0) - F0) * powr(fast::clamp(1.0 - cosTheta, 0.0, 1.0), 5.0));
+
+#line 13
+    return F0_0 + (float3(1.0)  - F0_0) * float3(pow(clamp(1.0 - cosTheta_0, 0.0, 1.0), 5.0)) ;
 }
 
-static inline __attribute__((always_inline))
-float3 calculatePbrLighting(thread const float3& normal, thread const float3& V, thread const float3& lightDir, thread const PbrMaterial& material, thread const float3& lightColor, thread const float& lightIntensity)
+
+#line 1
+struct PbrMaterial_0
 {
-    float3 H = fast::normalize(lightDir + V);
-    float3 specColor = mix(float3(0.039999999105930328369140625), material.baseColor.xyz, float3(material.metalness));
-    float3 param = normal;
-    float3 param_1 = H;
-    float param_2 = material.roughness;
-    float NDF = distributionGGX(param, param_1, param_2);
-    float3 param_3 = normal;
-    float3 param_4 = V;
-    float3 param_5 = lightDir;
-    float param_6 = material.roughness;
-    float G = geometrySmith(param_3, param_4, param_5, param_6);
-    float param_7 = fast::max(dot(H, V), 0.0);
-    float3 param_8 = specColor;
-    float3 F = fresnelSchlick(param_7, param_8);
-    float denominator = (4.0 * fast::max(dot(normal, V), dot(normal, lightDir))) + 9.9999997473787516355514526367188e-05;
-    float3 specular = (F * (NDF * G)) / float3(denominator);
-    float3 kS = F;
-    float3 kD = float3(1.0) - kS;
-    kD *= (1.0 - material.metalness);
-    float NdotL = fast::max(dot(normal, lightDir), 0.0);
-    float3 lightCol = lightColor * lightIntensity;
-    return ((((kD * material.baseColor.xyz) / float3(3.1415927410125732421875)) + specular) * lightCol) * NdotL;
+    float4 baseColor_0;
+    float metalness_0;
+    float roughness_3;
+    float ao_0;
+};
+
+
+#line 46
+float3 calculatePbrLighting_0(float3 normal_2, float3 V_1, float3 lightDir_0, const PbrMaterial_0 constant* material_0, float3 lightColor_0, float lightIntensity_0)
+{
+
+#line 54
+    float3 H_1 = normalize(lightDir_0 + V_1);
+
+    float3 _S2 = material_0->baseColor_0.xyz;
+
+
+
+    float3 F_0 = fresnelSchlick_0(max(dot(H_1, V_1), 0.0), mix(float3(0.03999999910593033) , _S2, float3(material_0->metalness_0) ));
+
+    float _S3 = dot(normal_2, lightDir_0);
+
+#line 72
+    return ((float3(1.0)  - F_0) * float3((1.0 - material_0->metalness_0))  * _S2 / float3(3.14159274101257324)  + float3((distributionGGX_0(normal_2, H_1, material_0->roughness_3) * geometrySmith_0(normal_2, V_1, lightDir_0, material_0->roughness_3)))  * F_0 / float3((4.0 * max(dot(normal_2, V_1), _S3) + 0.00009999999747379)) ) * (float3(lightIntensity_0)  * lightColor_0) * float3(max(_S3, 0.0)) ;
 }
 
-static inline __attribute__((always_inline))
-float3 uncharted2ToneMapping_Partial(thread const float3& color)
+
+#line 23 "shaders/src/tone_mapping.slang"
+float3 uncharted2ToneMapping_Partial_0(float3 color_0)
 {
-    float A = 0.1500000059604644775390625;
-    float B = 0.5;
-    float C = 0.100000001490116119384765625;
-    float D = 0.20000000298023223876953125;
-    float E = 0.0199999995529651641845703125;
-    float F = 0.300000011920928955078125;
-    return (((color * ((color * A) + float3(C * B))) + float3(D * E)) / ((color * ((color * A) + float3(B))) + float3(D * F))) - float3(E / F);
+
+#line 30
+    float3 _S4 = float3(0.15000000596046448)  * color_0;
+
+#line 30
+    return (color_0 * (_S4 + float3(0.05000000074505806) ) + float3(0.00400000018998981) ) / (color_0 * (_S4 + float3(0.5) ) + float3(0.06000000238418579) ) - float3(0.06666666269302368) ;
 }
 
-static inline __attribute__((always_inline))
-float3 uncharted2ToneMapping(thread const float3& color)
+
+float3 uncharted2ToneMapping_0(float3 color_1)
 {
-    float exposure_bias = 2.0;
-    float3 param = color * exposure_bias;
-    float3 curr = uncharted2ToneMapping_Partial(param);
-    float3 W = float3(11.19999980926513671875);
-    float3 param_1 = W;
-    float3 white_scale = float3(1.0) / uncharted2ToneMapping_Partial(param_1);
-    return curr * white_scale;
+
+
+
+    return uncharted2ToneMapping_Partial_0(float3(2.0)  * color_1) * (float3(1.0)  / uncharted2ToneMapping_Partial_0(float3(11.19999980926513672) ));
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant Material& _370 [[buffer(0)]], constant LightBlock& light [[buffer(1)]], float4 gl_FragCoord [[position]])
+
+#line 35 "shaders/src/PbrTransparent.frag.slang"
+struct FSOutput_0
 {
-    main0_out out = {};
-    float3 normal = fast::normalize(in.fragViewNormal);
-    float3 V = fast::normalize(-in.fragViewPos);
-    float3 Lo = float3(0.0);
-    for (uint i = 0u; i < uint(light.numLights); i++)
+    float4 accum_0 [[color(0)]];
+    float reveal_0 [[color(1)]];
+};
+
+
+#line 35
+struct pixelInput_0
+{
+    float3 fragViewPos_0 [[user(_SLANG_ATTR)]];
+    float3 fragViewNormal_0 [[user(_SLANG_ATTR_1)]];
+    float3 fragLightPos_0 [[user(_SLANG_ATTR_2)]];
+};
+
+
+#line 9
+struct MaterialBlock_0
+{
+    PbrMaterial_0 material_1;
+};
+
+
+#line 13
+struct LightBlock_0
+{
+    array<float3, int(4)> direction_0;
+    array<float3, int(4)> color_2;
+    array<float, int(4)> intensity_0;
+    int numLights_0;
+};
+
+
+#line 13
+struct KernelContext_0
+{
+    MaterialBlock_0 constant* materialBlock_0;
+    LightBlock_0 constant* light_0;
+};
+
+
+#line 41
+[[fragment]] FSOutput_0 main_0(pixelInput_0 _S5 [[stage_in]], float4 fragCoord_0 [[position]], MaterialBlock_0 constant* materialBlock_1 [[buffer(0)]], LightBlock_0 constant* light_1 [[buffer(1)]])
+{
+
+    thread KernelContext_0 kernelContext_0;
+
+#line 44
+    (&kernelContext_0)->materialBlock_0 = materialBlock_1;
+
+#line 44
+    (&kernelContext_0)->light_0 = light_1;
+    float3 _S6 = normalize(_S5.fragViewNormal_0);
+    float3 _S7 = normalize(- _S5.fragViewPos_0);
+
+    PbrMaterial_0 mat_0 = materialBlock_1->material_1;
+
+    float3 _S8 = float3(int3(int(0)) );
+
+#line 50
+    uint i_0 = 0U;
+
+#line 50
+    float3 Lo_0 = _S8;
+    for(;;)
     {
-        float3 lightDir = fast::normalize(-light.direction[i]);
-        float3 param = normal;
-        float3 param_1 = V;
-        float3 param_2 = lightDir;
-        PbrMaterial _383;
-        _383.baseColor = _370.material.baseColor;
-        _383.metalness = _370.material.metalness;
-        _383.roughness = _370.material.roughness;
-        _383.ao = _370.material.ao;
-        PbrMaterial param_3 = _383;
-        float3 param_4 = light.color[i];
-        float param_5 = light.intensity[i].x;
-        Lo += calculatePbrLighting(param, param_1, param_2, param_3, param_4, param_5);
+
+#line 51
+        if(i_0 < uint((&kernelContext_0)->light_0->numLights_0))
+        {
+        }
+        else
+        {
+
+#line 51
+            break;
+        }
+
+#line 51
+        float3 _S9 = calculatePbrLighting_0(_S6, _S7, normalize(- (&kernelContext_0)->light_0->direction_0[i_0]), &materialBlock_1->material_1, (&kernelContext_0)->light_0->color_2[i_0], (&kernelContext_0)->light_0->intensity_0[i_0]);
+
+        float3 Lo_1 = Lo_0 + _S9;
+
+#line 51
+        i_0 = i_0 + 1U;
+
+#line 51
+        Lo_0 = Lo_1;
+
+#line 51
     }
-    float3 ambient = (float3(0.02999999932944774627685546875) * _370.material.baseColor.xyz) * _370.material.ao;
-    float3 color = ambient + Lo;
-    float3 param_6 = color;
-    color = uncharted2ToneMapping(param_6);
-    color = powr(color, float3(0.4545454680919647216796875));
-    float alpha = _370.material.baseColor.w;
-    float z = gl_FragCoord.z;
-    float w1 = (alpha * 10.0) + 0.00999999977648258209228515625;
-    float weight = fast::clamp(w1 * (1.0 - (z * 0.300000011920928955078125)), 0.00999999977648258209228515625, 1000.0);
-    out.accum = float4((color * alpha) * weight, alpha);
-    out.reveal = 1.0 - (alpha * weight);
-    return out;
+
+#line 63
+    float alpha_0 = mat_0.baseColor_0.w;
+
+
+    float weight_0 = clamp((alpha_0 * 10.0 + 0.00999999977648258) * (1.0 - fragCoord_0.z * 0.30000001192092896), 0.00999999977648258, 1000.0);
+
+    thread FSOutput_0 output_0;
+    (&output_0)->accum_0 = float4(pow(uncharted2ToneMapping_0(float3(0.02999999932944775)  * mat_0.baseColor_0.xyz * float3(mat_0.ao_0)  + Lo_0), float3(0.45454543828964233) ) * float3(alpha_0)  * float3(weight_0) , alpha_0);
+    (&output_0)->reveal_0 = 1.0 - alpha_0 * weight_0;
+    return output_0;
 }
+

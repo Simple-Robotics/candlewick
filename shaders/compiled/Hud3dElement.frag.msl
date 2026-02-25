@@ -1,21 +1,28 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct Color
+#line 8 "shaders/src/Hud3dElement.frag.slang"
+struct pixelOutput_0
 {
-    float4 color;
+    float4 output_0 [[color(0)]];
 };
 
-struct main0_out
+
+#line 1
+struct Color_0
 {
-    float4 fragColor [[color(0)]];
+    float4 color_0;
 };
 
-fragment main0_out main0(constant Color& _12 [[buffer(0)]])
+
+
+[[fragment]] pixelOutput_0 main_0(Color_0 constant* colorBlock_0 [[buffer(0)]])
 {
-    main0_out out = {};
-    out.fragColor = _12.color;
-    return out;
+
+#line 8
+    pixelOutput_0 _S1 = { colorBlock_0->color_0 };
+    return _S1;
 }
+

@@ -1,77 +1,122 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-#pragma clang diagnostic ignored "-Wmissing-braces"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-template<typename T, size_t Num>
-struct spvUnsafeArray
+#line 3 "shaders/src/SSAOblur.frag.slang"
+constant array<float, int(5)> weights_0 = { 0.22702699899673462, 0.194594606757164, 0.12162160128355026, 0.05405399948358536, 0.01621600054204464 };
+
+#line 90 "core"
+struct pixelOutput_0
 {
-    T elements[Num ? Num : 1];
-
-    thread T& operator [] (size_t pos) thread
-    {
-        return elements[pos];
-    }
-    constexpr const thread T& operator [] (size_t pos) const thread
-    {
-        return elements[pos];
-    }
-
-    device T& operator [] (size_t pos) device
-    {
-        return elements[pos];
-    }
-    constexpr const device T& operator [] (size_t pos) const device
-    {
-        return elements[pos];
-    }
-
-    constexpr const constant T& operator [] (size_t pos) const constant
-    {
-        return elements[pos];
-    }
-
-    threadgroup T& operator [] (size_t pos) threadgroup
-    {
-        return elements[pos];
-    }
-    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
-    {
-        return elements[pos];
-    }
+    float output_0 [[color(0)]];
 };
 
-struct BlurParams
+
+#line 90
+struct pixelInput_0
 {
-    float2 direction;
+    float2 inUV_0 [[user(_SLANG_ATTR)]];
 };
 
-constant spvUnsafeArray<float, 5> _73 = spvUnsafeArray<float, 5>({ 0.227026998996734619140625, 0.19459460675716400146484375, 0.121621601283550262451171875, 0.054053999483585357666015625, 0.01621600054204463958740234375 });
 
-struct main0_out
+#line 6 "shaders/src/SSAOblur.frag.slang"
+struct BlurParams_0
 {
-    float aoValue [[color(0)]];
+    float2 direction_0;
 };
 
-struct main0_in
+
+#line 5176 "core.meta.slang"
+struct KernelContext_0
 {
-    float2 inUV [[user(locn0)]];
+    texture2d<float, access::sample> aoTex_texture_0;
+    sampler aoTex_sampler_0;
+    BlurParams_0 constant* blur_0;
 };
 
-fragment main0_out main0(main0_in in [[stage_in]], constant BlurParams& _52 [[buffer(0)]], texture2d<float> aoTex [[texture(0)]], sampler aoTexSmplr [[sampler(0)]])
+
+#line 13 "shaders/src/SSAOblur.frag.slang"
+[[fragment]] pixelOutput_0 main_0(pixelInput_0 _S1 [[stage_in]], texture2d<float, access::sample> aoTex_texture_1 [[texture(0)]], sampler aoTex_sampler_1 [[sampler(0)]], BlurParams_0 constant* blur_1 [[buffer(0)]])
 {
-    main0_out out = {};
-    float2 texelSize = float2(1.0) / float2(int2(aoTex.get_width(), aoTex.get_height()));
-    float result = aoTex.sample(aoTexSmplr, in.inUV).x * 0.227026998996734619140625;
-    for (int i = 1; i <= 4; i++)
+
+#line 13
+    thread KernelContext_0 kernelContext_0;
+
+#line 13
+    (&kernelContext_0)->aoTex_texture_0 = aoTex_texture_1;
+
+#line 13
+    (&kernelContext_0)->aoTex_sampler_0 = aoTex_sampler_1;
+
+#line 13
+    (&kernelContext_0)->blur_0 = blur_1;
+    thread uint w_0;
+
+#line 14
+    thread uint h_0;
+
+#line 14
+    (*((aoTex_sampler_1)) = (aoTex_texture_1).get_width(0)),(*((&w_0)) = (aoTex_texture_1).get_height(0));
+
+    float2 _S2 = float2(1.0)  / float2(float(w_0), float(h_0));
+    ;
+
+#line 17
+    float _S3 = (((&kernelContext_0)->aoTex_texture_0).sample(((&kernelContext_0)->aoTex_sampler_0), (_S1.inUV_0))).x * 0.22702699899673462;
+
+#line 17
+    int i_0 = int(1);
+
+#line 17
+    float result_0 = _S3;
+
+    for(;;)
     {
-        float2 off = (_52.direction * texelSize) * float(i);
-        result += (aoTex.sample(aoTexSmplr, (in.inUV + off)).x * _73[i]);
-        result += (aoTex.sample(aoTexSmplr, (in.inUV - off)).x * _73[i]);
+
+#line 19
+        if(i_0 <= int(4))
+        {
+        }
+        else
+        {
+
+#line 19
+            break;
+        }
+
+#line 20
+        float2 off_0 = (&kernelContext_0)->blur_0->direction_0 * _S2 * float2(float(i_0)) ;
+        float2 _S4 = _S1.inUV_0 + off_0;
+
+#line 21
+        ;
+
+#line 19
+        int _S5 = i_0;
+
+        float result_1 = result_0 + (((&kernelContext_0)->aoTex_texture_0).sample(((&kernelContext_0)->aoTex_sampler_0), (_S4))).x * weights_0[i_0];
+        float2 _S6 = _S1.inUV_0 - off_0;
+
+#line 22
+        ;
+
+#line 22
+        float result_2 = result_1 + (((&kernelContext_0)->aoTex_texture_0).sample(((&kernelContext_0)->aoTex_sampler_0), (_S6))).x * weights_0[_S5];
+
+#line 19
+        i_0 = i_0 + int(1);
+
+#line 19
+        result_0 = result_2;
+
+#line 19
     }
-    out.aoValue = result;
-    return out;
+
+#line 19
+    pixelOutput_0 _S7 = { result_0 };
+
+#line 24
+    return _S7;
 }
+

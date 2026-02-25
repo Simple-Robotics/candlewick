@@ -1,29 +1,65 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct UniformBlock
+#line 90 "core"
+struct main_Result_0
 {
-    float4x4 viewProj;
+    float4 interpColor_0 [[user(_SLANG_ATTR)]];
+    float4 position_0 [[position]];
 };
 
-struct main0_out
+
+#line 13 "shaders/src/VertexColor.vert.slang"
+struct vertexInput_0
 {
-    float4 interpColor [[user(locn0)]];
-    float4 gl_Position [[position]];
+    float3 position_1 [[attribute(0)]];
+    float4 color_0 [[attribute(4)]];
 };
 
-struct main0_in
+
+#line 13
+struct _MatrixStorage_float4x4_ColMajornatural_0
 {
-    float3 position [[attribute(0)]];
-    float4 color [[attribute(4)]];
+    array<float4, int(4)> data_0;
 };
 
-vertex main0_out main0(main0_in in [[stage_in]], constant UniformBlock& _19 [[buffer(0)]])
+
+#line 13
+struct UniformBlock_natural_0
 {
-    main0_out out = {};
-    out.gl_Position = _19.viewProj * float4(in.position, 1.0);
-    out.interpColor = in.color;
-    return out;
+    _MatrixStorage_float4x4_ColMajornatural_0 viewProj_0;
+};
+
+
+#line 7
+struct VSOutput_0
+{
+    float4 interpColor_1;
+    float4 position_2;
+};
+
+
+#line 7
+[[vertex]] main_Result_0 main_0(vertexInput_0 _S1 [[stage_in]], UniformBlock_natural_0 constant* transform_0 [[buffer(0)]])
+{
+
+#line 15
+    thread VSOutput_0 output_0;
+    (&output_0)->position_2 = (((float4(_S1.position_1, 1.0)) * (matrix<float,int(4),int(4)> (transform_0->viewProj_0.data_0[int(0)][int(0)], transform_0->viewProj_0.data_0[int(1)][int(0)], transform_0->viewProj_0.data_0[int(2)][int(0)], transform_0->viewProj_0.data_0[int(3)][int(0)], transform_0->viewProj_0.data_0[int(0)][int(1)], transform_0->viewProj_0.data_0[int(1)][int(1)], transform_0->viewProj_0.data_0[int(2)][int(1)], transform_0->viewProj_0.data_0[int(3)][int(1)], transform_0->viewProj_0.data_0[int(0)][int(2)], transform_0->viewProj_0.data_0[int(1)][int(2)], transform_0->viewProj_0.data_0[int(2)][int(2)], transform_0->viewProj_0.data_0[int(3)][int(2)], transform_0->viewProj_0.data_0[int(0)][int(3)], transform_0->viewProj_0.data_0[int(1)][int(3)], transform_0->viewProj_0.data_0[int(2)][int(3)], transform_0->viewProj_0.data_0[int(3)][int(3)]))));
+    (&output_0)->interpColor_1 = _S1.color_0;
+
+#line 17
+    thread main_Result_0 _S2;
+
+#line 17
+    (&_S2)->interpColor_0 = output_0.interpColor_1;
+
+#line 17
+    (&_S2)->position_0 = output_0.position_2;
+
+#line 17
+    return _S2;
 }
+

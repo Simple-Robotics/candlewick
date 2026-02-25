@@ -1,63 +1,93 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct TranformBlock
+#line 23 "shaders/src/tone_mapping.slang"
+float3 uncharted2ToneMapping_Partial_0(float3 color_0)
 {
-    float4x4 model;
-    float4x4 viewProj;
-};
 
-struct main0_out
-{
-    float4 pointColor [[user(locn0)]];
-    float4 gl_Position [[position]];
-    float gl_PointSize [[point_size]];
-};
+#line 30
+    float3 _S1 = float3(0.15000000596046448)  * color_0;
 
-struct main0_in
-{
-    float3 position [[attribute(0)]];
-    float4 color [[attribute(4)]];
-};
-
-static inline __attribute__((always_inline))
-float3 uncharted2ToneMapping_Partial(thread const float3& color)
-{
-    float A = 0.1500000059604644775390625;
-    float B = 0.5;
-    float C = 0.100000001490116119384765625;
-    float D = 0.20000000298023223876953125;
-    float E = 0.0199999995529651641845703125;
-    float F = 0.300000011920928955078125;
-    return (((color * ((color * A) + float3(C * B))) + float3(D * E)) / ((color * ((color * A) + float3(B))) + float3(D * F))) - float3(E / F);
+#line 30
+    return (color_0 * (_S1 + float3(0.05000000074505806) ) + float3(0.00400000018998981) ) / (color_0 * (_S1 + float3(0.5) ) + float3(0.06000000238418579) ) - float3(0.06666666269302368) ;
 }
 
-static inline __attribute__((always_inline))
-float3 uncharted2ToneMapping(thread const float3& color)
+
+float3 uncharted2ToneMapping_0(float3 color_1)
 {
-    float exposure_bias = 2.0;
-    float3 param = color * exposure_bias;
-    float3 curr = uncharted2ToneMapping_Partial(param);
-    float3 W = float3(11.19999980926513671875);
-    float3 param_1 = W;
-    float3 white_scale = float3(1.0) / uncharted2ToneMapping_Partial(param_1);
-    return curr * white_scale;
+
+
+
+    return uncharted2ToneMapping_Partial_0(float3(2.0)  * color_1) * (float3(1.0)  / uncharted2ToneMapping_Partial_0(float3(11.19999980926513672) ));
 }
 
-vertex main0_out main0(main0_in in [[stage_in]], constant TranformBlock& transform [[buffer(0)]])
+
+#line 90 "core"
+struct main_Result_0
 {
-    main0_out out = {};
-    out.gl_Position = (transform.viewProj * transform.model) * float4(in.position, 1.0);
-    out.gl_PointSize = 5.0;
-    float3 param = in.color.xyz;
-    float3 _127 = uncharted2ToneMapping(param);
-    out.pointColor.x = _127.x;
-    out.pointColor.y = _127.y;
-    out.pointColor.z = _127.z;
-    out.pointColor.w = 1.0;
-    return out;
+    float4 pointColor_0 [[user(_SLANG_ATTR)]];
+    float4 position_0 [[position]];
+    float pointSize_0 [[point_size]];
+};
+
+
+#line 90
+struct vertexInput_0
+{
+    float3 position_1 [[attribute(0)]];
+    float4 color_2 [[attribute(4)]];
+};
+
+
+#line 90
+struct _MatrixStorage_float4x4_ColMajornatural_0
+{
+    array<float4, int(4)> data_0;
+};
+
+
+#line 90
+struct TranformBlock_natural_0
+{
+    _MatrixStorage_float4x4_ColMajornatural_0 model_0;
+    _MatrixStorage_float4x4_ColMajornatural_0 viewProj_0;
+};
+
+
+#line 10 "shaders/src/PointSprite.vert.slang"
+struct VSOutput_0
+{
+    float4 pointColor_1;
+    float4 position_2;
+    float pointSize_1;
+};
+
+
+#line 10
+[[vertex]] main_Result_0 main_0(vertexInput_0 _S2 [[stage_in]], TranformBlock_natural_0 constant* transform_0 [[buffer(0)]])
+{
+
+#line 18
+    thread VSOutput_0 output_0;
+    (&output_0)->position_2 = ((((((float4(_S2.position_1, 1.0)) * (matrix<float,int(4),int(4)> (transform_0->model_0.data_0[int(0)][int(0)], transform_0->model_0.data_0[int(1)][int(0)], transform_0->model_0.data_0[int(2)][int(0)], transform_0->model_0.data_0[int(3)][int(0)], transform_0->model_0.data_0[int(0)][int(1)], transform_0->model_0.data_0[int(1)][int(1)], transform_0->model_0.data_0[int(2)][int(1)], transform_0->model_0.data_0[int(3)][int(1)], transform_0->model_0.data_0[int(0)][int(2)], transform_0->model_0.data_0[int(1)][int(2)], transform_0->model_0.data_0[int(2)][int(2)], transform_0->model_0.data_0[int(3)][int(2)], transform_0->model_0.data_0[int(0)][int(3)], transform_0->model_0.data_0[int(1)][int(3)], transform_0->model_0.data_0[int(2)][int(3)], transform_0->model_0.data_0[int(3)][int(3)]))))) * (matrix<float,int(4),int(4)> (transform_0->viewProj_0.data_0[int(0)][int(0)], transform_0->viewProj_0.data_0[int(1)][int(0)], transform_0->viewProj_0.data_0[int(2)][int(0)], transform_0->viewProj_0.data_0[int(3)][int(0)], transform_0->viewProj_0.data_0[int(0)][int(1)], transform_0->viewProj_0.data_0[int(1)][int(1)], transform_0->viewProj_0.data_0[int(2)][int(1)], transform_0->viewProj_0.data_0[int(3)][int(1)], transform_0->viewProj_0.data_0[int(0)][int(2)], transform_0->viewProj_0.data_0[int(1)][int(2)], transform_0->viewProj_0.data_0[int(2)][int(2)], transform_0->viewProj_0.data_0[int(3)][int(2)], transform_0->viewProj_0.data_0[int(0)][int(3)], transform_0->viewProj_0.data_0[int(1)][int(3)], transform_0->viewProj_0.data_0[int(2)][int(3)], transform_0->viewProj_0.data_0[int(3)][int(3)]))));
+    (&output_0)->pointSize_1 = 5.0;
+    (&output_0)->pointColor_1 = float4(uncharted2ToneMapping_0(_S2.color_2.xyz), 1.0);
+
+#line 21
+    thread main_Result_0 _S3;
+
+#line 21
+    (&_S3)->pointColor_0 = output_0.pointColor_1;
+
+#line 21
+    (&_S3)->position_0 = output_0.position_2;
+
+#line 21
+    (&_S3)->pointSize_0 = output_0.pointSize_1;
+
+#line 21
+    return _S3;
 }
+

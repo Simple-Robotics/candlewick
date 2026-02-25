@@ -1,25 +1,83 @@
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-struct main0_out
+#line 4482 "hlsl.meta.slang"
+struct pixelOutput_0
 {
-    float4 outColor [[color(0)]];
+    float4 output_0 [[color(0)]];
 };
 
-fragment main0_out main0(texture2d_ms<float> accumTexture [[texture(0)]], texture2d_ms<float> revealTexture [[texture(1)]], sampler accumTextureSmplr [[sampler(0)]], sampler revealTextureSmplr [[sampler(1)]], float4 gl_FragCoord [[position]], uint gl_SampleID [[sample_id]])
+
+#line 4482
+struct KernelContext_0
 {
-    main0_out out = {};
-    gl_FragCoord.xy += get_sample_position(gl_SampleID) - 0.5;
-    int2 uv = int2(gl_FragCoord.xy);
-    float4 accum = accumTexture.read(uint2(uv), gl_SampleID);
-    float reveal = revealTexture.read(uint2(uv), gl_SampleID).x;
-    float3 color = accum.xyz;
-    if (accum.w > 0.001000000047497451305389404296875)
+    texture2d_ms<float, access::read> accumTexture_texture_0;
+    sampler accumTexture_sampler_0;
+    texture2d_ms<float, access::read> revealTexture_texture_0;
+    sampler revealTexture_sampler_0;
+};
+
+
+#line 5 "shaders/src/WBOITComposite.frag.slang"
+[[fragment]] pixelOutput_0 main_0(float4 fragCoord_0 [[position]], uint sampleIndex_0 [[sample_id]], texture2d_ms<float, access::read> accumTexture_texture_1 [[texture(0)]], sampler accumTexture_sampler_1 [[sampler(0)]], texture2d_ms<float, access::read> revealTexture_texture_1 [[texture(1)]], sampler revealTexture_sampler_1 [[sampler(1)]])
+{
+
+#line 6
+    thread KernelContext_0 kernelContext_0;
+
+#line 6
+    (&kernelContext_0)->accumTexture_texture_0 = accumTexture_texture_1;
+
+#line 6
+    (&kernelContext_0)->accumTexture_sampler_0 = accumTexture_sampler_1;
+
+#line 6
+    (&kernelContext_0)->revealTexture_texture_0 = revealTexture_texture_1;
+
+#line 6
+    (&kernelContext_0)->revealTexture_sampler_0 = revealTexture_sampler_1;
+    int2 _S1 = int2(fragCoord_0.xy);
+
+    int _S2 = int(sampleIndex_0);
+
+#line 9
+    float4 _S3 = ((accumTexture_texture_1).read((accumTexture_sampler_1), uint((_S1))));
+
+#line 9
+    float _S4 = ((revealTexture_texture_1).read((revealTexture_sampler_1), uint((_S1))).x);
+
+
+    float3 _S5 = _S3.xyz;
+    float _S6 = _S3.w;
+
+#line 13
+    float3 color_0;
+
+#line 13
+    if(_S6 > 0.00100000004749745)
     {
-        color = accum.xyz / float3(accum.w);
+
+#line 13
+        color_0 = _S5 / float3(_S6) ;
+
+#line 13
     }
-    out.outColor = float4(color, reveal);
-    return out;
+    else
+    {
+
+#line 13
+        color_0 = _S5;
+
+#line 13
+    }
+
+#line 13
+    pixelOutput_0 _S7 = { float4(color_0, _S4) };
+
+
+
+    return _S7;
 }
+

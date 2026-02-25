@@ -1,63 +1,48 @@
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-#pragma clang diagnostic ignored "-Wmissing-braces"
-
 #include <metal_stdlib>
-#include <simd/simd.h>
-
+#include <metal_math>
+#include <metal_texture>
 using namespace metal;
 
-template<typename T, size_t Num>
-struct spvUnsafeArray
+#line 5 "shaders/src/DrawQuad.vert.slang"
+constant array<float2, int(6)> positions_0 = { float2(-1.0, -1.0), float2(1.0, -1.0), float2(1.0, 1.0), float2(-1.0, -1.0), float2(1.0, 1.0), float2(-1.0, 1.0) };
+
+#line 14
+struct main_Result_0
 {
-    T elements[Num ? Num : 1];
-
-    thread T& operator [] (size_t pos) thread
-    {
-        return elements[pos];
-    }
-    constexpr const thread T& operator [] (size_t pos) const thread
-    {
-        return elements[pos];
-    }
-
-    device T& operator [] (size_t pos) device
-    {
-        return elements[pos];
-    }
-    constexpr const device T& operator [] (size_t pos) const device
-    {
-        return elements[pos];
-    }
-
-    constexpr const constant T& operator [] (size_t pos) const constant
-    {
-        return elements[pos];
-    }
-
-    threadgroup T& operator [] (size_t pos) threadgroup
-    {
-        return elements[pos];
-    }
-    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
-    {
-        return elements[pos];
-    }
+    float2 outUV_0 [[user(_SLANG_ATTR)]];
+    float4 position_0 [[position]];
 };
 
-constant spvUnsafeArray<float2, 6> _19 = spvUnsafeArray<float2, 6>({ float2(-1.0), float2(1.0, -1.0), float2(1.0), float2(-1.0), float2(1.0), float2(-1.0, 1.0) });
 
-struct main0_out
+#line 14
+struct VSOutput_0
 {
-    float2 outUV [[user(locn0)]];
-    float4 gl_Position [[position]];
+    float2 outUV_1;
+    float4 position_1;
 };
 
-vertex main0_out main0(uint gl_VertexIndex [[vertex_id]])
+
+#line 14
+[[vertex]] main_Result_0 main_0(uint vertexID_0 [[vertex_id]])
 {
-    main0_out out = {};
-    float2 pos = _19[int(gl_VertexIndex)];
-    out.gl_Position = float4(pos, 0.0, 1.0);
-    out.outUV.x = (pos.x * 0.5) + 0.5;
-    out.outUV.y = 0.5 - (pos.y * 0.5);
-    return out;
+
+#line 22
+    thread VSOutput_0 output_0;
+    (&output_0)->position_1 = float4(positions_0[vertexID_0], 0.0, 1.0);
+
+    (&output_0)->outUV_1.x = positions_0[vertexID_0].x * 0.5 + 0.5;
+    (&output_0)->outUV_1.y = 0.5 - positions_0[vertexID_0].y * 0.5;
+
+#line 26
+    thread main_Result_0 _S1;
+
+#line 26
+    (&_S1)->outUV_0 = output_0.outUV_1;
+
+#line 26
+    (&_S1)->position_0 = output_0.position_1;
+
+#line 26
+    return _S1;
 }
+
