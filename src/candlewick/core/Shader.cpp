@@ -68,7 +68,7 @@ Shader::Shader(const Device &device, const char *filename, const Config &config)
   } else if (supported_formats & SDL_GPU_SHADERFORMAT_MSL) {
     target_format = SDL_GPU_SHADERFORMAT_MSL;
     shader_ext = "msl";
-    entry_point = "main0";
+    entry_point = "main_0";
   } else {
     throw RAIIException(
         "Failed to load shader: no available supported shader format.");
@@ -100,13 +100,29 @@ void Shader::release() noexcept {
   }
 }
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Shader::Config, uniform_buffers, samplers,
-                                   storage_textures, storage_buffers);
-
 Shader::Config loadShaderMetadata(const char *filename) {
   auto data = loadShaderFile(filename, "json");
-  auto meta = nlohmann::json::parse(data.data, data.data + data.size);
-  return meta.get<Shader::Config>();
+  auto json = nlohmann::json::parse(data.data, data.data + data.size);
+
+  Shader::Config config{};
+  for (const auto &param : json.at("parameters")) {
+    const auto &kind =
+        param.at("type").at("kind").get_ref<const std::string &>();
+    if (kind == "constantBuffer") {
+      config.uniform_buffers++;
+    } else if (kind == "samplerState" || kind == "samplerComparisonState") {
+      // Each samplerState corresponds to one SDL_GPUTextureSamplerBinding slot.
+      // Note: may need revisiting once shaders with textures are migrated, to
+      // verify whether Slang emits paired "texture"+"samplerState" entries or a
+      // single combined entry.
+      config.samplers++;
+    } else if (kind == "rwTexture") {
+      config.storage_textures++;
+    } else if (kind == "structuredBuffer" || kind == "rwStructuredBuffer") {
+      config.storage_buffers++;
+    }
+  }
+  return config;
 }
 
 } // namespace candlewick
