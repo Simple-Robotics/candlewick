@@ -66,10 +66,9 @@ namespace multibody {
     enum FragmentUniformSlots : Uint32 {
       MATERIAL,
       LIGHTING,
-      SSAO_FLAG,
-      ATLAS_INFO
+      ATLAS_INFO,
     };
-    enum FragmentSamplerSlots { SHADOW_MAP_SLOT, SSAO_SLOT };
+    enum FragmentSamplerSlots : Uint32 { SHADOW_MAP_SLOT, SSAO_SLOT };
 
     /// Map hpp-fcl/coal collision geometry to desired pipeline type.
     static PipelineType pinGeomToPipeline(const coal::CollisionGeometry &geom);

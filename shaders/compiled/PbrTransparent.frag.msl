@@ -3,11 +3,11 @@
 #include <metal_texture>
 using namespace metal;
 
-#line 17 "shaders/src/pbr_lighting.slang"
+#line 27 "shaders/src/pbr_lighting.slang"
 float distributionGGX_0(float3 normal_0, float3 H_0, float roughness_0)
 {
 
-#line 18
+#line 28
     float a_0 = roughness_0 * roughness_0;
     float a2_0 = a_0 * a_0;
     float _S1 = max(dot(normal_0, H_0), 0.0);
@@ -23,7 +23,7 @@ float distributionGGX_0(float3 normal_0, float3 H_0, float roughness_0)
 float geometrySchlickGGX_0(float NdotV_0, float roughness_1)
 {
 
-#line 31
+#line 41
     float r_0 = roughness_1 + 1.0;
     float k_0 = r_0 * r_0 / 8.0;
     return NdotV_0 / (NdotV_0 * (1.0 - k_0) + k_0);
@@ -38,16 +38,16 @@ float geometrySmith_0(float3 normal_1, float3 V_0, float3 L_0, float roughness_2
 }
 
 
-#line 12
+#line 22
 float3 fresnelSchlick_0(float cosTheta_0, float3 F0_0)
 {
 
-#line 13
+#line 23
     return F0_0 + (float3(1.0)  - F0_0) * float3(pow(clamp(1.0 - cosTheta_0, 0.0, 1.0), 5.0)) ;
 }
 
 
-#line 1
+#line 11
 struct PbrMaterial_0
 {
     float4 baseColor_0;
@@ -57,11 +57,11 @@ struct PbrMaterial_0
 };
 
 
-#line 46
+#line 56
 float3 calculatePbrLighting_0(float3 normal_2, float3 V_1, float3 lightDir_0, const PbrMaterial_0 constant* material_0, float3 lightColor_0, float lightIntensity_0)
 {
 
-#line 54
+#line 64
     float3 H_1 = normalize(lightDir_0 + V_1);
 
     float3 _S2 = material_0->baseColor_0.xyz;
@@ -72,7 +72,7 @@ float3 calculatePbrLighting_0(float3 normal_2, float3 V_1, float3 lightDir_0, co
 
     float _S3 = dot(normal_2, lightDir_0);
 
-#line 72
+#line 82
     return ((float3(1.0)  - F_0) * float3((1.0 - material_0->metalness_0))  * _S2 / float3(3.14159274101257324)  + float3((distributionGGX_0(normal_2, H_1, material_0->roughness_3) * geometrySmith_0(normal_2, V_1, lightDir_0, material_0->roughness_3)))  * F_0 / float3((4.0 * max(dot(normal_2, V_1), _S3) + 0.00009999999747379)) ) * (float3(lightIntensity_0)  * lightColor_0) * float3(max(_S3, 0.0)) ;
 }
 
@@ -98,7 +98,7 @@ float3 uncharted2ToneMapping_0(float3 color_1)
 }
 
 
-#line 35 "shaders/src/PbrTransparent.frag.slang"
+#line 10 "shaders/src/PbrTransparent.frag.slang"
 struct FSOutput_0
 {
     float4 accum_0 [[color(0)]];
@@ -106,7 +106,7 @@ struct FSOutput_0
 };
 
 
-#line 35
+#line 10
 struct pixelInput_0
 {
     float3 fragViewPos_0 [[user(_SLANG_ATTR)]];
@@ -115,83 +115,77 @@ struct pixelInput_0
 };
 
 
-#line 9
-struct MaterialBlock_0
-{
-    PbrMaterial_0 material_1;
-};
-
-
-#line 13
+#line 3 "shaders/src/pbr_lighting.slang"
 struct LightBlock_0
 {
     array<float3, int(4)> direction_0;
     array<float3, int(4)> color_2;
     array<float, int(4)> intensity_0;
     int numLights_0;
+    uint useSsao_0;
 };
 
 
-#line 13
+#line 3
 struct KernelContext_0
 {
-    MaterialBlock_0 constant* materialBlock_0;
+    PbrMaterial_0 constant* materialBlock_0;
     LightBlock_0 constant* light_0;
 };
 
 
-#line 41
-[[fragment]] FSOutput_0 main_0(pixelInput_0 _S5 [[stage_in]], float4 fragCoord_0 [[position]], MaterialBlock_0 constant* materialBlock_1 [[buffer(0)]], LightBlock_0 constant* light_1 [[buffer(1)]])
+#line 16 "shaders/src/PbrTransparent.frag.slang"
+[[fragment]] FSOutput_0 main_0(pixelInput_0 _S5 [[stage_in]], float4 fragCoord_0 [[position]], PbrMaterial_0 constant* materialBlock_1 [[buffer(0)]], LightBlock_0 constant* light_1 [[buffer(1)]])
 {
 
     thread KernelContext_0 kernelContext_0;
 
-#line 44
+#line 19
     (&kernelContext_0)->materialBlock_0 = materialBlock_1;
 
-#line 44
+#line 19
     (&kernelContext_0)->light_0 = light_1;
     float3 _S6 = normalize(_S5.fragViewNormal_0);
     float3 _S7 = normalize(- _S5.fragViewPos_0);
 
-    PbrMaterial_0 mat_0 = materialBlock_1->material_1;
+    PbrMaterial_0 mat_0 = *materialBlock_1;
 
     float3 _S8 = float3(int3(int(0)) );
 
-#line 50
+#line 25
     uint i_0 = 0U;
 
-#line 50
+#line 25
     float3 Lo_0 = _S8;
     for(;;)
     {
 
-#line 51
+#line 26
         if(i_0 < uint((&kernelContext_0)->light_0->numLights_0))
         {
         }
         else
         {
 
-#line 51
+#line 26
             break;
         }
 
-#line 51
-        float3 _S9 = calculatePbrLighting_0(_S6, _S7, normalize(- (&kernelContext_0)->light_0->direction_0[i_0]), &materialBlock_1->material_1, (&kernelContext_0)->light_0->color_2[i_0], (&kernelContext_0)->light_0->intensity_0[i_0]);
+#line 26
+        float3 _S9 = calculatePbrLighting_0(_S6, _S7, normalize(- (&kernelContext_0)->light_0->direction_0[i_0]), (&kernelContext_0)->materialBlock_0, (&kernelContext_0)->light_0->color_2[i_0], (&kernelContext_0)->light_0->intensity_0[i_0]);
 
         float3 Lo_1 = Lo_0 + _S9;
 
-#line 51
+#line 26
         i_0 = i_0 + 1U;
 
-#line 51
+#line 26
         Lo_0 = Lo_1;
 
-#line 51
+#line 26
     }
 
-#line 63
+#line 38
     float alpha_0 = mat_0.baseColor_0.w;
 
 
@@ -202,3 +196,4 @@ struct KernelContext_0
     (&output_0)->reveal_0 = 1.0 - alpha_0 * weight_0;
     return output_0;
 }
+

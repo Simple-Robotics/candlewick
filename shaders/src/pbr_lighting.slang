@@ -1,3 +1,13 @@
+import config;
+
+struct LightBlock {
+    float3 direction[MAX_NUM_LIGHTS];
+    float3 color[MAX_NUM_LIGHTS];
+    float intensity[MAX_NUM_LIGHTS];
+    int numLights;
+    uint useSsao;
+};
+
 struct PbrMaterial {
     float4 baseColor;
     float metalness;

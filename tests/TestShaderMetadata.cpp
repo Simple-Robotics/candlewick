@@ -58,7 +58,7 @@ GTEST_TEST(TestShaderMetadataReal, PbrBasic_frag) {
   auto config = loadShaderMetadata("PbrBasic.frag");
   EXPECT_EQ(config.stage, SDL_GPU_SHADERSTAGE_FRAGMENT);
   EXPECT_EQ(config.entry_point, "main");
-  EXPECT_EQ(config.uniform_buffers, 4u);
+  EXPECT_EQ(config.uniform_buffers, 3u);
   EXPECT_EQ(config.samplers, 2u);
   EXPECT_EQ(config.storage_textures, 0u);
   EXPECT_EQ(config.storage_buffers, 0u);

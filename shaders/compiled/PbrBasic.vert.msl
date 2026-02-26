@@ -44,14 +44,14 @@ struct TranformBlock_natural_0
 };
 
 
-#line 5176 "core.meta.slang"
+#line 993 "core"
 struct _Array_natural_matrixx3Cfloatx2C4x2C4x3E4_0
 {
     array<_MatrixStorage_float4x4_ColMajornatural_0, int(4)> data_2;
 };
 
 
-#line 5176
+#line 993
 struct LightBlockV_natural_0
 {
     _Array_natural_matrixx3Cfloatx2C4x2C4x3E4_0 mvp_1;
@@ -160,3 +160,4 @@ struct KernelContext_0
 #line 37
     return _S3;
 }
+
