@@ -192,7 +192,7 @@ struct KernelContext_0
     float weight_0 = clamp((alpha_0 * 10.0 + 0.00999999977648258) * (1.0 - fragCoord_0.z * 0.30000001192092896), 0.00999999977648258, 1000.0);
 
     thread FSOutput_0 output_0;
-    (&output_0)->accum_0 = float4(pow(uncharted2ToneMapping_0(float3(0.02999999932944775)  * mat_0.baseColor_0.xyz * float3(mat_0.ao_0)  + Lo_0), float3(0.45454543828964233) ) * float3(alpha_0)  * float3(weight_0) , alpha_0);
-    (&output_0)->reveal_0 = 1.0 - alpha_0 * weight_0;
+    (&output_0)->accum_0 = float4(pow(uncharted2ToneMapping_0(float3(0.02999999932944775)  * mat_0.baseColor_0.xyz * float3(mat_0.ao_0)  + Lo_0), float3(0.45454543828964233) ) * float3(alpha_0)  * float3(weight_0) , alpha_0 * weight_0);
+    (&output_0)->reveal_0 = alpha_0;
     return output_0;
 }

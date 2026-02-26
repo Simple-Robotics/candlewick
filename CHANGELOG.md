@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed visual effects with SSAO + MSAA. Have SSAO sample from resolved multisampled depth texture (https://github.com/Simple-Robotics/candlewick/pull/105)
+- Fix WBOIT transparent shader formulas, fixing transparency visual appearance and alpha channel in PNG screenshots (https://github.com/Simple-Robotics/candlewick/pull/110)
 
 ## [0.10.1] - 2026-01-19
 

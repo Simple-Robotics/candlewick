@@ -41,7 +41,7 @@ FSOutput main([vk::location(0)] float3 fragViewPos,
     float weight = clamp(w1 * (1.0 - z * 0.3), 1e-2, 1e3);
 
     FSOutput output;
-    output.accum  = float4(color * alpha * weight, alpha);
-    output.reveal = 1.0 - alpha * weight;
+    output.accum  = float4(color * alpha * weight, alpha * weight);
+    output.reveal = alpha;
     return output;
 }
