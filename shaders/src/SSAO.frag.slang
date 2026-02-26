@@ -9,12 +9,12 @@ static const float SSAO_INTENSITY = 1.5;
 
 struct SSAOParams {
     float4 samples[SSAO_MAX_KERNEL_SIZE];
+    uint kernelSize;
 };
 
 struct Camera {
     float4x4 projection;
     float4x4 projectionInverse;
-    uint kernelSize;
 };
 
 [vk::binding(0, 3)] ConstantBuffer<SSAOParams> kernel;
@@ -51,7 +51,7 @@ float calculatePixelAO(float2 uv) {
     // to GLSL's mat3(tangent, bitangent, viewNormal) * v (column-major multiply)
 
     float occlusion = 0.0;
-    for (int i = 0; i < int(camera.kernelSize); i++) {
+    for (int i = 0; i < int(kernel.kernelSize); i++) {
         float3 samplePos = mul(kernel.samples[i].xyz, float3x3(tangent, bitangent, viewNormal));
         samplePos = viewPos + samplePos * SSAO_RADIUS;
 
@@ -66,7 +66,7 @@ float calculatePixelAO(float2 uv) {
         occlusion += (sampleViewPos.z >= samplePos.z + SSAO_BIAS ? 1.0 : 0.0) * rangeCheck;
     }
 
-    occlusion = 1.0 - (occlusion / float(camera.kernelSize)) * SSAO_INTENSITY;
+    occlusion = 1.0 - (occlusion / float(kernel.kernelSize)) * SSAO_INTENSITY;
     return occlusion;
 }
 

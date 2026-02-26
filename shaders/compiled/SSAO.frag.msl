@@ -15,7 +15,6 @@ struct Camera_natural_0
 {
     _MatrixStorage_float4x4_ColMajornatural_0 projection_0;
     _MatrixStorage_float4x4_ColMajornatural_0 projectionInverse_0;
-    uint kernelSize_0;
 };
 
 
@@ -23,6 +22,7 @@ struct Camera_natural_0
 struct SSAOParams_0
 {
     array<float4, int(64)> samples_0;
+    uint kernelSize_0;
 };
 
 
@@ -103,7 +103,7 @@ float calculatePixelAO_0(float2 uv_2, KernelContext_0 thread* kernelContext_2)
     {
 
 #line 54
-        if(i_0 < int(kernelContext_2->camera_0->kernelSize_0))
+        if(i_0 < int(kernelContext_2->kernel_0->kernelSize_0))
         {
         }
         else
@@ -170,7 +170,7 @@ float calculatePixelAO_0(float2 uv_2, KernelContext_0 thread* kernelContext_2)
     }
 
 #line 70
-    return 1.0 - occlusion_0 / float(kernelContext_2->camera_0->kernelSize_0) * 1.5;
+    return 1.0 - occlusion_0 / float(kernelContext_2->kernel_0->kernelSize_0) * 1.5;
 }
 
 

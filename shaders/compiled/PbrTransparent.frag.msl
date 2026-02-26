@@ -196,4 +196,3 @@ struct KernelContext_0
     (&output_0)->reveal_0 = 1.0 - alpha_0 * weight_0;
     return output_0;
 }
-

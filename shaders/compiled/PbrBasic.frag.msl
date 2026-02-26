@@ -515,4 +515,3 @@ struct pixelInput_0
 
     return output_0;
 }
-
