@@ -22,7 +22,7 @@ namespace media {
     Uint32 _currentBufSize = 0;
 
   public:
-    TransferBufferPool(const Device &device);
+    explicit TransferBufferPool(const Device &device);
     void release() noexcept;
     ~TransferBufferPool() noexcept { this->release(); }
 

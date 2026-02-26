@@ -62,8 +62,13 @@ namespace media {
     // pixel size, in bytes
     const Uint32 pixelSize = SDL_GPUTextureFormatTexelBlockSize(format);
     const Uint32 requiredSize = width * height * pixelSize;
-    assert(requiredSize ==
-           SDL_CalculateGPUTextureFormatSize(format, width, height, 1));
+    if (Uint32 texSize =
+            SDL_CalculateGPUTextureFormatSize(format, width, height, 1);
+        requiredSize != texSize)
+      terminate_with_message(
+          "The required size for the payload ({:d} bytes) is different from "
+          "the target texture's size ({:d} bytes)",
+          requiredSize, texSize);
 
     SDL_GPUTransferBuffer *buffer = pool.acquireBuffer(requiredSize);
 

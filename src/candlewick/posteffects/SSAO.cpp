@@ -17,7 +17,7 @@ namespace ssao {
   inline bool isPowerOfTwo(size_t n) { return (n > 0) && ((n & (n - 1)) == 0); }
 
   // https://sudonull.com/post/102169-Normal-oriented-Hemisphere-SSAO-for-Dummies
-  std::vector<GpuVec4> generateSsaoKernel(size_t kernelSize) {
+  template <Uint32 kernelSize> auto generateSsaoKernel() {
     if (!isPowerOfTwo(kernelSize))
       terminate_with_message(
           "Kernel size must be a power of two. (Current: {:d})", kernelSize);
@@ -26,13 +26,13 @@ namespace ssao {
     std::mt19937 gen{seed};
     std::uniform_real_distribution<float> rfloat{0., 1.};
 
-    std::vector<GpuVec4> kernel;
-    kernel.resize(kernelSize);
+    std::array<GpuVec4, kernelSize> kernel;
 
     for (size_t i = 0; i < kernelSize; i++) {
       GpuVec3 sample;
       sample.setRandom();
-      sample.head<2>() = 2.f * sample.head<2>() - GpuVec2::Ones();
+      sample.template head<2>() =
+          2.f * sample.template head<2>() - GpuVec2::Ones();
       sample.normalize();
       sample *= rfloat(gen);
 
@@ -40,15 +40,22 @@ namespace ssao {
       scale = lerp(0.1f, 10.f, scale * scale);
       sample *= scale;
 
-      kernel[i].head<3>() = sample;
+      kernel[i].template head<3>() = sample;
       kernel[i].w() = 1.f;
     }
     return kernel;
   }
+  struct SsaoParamUbo {
+    std::array<GpuVec4, 64ul> samples;
+    Uint32 kernelSize;
+  };
 
   // Maximum-size kernel shared across all SsaoPass instances.
-  // Each pass uses only its configured kernelSize samples.
-  static const std::vector g_maxKernelSamples = generateSsaoKernel(64ul);
+  // Each pass only has to set the configured kernel size.
+  thread_local static SsaoParamUbo g_ssaoParam = {
+      generateSsaoKernel<64u>(),
+      64u,
+  };
 
   Texture create_noise_texture(const Device &device, Uint32 size) {
     return Texture{device,
@@ -226,13 +233,13 @@ namespace ssao {
 
   void SsaoPass::render(CommandBuffer &cmdBuf, const Camera &camera) {
     // std140 layout: two mat4 (128 bytes) + uint (4 bytes) padded to 144 bytes.
-    struct CameraUniforms {
+    struct CameraUbo {
       GpuMat4 projection;
       GpuMat4 projectionInverse;
-      Uint32 kernelSize;
-      Uint32 _pad[3];
     } cameraUniforms{
-        camera.projection, camera.projection.inverse(), this->kernelSize, {}};
+        camera.projection,
+        camera.projection.inverse(),
+    };
     SDL_GPUColorTargetInfo color_info{
         .texture = ssaoMap,
         .layer_or_depth_plane = 0,
@@ -249,11 +256,8 @@ namespace ssao {
             {.texture = inNormalMap, .sampler = texSampler},
             {.texture = ssaoNoise.tex, .sampler = ssaoNoise.sampler},
         });
-    auto SAMPLES_PAYLOAD_BYTES =
-        Uint32(g_maxKernelSamples.size() * sizeof(GpuVec4));
-    cmdBuf
-        .pushFragmentUniformRaw(0, g_maxKernelSamples.data(),
-                                SAMPLES_PAYLOAD_BYTES)
+    g_ssaoParam.kernelSize = this->kernelSize;
+    cmdBuf.pushFragmentUniform(0, g_ssaoParam)
         .pushFragmentUniform(1, cameraUniforms);
     pipeline.bind(render_pass);
     SDL_DrawGPUPrimitives(render_pass, 6, 1, 0, 0);

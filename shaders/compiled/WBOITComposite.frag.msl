@@ -74,7 +74,7 @@ struct KernelContext_0
     }
 
 #line 13
-    pixelOutput_0 _S7 = { float4(color_0, _S4) };
+    pixelOutput_0 _S7 = { float4(color_0, 1.0 - _S4) };
 
 
 

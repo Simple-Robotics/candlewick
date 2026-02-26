@@ -3,11 +3,11 @@
 #include <metal_texture>
 using namespace metal;
 
-#line 17 "shaders/src/pbr_lighting.slang"
+#line 27 "shaders/src/pbr_lighting.slang"
 float distributionGGX_0(float3 normal_0, float3 H_0, float roughness_0)
 {
 
-#line 18
+#line 28
     float a_0 = roughness_0 * roughness_0;
     float a2_0 = a_0 * a_0;
     float _S1 = max(dot(normal_0, H_0), 0.0);
@@ -23,7 +23,7 @@ float distributionGGX_0(float3 normal_0, float3 H_0, float roughness_0)
 float geometrySchlickGGX_0(float NdotV_0, float roughness_1)
 {
 
-#line 31
+#line 41
     float r_0 = roughness_1 + 1.0;
     float k_0 = r_0 * r_0 / 8.0;
     return NdotV_0 / (NdotV_0 * (1.0 - k_0) + k_0);
@@ -38,16 +38,16 @@ float geometrySmith_0(float3 normal_1, float3 V_0, float3 L_0, float roughness_2
 }
 
 
-#line 12
+#line 22
 float3 fresnelSchlick_0(float cosTheta_0, float3 F0_0)
 {
 
-#line 13
+#line 23
     return F0_0 + (float3(1.0)  - F0_0) * float3(pow(clamp(1.0 - cosTheta_0, 0.0, 1.0), 5.0)) ;
 }
 
 
-#line 1
+#line 11
 struct PbrMaterial_0
 {
     float4 baseColor_0;
@@ -57,11 +57,11 @@ struct PbrMaterial_0
 };
 
 
-#line 46
+#line 56
 float3 calculatePbrLighting_0(float3 normal_2, float3 V_1, float3 lightDir_0, const PbrMaterial_0 constant* material_0, float3 lightColor_0, float lightIntensity_0)
 {
 
-#line 54
+#line 64
     float3 H_1 = normalize(lightDir_0 + V_1);
 
     float3 _S2 = material_0->baseColor_0.xyz;
@@ -72,7 +72,7 @@ float3 calculatePbrLighting_0(float3 normal_2, float3 V_1, float3 lightDir_0, co
 
     float _S3 = dot(normal_2, lightDir_0);
 
-#line 72
+#line 82
     return ((float3(1.0)  - F_0) * float3((1.0 - material_0->metalness_0))  * _S2 / float3(3.14159274101257324)  + float3((distributionGGX_0(normal_2, H_1, material_0->roughness_3) * geometrySmith_0(normal_2, V_1, lightDir_0, material_0->roughness_3)))  * F_0 / float3((4.0 * max(dot(normal_2, V_1), _S3) + 0.00009999999747379)) ) * (float3(lightIntensity_0)  * lightColor_0) * float3(max(_S3, 0.0)) ;
 }
 
@@ -178,53 +178,38 @@ bool isCoordsInRange_0(float3 uv_0)
 }
 
 
-#line 10 "shaders/src/PbrBasic.frag.slang"
-struct MaterialBlock_0
-{
-    PbrMaterial_0 material_1;
-};
-
-
-#line 14
+#line 3 "shaders/src/pbr_lighting.slang"
 struct LightBlock_0
 {
     array<float3, int(4)> direction_0;
     array<float3, int(4)> color_0;
     array<float, int(4)> intensity_0;
     int numLights_0;
+    uint useSsao_0;
 };
 
 
-
-
+#line 10 "shaders/src/PbrBasic.frag.slang"
 struct ShadowAtlasInfo_0
 {
     array<int4, int(4)> lightRegions_0;
 };
 
 
-#line 21
-struct EffectParams_0
-{
-    uint useSsao_0;
-};
-
-
-#line 21
+#line 10
 struct KernelContext_0
 {
     depth2d<float, access::sample> shadowMap_texture_0;
     sampler shadowMap_sampler_0;
-    MaterialBlock_0 constant* materialBlock_0;
+    PbrMaterial_0 constant* materialBlock_0;
     LightBlock_0 constant* light_0;
     ShadowAtlasInfo_0 constant* shadowAtlas_0;
-    EffectParams_0 constant* params_0;
     texture2d<float, access::sample> ssaoTex_texture_0;
     sampler ssaoTex_sampler_0;
 };
 
 
-#line 50
+#line 34
 float calcShadowmap_0(int lightIndex_0, float NdotL_0, int2 atlasSize_0, const array<float3, int(4)> thread* fragLightPos_0, KernelContext_0 thread* kernelContext_0)
 {
 
@@ -236,23 +221,23 @@ float calcShadowmap_0(int lightIndex_0, float NdotL_0, int2 atlasSize_0, const a
     if(!isCoordsInRange_0(float3(uv_1, depthRef_0)))
     {
 
-#line 59
+#line 43
         return 1.0;
     }
 
 
     int2 _S6 = kernelContext_0->shadowAtlas_0->lightRegions_0[lightIndex_0].xy;
 
-#line 63
+#line 47
     float2 _S7 = float2(_S6);
 
-#line 63
+#line 47
     int2 _S8 = kernelContext_0->shadowAtlas_0->lightRegions_0[lightIndex_0].zw;
 
-#line 63
+#line 47
     float2 _S9 = float2(atlasSize_0);
 
-#line 63
+#line 47
     uv_1 = (_S7 + uv_1 * float2(_S8)) / _S9;
     float2 _S10 = _S7 / _S9;
     float2 _S11 = float2(_S6 + _S8) / _S9;
@@ -262,70 +247,70 @@ float calcShadowmap_0(int lightIndex_0, float NdotL_0, int2 atlasSize_0, const a
 
     float _S13 = 1.0 / pow(3.0, 2.0);
 
-#line 70
+#line 54
     int i_0 = int(-1);
 
-#line 70
+#line 54
     float value_0 = 0.0;
     for(;;)
     {
 
-#line 71
+#line 55
         if(i_0 <= int(1))
         {
         }
         else
         {
 
-#line 71
+#line 55
             break;
         }
 
-#line 71
+#line 55
         int j_0 = int(-1);
         for(;;)
         {
 
-#line 72
+#line 56
             if(j_0 <= int(1))
             {
             }
             else
             {
 
-#line 72
+#line 56
                 break;
             }
 
-#line 73
+#line 57
             float2 offUV_0 = clamp(uv_1 + float2(float(i_0), float(j_0)) * _S12, _S10, _S11);
             ;
 
-#line 74
+#line 58
             ;
 
-#line 74
+#line 58
             float _S14 = kernelContext_0->shadowMap_texture_0.sample_compare(kernelContext_0->shadowMap_sampler_0, offUV_0, depthRef_0);
 
-#line 74
+#line 58
             float value_1 = value_0 + _S13 * _S14;
 
-#line 72
+#line 56
             j_0 = j_0 + int(1);
 
-#line 72
+#line 56
             value_0 = value_1;
 
-#line 72
+#line 56
         }
 
-#line 71
+#line 55
         i_0 = i_0 + int(1);
 
-#line 71
+#line 55
     }
 
-#line 77
+#line 61
     return value_0;
 }
 
@@ -351,7 +336,7 @@ float3 uncharted2ToneMapping_0(float3 color_2)
 }
 
 
-#line 41 "shaders/src/PbrBasic.frag.slang"
+#line 25 "shaders/src/PbrBasic.frag.slang"
 struct FSOutput_0
 {
     float4 fragColor_0 [[color(0)]];
@@ -360,7 +345,7 @@ struct FSOutput_0
 };
 
 
-#line 41
+#line 25
 struct pixelInput_0
 {
     float3 fragViewPos_0 [[user(_SLANG_ATTR)]];
@@ -369,35 +354,32 @@ struct pixelInput_0
 };
 
 
-#line 82
-[[fragment]] FSOutput_0 main_0(pixelInput_0 _S16 [[stage_in]], float4 fragCoord_0 [[position]], bool isFrontFacing_0 [[front_facing]], depth2d<float, access::sample> shadowMap_texture_1 [[texture(0)]], sampler shadowMap_sampler_1 [[sampler(0)]], MaterialBlock_0 constant* materialBlock_1 [[buffer(0)]], LightBlock_0 constant* light_1 [[buffer(1)]], ShadowAtlasInfo_0 constant* shadowAtlas_1 [[buffer(3)]], EffectParams_0 constant* params_1 [[buffer(2)]], texture2d<float, access::sample> ssaoTex_texture_1 [[texture(1)]], sampler ssaoTex_sampler_1 [[sampler(1)]])
+#line 66
+[[fragment]] FSOutput_0 main_0(pixelInput_0 _S16 [[stage_in]], float4 fragCoord_0 [[position]], bool isFrontFacing_0 [[front_facing]], depth2d<float, access::sample> shadowMap_texture_1 [[texture(0)]], sampler shadowMap_sampler_1 [[sampler(0)]], PbrMaterial_0 constant* materialBlock_1 [[buffer(0)]], LightBlock_0 constant* light_1 [[buffer(1)]], ShadowAtlasInfo_0 constant* shadowAtlas_1 [[buffer(2)]], texture2d<float, access::sample> ssaoTex_texture_1 [[texture(1)]], sampler ssaoTex_sampler_1 [[sampler(1)]])
 {
 
 
     thread KernelContext_0 kernelContext_1;
 
-#line 86
+#line 70
     (&kernelContext_1)->shadowMap_texture_0 = shadowMap_texture_1;
 
-#line 86
+#line 70
     (&kernelContext_1)->shadowMap_sampler_0 = shadowMap_sampler_1;
 
-#line 86
+#line 70
     (&kernelContext_1)->materialBlock_0 = materialBlock_1;
 
-#line 86
+#line 70
     (&kernelContext_1)->light_0 = light_1;
 
-#line 86
+#line 70
     (&kernelContext_1)->shadowAtlas_0 = shadowAtlas_1;
 
-#line 86
-    (&kernelContext_1)->params_0 = params_1;
-
-#line 86
+#line 70
     (&kernelContext_1)->ssaoTex_texture_0 = ssaoTex_texture_1;
 
-#line 86
+#line 70
     (&kernelContext_1)->ssaoTex_sampler_0 = ssaoTex_sampler_1;
     float3 normal_3 = normalize(_S16.fragViewNormal_0);
     float3 _S17 = normalize(- _S16.fragViewPos_0);
@@ -405,126 +387,126 @@ struct pixelInput_0
 
     thread uint smW_0;
 
-#line 91
+#line 75
     thread uint smH_0;
 
-#line 91
+#line 75
     (*((shadowMap_sampler_1)) = (shadowMap_texture_1).get_width(0)),(*((&smW_0)) = (shadowMap_texture_1).get_height(0));
 
     int2 _S18 = int2(int(smW_0), int(smH_0));
 
-#line 93
+#line 77
     float3 normal_4;
 
 
     if(!isFrontFacing_0)
     {
 
-#line 96
+#line 80
         normal_4 = - normal_3;
 
-#line 96
+#line 80
     }
     else
     {
 
-#line 96
+#line 80
         normal_4 = normal_3;
 
-#line 96
+#line 80
     }
 
 
 
-    PbrMaterial_0 mat_0 = (&kernelContext_1)->materialBlock_0->material_1;
+    PbrMaterial_0 mat_0 = *(&kernelContext_1)->materialBlock_0;
 
     float3 _S19 = float3(int3(int(0)) );
 
-#line 102
+#line 86
     int i_1 = int(0);
 
-#line 102
+#line 86
     float3 Lo_0 = _S19;
     for(;;)
     {
 
-#line 103
+#line 87
         if(i_1 < ((&kernelContext_1)->light_0->numLights_0))
         {
         }
         else
         {
 
-#line 103
+#line 87
             break;
         }
 
-#line 104
+#line 88
         float3 lightDir_1 = normalize(- (&kernelContext_1)->light_0->direction_0[i_1]);
 
-#line 104
-        float3 _S20 = calculatePbrLighting_0(normal_4, _S17, lightDir_1, &(&kernelContext_1)->materialBlock_0->material_1, (&kernelContext_1)->light_0->color_0[i_1], (&kernelContext_1)->light_0->intensity_0[i_1]);
+#line 88
+        float3 _S20 = calculatePbrLighting_0(normal_4, _S17, lightDir_1, (&kernelContext_1)->materialBlock_0, (&kernelContext_1)->light_0->color_0[i_1], (&kernelContext_1)->light_0->intensity_0[i_1]);
 
 
 
         float _S21 = max(dot(normal_4, lightDir_1), 0.0);
 
-#line 108
+#line 92
         thread array<float3, int(4)> _S22 = _S16.fragLightPos_1;
 
-#line 108
+#line 92
         float _S23 = calcShadowmap_0(i_1, _S21, _S18, &_S22, &kernelContext_1);
 
 
         float3 Lo_1 = Lo_0 + _S20 * float3(_S23) ;
 
-#line 103
+#line 87
         i_1 = i_1 + int(1);
 
-#line 103
+#line 87
         Lo_0 = Lo_1;
 
-#line 103
+#line 87
     }
 
-#line 114
+#line 98
     float3 ambient_0 = float3(0.10000000149011612)  * mat_0.baseColor_0.xyz * float3(mat_0.ao_0) ;
 
-#line 114
+#line 98
     float3 ambient_1;
 
 
-    if(((&kernelContext_1)->params_0->useSsao_0) == 1U)
+    if(((&kernelContext_1)->light_0->useSsao_0) != 0U)
     {
 
-#line 117
+#line 101
         texture2d<float, access::sample> _S24 = (&kernelContext_1)->ssaoTex_texture_0;
         thread uint ssaoW_0;
 
-#line 118
+#line 102
         thread uint ssaoH_0;
 
-#line 118
+#line 102
         (*(((&kernelContext_1)->ssaoTex_sampler_0)) = (_S24).get_width(0)),(*((&ssaoW_0)) = (_S24).get_height(0));
 
         float2 ssaoUV_0 = fragCoord_0.xy / float2(float(ssaoW_0), float(ssaoH_0));
         ;
 
-#line 121
+#line 105
         ambient_1 = ambient_0 * float3((((&kernelContext_1)->ssaoTex_texture_0).sample(((&kernelContext_1)->ssaoTex_sampler_0), (ssaoUV_0))).x) ;
 
-#line 117
+#line 101
     }
     else
     {
 
-#line 117
+#line 101
         ambient_1 = ambient_0;
 
-#line 117
+#line 101
     }
 
-#line 129
+#line 113
     thread FSOutput_0 output_0;
     (&output_0)->fragColor_0 = float4(pow(uncharted2ToneMapping_0(ambient_1 + Lo_0), float3(0.45454543828964233) ), mat_0.baseColor_0.w);
 

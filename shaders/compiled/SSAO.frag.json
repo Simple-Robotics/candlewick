@@ -76,6 +76,14 @@
                                 "uniformStride": 16
                             },
                             "binding": {"kind": "uniform", "offset": 0, "size": 1024, "elementStride": 16}
+                        },
+                        {
+                            "name": "kernelSize",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "binding": {"kind": "uniform", "offset": 1024, "size": 4, "elementStride": 0}
                         }
                     ]
                 },
@@ -103,10 +111,18 @@
                                     "uniformStride": 16
                                 },
                                 "binding": {"kind": "uniform", "offset": 0, "size": 1024, "elementStride": 16}
+                            },
+                            {
+                                "name": "kernelSize",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32"
+                                },
+                                "binding": {"kind": "uniform", "offset": 1024, "size": 4, "elementStride": 0}
                             }
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 1024, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 1040, "elementStride": 0}
                 }
             }
         },
@@ -144,14 +160,6 @@
                                 }
                             },
                             "binding": {"kind": "uniform", "offset": 64, "size": 64, "elementStride": 0}
-                        },
-                        {
-                            "name": "kernelSize",
-                            "type": {
-                                "kind": "scalar",
-                                "scalarType": "uint32"
-                            },
-                            "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
                         }
                     ]
                 },
@@ -188,18 +196,10 @@
                                     }
                                 },
                                 "binding": {"kind": "uniform", "offset": 64, "size": 64, "elementStride": 0}
-                            },
-                            {
-                                "name": "kernelSize",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32"
-                                },
-                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
                             }
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 144, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 128, "elementStride": 0}
                 }
             }
         }

@@ -1,36 +1,11 @@
 #define HAS_WBOIT
-#define HAS_SHADOW_MAPS
-#define HAS_SSAO
 
 import tone_mapping;
 import pbr_lighting;
 import config;
 
-struct MaterialBlock {
-    PbrMaterial material;
-};
-
-struct LightBlock {
-    float3 direction[MAX_NUM_LIGHTS];
-    float3 color[MAX_NUM_LIGHTS];
-    float intensity[MAX_NUM_LIGHTS];
-    int numLights;
-};
-
-struct EffectParams {
-    uint useSsao;
-};
-
-[vk::binding(0, 3)] ConstantBuffer<MaterialBlock> materialBlock;
-[vk::binding(1, 3)] ConstantBuffer<LightBlock>    light;
-[vk::binding(2, 3)] ConstantBuffer<EffectParams>  params;
-
-#ifdef HAS_SHADOW_MAPS
-    [vk::binding(0, 2)] Sampler2DShadow shadowMap;
-#endif
-#ifdef HAS_SSAO
-    [vk::binding(1, 2)] Sampler2D ssaoTex;
-#endif
+[vk::binding(0, 3)] ConstantBuffer<PbrMaterial> materialBlock;
+[vk::binding(1, 3)] ConstantBuffer<LightBlock>  light;
 
 struct FSOutput {
     float4 accum  : SV_Target0; // R16G16B16A16 accumulation
@@ -45,7 +20,7 @@ FSOutput main([vk::location(0)] float3 fragViewPos,
     float3 normal = normalize(fragViewNormal);
     float3 V = normalize(-fragViewPos);
 
-    PbrMaterial mat = materialBlock.material;
+    PbrMaterial mat = materialBlock;
 
     float3 Lo = float3(0);
     for (uint i = 0; i < uint(light.numLights); i++) {

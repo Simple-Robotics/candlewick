@@ -34,6 +34,7 @@ struct alignas(16) LightArrayUbo {
   GpuVec4 color[kNumLights];
   GpuVec4 intensity[kNumLights];
   Uint32 numLights;
+  Uint32 useSsao;
 };
 static_assert(std::is_standard_layout_v<LightArrayUbo>);
 
@@ -270,10 +271,10 @@ void RobotScene::initCompositePipeline(const MeshLayout &layout) {
   color_target.format = m_renderer.getSwapchainTextureFormat();
   color_target.blend_state = {
       .src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-      .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+      .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
       .color_blend_op = SDL_GPU_BLENDOP_ADD,
-      .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
-      .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+      .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+      .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
       .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
       .enable_blend = true,
   };
@@ -535,6 +536,7 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
   // calculate light ubos
   LightArrayUbo lightUbo;
   lightUbo.numLights = numLights;
+  lightUbo.useSsao = m_config.enable_ssao ? 1u : 0u;
   for (size_t i = 0; i < lightUbo.numLights; i++) {
     auto &dl = directionalLight[i];
     lightUbo.viewSpaceDir[i].head<3>() = camera.transformVector(dl.direction);
@@ -565,23 +567,23 @@ void RobotScene::renderPBRTriangleGeometry(CommandBuffer &command_buffer,
         gBuffer);
   }
 
-  if (shadowsEnabled()) {
-    rend::bindFragmentSamplers(render_pass, SHADOW_MAP_SLOT,
+  command_buffer.pushFragmentUniform(FragmentUniformSlots::LIGHTING, lightUbo);
+  if (!transparent) {
+    if (shadowsEnabled()) {
+      rend::bindFragmentSamplers(render_pass, SHADOW_MAP_SLOT,
+                                 {{
+                                     .texture = shadowPass.shadowMap,
+                                     .sampler = shadowPass.sampler,
+                                 }});
+    }
+    rend::bindFragmentSamplers(render_pass, SSAO_SLOT,
                                {{
-                                   .texture = shadowPass.shadowMap,
-                                   .sampler = shadowPass.sampler,
+                                   .texture = ssaoPass.ssaoMap,
+                                   .sampler = ssaoPass.texSampler,
                                }});
+    command_buffer.pushFragmentUniform(FragmentUniformSlots::ATLAS_INFO,
+                                       shadowAtlasUbo);
   }
-  rend::bindFragmentSamplers(render_pass, SSAO_SLOT,
-                             {{
-                                 .texture = ssaoPass.ssaoMap,
-                                 .sampler = ssaoPass.texSampler,
-                             }});
-  int _useSsao = m_config.enable_ssao;
-  command_buffer //
-      .pushFragmentUniform(FragmentUniformSlots::LIGHTING, lightUbo)
-      .pushFragmentUniform(FragmentUniformSlots::SSAO_FLAG, _useSsao)
-      .pushFragmentUniform(FragmentUniformSlots::ATLAS_INFO, shadowAtlasUbo);
 
   auto view =
       m_registry.view<const TransformComponent, const MeshMaterialComponent,

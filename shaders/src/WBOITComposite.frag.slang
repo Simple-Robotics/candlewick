@@ -14,5 +14,5 @@ float4 main(float4 fragCoord : SV_Position,
         color = accum.rgb / accum.a;
     }
 
-    return float4(color, reveal);
+    return float4(color, 1.0 - reveal);
 }
